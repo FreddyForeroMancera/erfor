@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { useState, useEffect, useMemo, Fragment } from "react";
+import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Loader2, X, MapPin, Clock, Tag } from "lucide-react";
+import { Dialog, Transition } from "@headlessui/react";
 import { useClient } from "@/lib/client-context";
 import toast from "react-hot-toast";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameMonth, isSameDay, addDays, parseISO } from "date-fns";
@@ -21,6 +22,7 @@ export function CalendarModule() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
   useEffect(() => {
     async function loadEvents() {
@@ -128,7 +130,12 @@ export function CalendarModule() {
                 </div>
                 <div className="flex flex-col gap-1 overflow-y-auto flex-1 no-scrollbar">
                   {dayEvents.slice(0, 4).map((evt, idx) => (
-                    <div key={evt.id} className={`text-xs px-2 py-1 rounded truncate border ${getEventColor(evt.type, evt.priority)}`} title={evt.title}>
+                    <div 
+                      key={evt.id} 
+                      onClick={(e) => { e.stopPropagation(); setSelectedEvent(evt); }}
+                      className={`text-xs px-2 py-1 rounded truncate border cursor-pointer hover:opacity-80 transition-opacity ${getEventColor(evt.type, evt.priority)}`} 
+                      title={evt.title}
+                    >
                       <span className="font-bold mr-1">{evt.type.substring(0,3)}:</span>
                       {evt.title}
                     </div>
@@ -142,6 +149,66 @@ export function CalendarModule() {
           })}
         </div>
       </div>
+
+      <Transition appear show={!!selectedEvent} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={() => setSelectedEvent(null)}>
+          <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
+            <div className="fixed inset-0 bg-erfor-ink/60 backdrop-blur-sm" />
+          </Transition.Child>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <div className="flex items-center justify-between mb-5">
+                    <Dialog.Title as="h3" className="text-lg font-bold leading-6 text-slate-900">
+                      Detalles del Evento
+                    </Dialog.Title>
+                    <button onClick={() => setSelectedEvent(null)} className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full transition-colors">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  
+                  {selectedEvent && (
+                    <div className="space-y-4">
+                      <div>
+                        <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold border ${getEventColor(selectedEvent.type, selectedEvent.priority)}`}>
+                          {selectedEvent.type} - {selectedEvent.priority === "CRITICAL" ? "CRÍTICO" : selectedEvent.priority === "HIGH" ? "ALTO" : selectedEvent.priority === "MEDIUM" ? "MEDIO" : "BAJO"}
+                        </span>
+                      </div>
+                      
+                      <h4 className="text-xl font-bold text-erfor-deep">{selectedEvent.title}</h4>
+                      
+                      <div className="flex flex-col gap-3 mt-4 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <div className="flex items-center gap-3">
+                          <Clock className="h-4 w-4 text-slate-400" />
+                          <span className="capitalize"><strong>Fecha:</strong> {format(parseISO(selectedEvent.date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <MapPin className="h-4 w-4 text-slate-400" />
+                          <span><strong>Ubicación:</strong> Predio Asignado (Simulado)</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Tag className="h-4 w-4 text-slate-400" />
+                          <span><strong>Estado actual:</strong> {selectedEvent.status === "PENDING" ? "Pendiente" : selectedEvent.status === "SCHEDULED" ? "Programado" : selectedEvent.status === "OVERDUE" ? "Vencido" : selectedEvent.status}</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 pt-5 border-t border-slate-100 flex justify-end gap-3">
+                        <button onClick={() => setSelectedEvent(null)} className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                          Cerrar
+                        </button>
+                        <button onClick={() => toast.success("Simulación: Redirigiendo al expediente...")} className="px-4 py-2 text-sm font-medium text-white bg-erfor-green rounded-lg hover:bg-green-700 transition-colors shadow-sm shadow-green-900/20">
+                          Ver Expediente
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
     </div>
   );
 }
