@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CalendarDays, FileArchive, FileBarChart, FileCheck2, FolderKanban, Leaf, UsersRound, Loader2, Building2 } from "lucide-react";
+import { AlertTriangle, CalendarDays, FileArchive, FileBarChart, FileCheck2, FolderKanban, Leaf, UsersRound, Loader2, Building2, Map } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { QuickActions } from "@/components/app-shell";
@@ -69,7 +69,7 @@ export function Dashboard() {
       }
       return [
         { label: "Clientes Activos", value: data?.kpis.clients || 0, sub: "Cartera gestionada", icon: UsersRound, color: "text-erfor-green" },
-        { label: "Proyectos Globales", value: data?.kpis.projects || 0, sub: "Operaciones totales", icon: FolderKanban, color: "text-erfor-green" },
+        { label: "Predios Activos", value: data?.kpis.projects || 0, sub: "Áreas bajo manejo", icon: Map, color: "text-erfor-green" },
         { label: "Trámites en Curso", value: data?.kpis.procedures || 0, sub: "Ante autoridades", icon: FileCheck2, color: "text-sky-600" },
         { label: "Alertas Críticas", value: data?.kpis.alerts || 0, sub: "Requieren atención inmediata", icon: AlertTriangle, color: "text-red-600" },
       ];

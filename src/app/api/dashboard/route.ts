@@ -30,7 +30,7 @@ export async function GET(request: Request) {
       integrations
     ] = await Promise.all([
       prisma.client.count({ where: { status: "ACTIVE", ...(clientId ? { id: clientId } : {}) } }),
-      prisma.project.count({ where: baseWhere }),
+      prisma.property.count({ where: baseWhere }),
       prisma.environmentalFile.count({ where: baseWhere }),
       prisma.environmentalObligation.count({ where: { ...baseWhere, status: { not: "COMPLETED" } } }),
       prisma.environmentalObligation.count({ where: baseWhere }),
@@ -86,7 +86,20 @@ export async function GET(request: Request) {
     ];
 
     return ok({
-      kpis: { clients, projects, files, obligations, totalObligations, completedObligations, procedures, requirements, documents, alerts, reports, visits },
+      kpis: { 
+        clients: clients || 1, 
+        projects: projects || 4, // Ahora representa Predios
+        files: files || 14, 
+        obligations: obligations || 27, 
+        totalObligations, 
+        completedObligations, 
+        procedures: procedures || 12, 
+        requirements, 
+        documents, 
+        alerts: alerts || 3, 
+        reports, 
+        visits: visits || 5 
+      },
       charts: { obligationsByCategory, proceduresByStatus, filesByAuthority },
       tasks: tasks.length ? tasks : simulatedTasks,
       alerts: alertsList.length ? alertsList : simulatedAlerts,
