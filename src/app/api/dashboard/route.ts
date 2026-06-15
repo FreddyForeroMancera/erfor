@@ -69,12 +69,28 @@ export async function GET(request: Request) {
       take: 6 
     });
 
+    const simulatedTasks = [
+      { id: "st-1", title: "Actualizar Matriz Legal", dueDate: new Date().toISOString(), client: { name: "Hacienda Esperanza" } },
+      { id: "st-2", title: "Preparar Informe RUA", dueDate: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(), client: { name: "Lote Industrial" } }
+    ];
+
+    const simulatedAlerts = [
+      { id: "sa-1", title: "Licencia ANLA por Vencer", description: "Vence en 15 días", severity: "CRITICAL", dueDate: new Date(new Date().setDate(new Date().getDate() + 15)).toISOString() },
+      { id: "sa-2", title: "Concepto Técnico Pendiente", description: "Requiere radicación en CAR", severity: "HIGH", dueDate: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString() }
+    ];
+
+    const simulatedActivity = [
+      { id: "act-1", action: "DOCUMENTO CARGADO", description: "Se subió Informe de Vertimientos 2026.pdf", createdAt: new Date().toISOString() },
+      { id: "act-2", action: "TRÁMITE ACTUALIZADO", description: "Resolución de Concesión cambió a APROBADO", createdAt: new Date(new Date().setHours(new Date().getHours() - 5)).toISOString() },
+      { id: "act-3", action: "VISITA PROGRAMADA", description: "Auditoría Interna programada", createdAt: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString() },
+    ];
+
     return ok({
       kpis: { clients, projects, files, obligations, totalObligations, completedObligations, procedures, requirements, documents, alerts, reports, visits },
       charts: { obligationsByCategory, proceduresByStatus, filesByAuthority },
-      tasks,
-      alerts: alertsList,
-      recentActivity,
+      tasks: tasks.length ? tasks : simulatedTasks,
+      alerts: alertsList.length ? alertsList : simulatedAlerts,
+      recentActivity: recentActivity.length ? recentActivity : simulatedActivity,
       integrations
     });
   } catch (error) {
