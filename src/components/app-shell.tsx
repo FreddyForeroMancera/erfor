@@ -219,9 +219,77 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <input className="w-full bg-transparent text-sm outline-none" placeholder="Buscar..." />
                 <Search className="h-5 w-5 text-slate-500" />
               </div>
-              <IconButton title="Notificaciones">
-                <Bell className="h-5 w-5" />
-              </IconButton>
+              {/* Notifications Dropdown */}
+              <Menu as="div" className="relative ml-1">
+                <Menu.Button as="button" title="Notificaciones" className="relative flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 transition hover:border-erfor-green hover:text-erfor-green outline-none">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute right-2 top-2 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 ring-2 ring-white"></span>
+                  </span>
+                </Menu.Button>
+                <Transition
+                  as={Fragment}
+                  enter="transition ease-out duration-100"
+                  enterFrom="transform opacity-0 scale-95"
+                  enterTo="transform opacity-100 scale-100"
+                  leave="transition ease-in duration-75"
+                  leaveFrom="transform opacity-100 scale-100"
+                  leaveTo="transform opacity-0 scale-95"
+                >
+                  <Menu.Items className="absolute right-0 z-50 mt-2 w-80 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden flex flex-col">
+                    <div className="bg-slate-50 border-b border-slate-200 p-3 flex justify-between items-center">
+                      <h3 className="font-bold text-sm text-slate-800">Centro de Notificaciones</h3>
+                      <span className="text-xs text-erfor-green font-medium cursor-pointer hover:underline">Marcar leídas</span>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto divide-y divide-slate-100">
+                      
+                      <div className="p-4 hover:bg-slate-50 transition cursor-pointer">
+                        <div className="flex gap-3">
+                          <div className="mt-0.5 h-8 w-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                            <AlertTriangle className="h-4 w-4 text-red-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800">Alerta Crítica: Vencimiento ANLA</p>
+                            <p className="text-xs text-slate-600 mt-1 line-clamp-2">La Licencia Ambiental del Lote Industrial Norte vence en 15 días. Requiere acción inmediata para evitar multas.</p>
+                            <p className="text-[10px] font-medium text-slate-400 mt-2">Hace 2 horas</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 hover:bg-slate-50 transition cursor-pointer">
+                        <div className="flex gap-3">
+                          <div className="mt-0.5 h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                            <Bot className="h-4 w-4 text-amber-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800">Insight IA: Consumo de Agua</p>
+                            <p className="text-xs text-slate-600 mt-1 line-clamp-2">He detectado un aumento del 15% en el consumo de agua en Hacienda La Esperanza comparado con el mes anterior. ¿Deseas que analice las causas?</p>
+                            <p className="text-[10px] font-medium text-slate-400 mt-2">Hace 5 horas</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 hover:bg-slate-50 transition cursor-pointer">
+                        <div className="flex gap-3">
+                          <div className="mt-0.5 h-8 w-8 rounded-full bg-sky-100 flex items-center justify-center shrink-0">
+                            <FileCheck2 className="h-4 w-4 text-sky-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800">Hallazgo: Auditoría Interna</p>
+                            <p className="text-xs text-slate-600 mt-1 line-clamp-2">Se registró un nuevo hallazgo (No Conformidad Menor) en la auditoría de Reserva El Paraíso relacionado con la matriz de residuos.</p>
+                            <p className="text-[10px] font-medium text-slate-400 mt-2">Ayer</p>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                    <div className="bg-slate-50 border-t border-slate-200 p-2 text-center">
+                      <Link href="/calendario-y-alertas" className="text-xs font-semibold text-erfor-green hover:underline">Ver todas las alertas</Link>
+                    </div>
+                  </Menu.Items>
+                </Transition>
+              </Menu>
               
               {/* Profile Dropdown */}
               <Menu as="div" className="relative ml-3">
