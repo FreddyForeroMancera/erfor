@@ -150,7 +150,6 @@ export const aliases: Record<string, string> = {
   "pqrs-respuestas": "requerimientos",
   "monitoreos-y-reportes": "obligaciones-ambientales",
   "fuentes-de-informacion": "documentos",
-  "ia-asistente-ambiental": "requerimientos",
   integraciones: "documentos",
   configuracion: "requisitos-legales"
 };
