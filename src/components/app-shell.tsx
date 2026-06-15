@@ -1,0 +1,315 @@
+"use client";
+
+import { useState, Fragment } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  AlertTriangle,
+  Bell,
+  Bot,
+  Building2,
+  CalendarDays,
+  ClipboardCheck,
+  DatabaseZap,
+  FileArchive,
+  FileBarChart,
+  FileCheck2,
+  FolderKanban,
+  Gauge,
+  Home,
+  Landmark,
+  Leaf,
+  Map,
+  MessageSquareText,
+  Plug,
+  Search,
+  Settings,
+  ShieldCheck,
+  Upload,
+  UserRound,
+  UsersRound,
+  Wrench,
+  Menu as MenuIcon,
+  X,
+  LogOut,
+  User
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { AiPanel } from "@/components/ai-panel";
+import { BrandLogo } from "@/components/brand-logo";
+import { Menu, Transition, Dialog } from "@headlessui/react";
+import toast from "react-hot-toast";
+import { ClientSelector } from "./client-selector";
+import { useClient } from "@/lib/client-context";
+
+const nav = [
+  { label: "Panel Maestro", href: "/dashboard", icon: Gauge },
+  { label: "Clientes y Proyectos", href: "/clientes-y-proyectos", icon: UsersRound },
+  { label: "Predios", href: "/predios", icon: Map },
+  { label: "Expedientes Ambientales", href: "/expedientes-ambientales", icon: FolderKanban },
+  { label: "Requisitos Legales", href: "/requisitos-legales", icon: ShieldCheck },
+  { label: "CAR Cundinamarca", href: "/car-cundinamarca", icon: Landmark },
+  { label: "Trámites y Permisos", href: "/tramites-y-permisos", icon: FileCheck2 },
+  { label: "Obligaciones Ambientales", href: "/obligaciones-ambientales", icon: ClipboardCheck },
+  { label: "Requerimientos", href: "/requerimientos", icon: AlertTriangle },
+  { label: "Visitas e Inspecciones", href: "/visitas-e-inspecciones", icon: Building2 },
+  { label: "PQRS / Respuestas", href: "/pqrs-respuestas", icon: MessageSquareText },
+  { label: "Documentos", href: "/documentos", icon: FileArchive },
+  { label: "Calendario y Alertas", href: "/calendario-y-alertas", icon: CalendarDays },
+  { label: "Monitoreos y Reportes", href: "/monitoreos-y-reportes", icon: FileBarChart },
+  { label: "Fuentes de Información", href: "/fuentes-de-informacion", icon: DatabaseZap },
+  { label: "Informes y Reportes", href: "/informes-y-reportes", icon: FileBarChart },
+  { label: "IA Asistente Ambiental", href: "/ia-asistente-ambiental", icon: Bot },
+  { label: "Integraciones", href: "/integraciones", icon: Plug },
+  { label: "Configuración", href: "/configuracion", icon: Settings }
+];
+
+export function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { selectedClientId } = useClient();
+
+  const clientSpecificPaths = [
+    "/expedientes-ambientales",
+    "/requisitos-legales",
+    "/car-cundinamarca",
+    "/tramites-y-permisos",
+    "/obligaciones-ambientales",
+    "/requerimientos",
+    "/visitas-e-inspecciones",
+    "/pqrs-respuestas",
+    "/documentos",
+    "/monitoreos-y-reportes",
+    "/fuentes-de-informacion",
+    "/informes-y-reportes",
+    "/integraciones"
+  ];
+
+  async function logout() {
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST" });
+      if (response.ok) {
+        router.push("/login");
+        router.refresh();
+      } else {
+        toast.error("Error al cerrar sesión");
+      }
+    } catch (err) {
+      toast.error("Error de conexión");
+    }
+  }
+
+  const SidebarContent = () => (
+    <>
+      <div className="p-8">
+        <BrandLogo variant="light" className="max-w-[170px]" />
+        <p className="mt-3 max-w-[210px] text-sm leading-5 text-white/78">Plataforma Integral de Asesoría Ambiental</p>
+      </div>
+      <nav className="erfor-scroll flex-1 overflow-y-auto px-2 pb-6">
+        {nav.filter(item => selectedClientId ? true : !clientSpecificPaths.includes(item.href)).map((item) => {
+          // Mejorado el chequeo de ruta activa
+          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className={`mb-1 flex items-center gap-3 rounded-md px-4 py-3 text-sm transition ${
+                active ? "bg-erfor-green text-white shadow-lg shadow-green-950/20" : "text-white/78 hover:bg-white/8 hover:text-white"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="p-7">
+        <BrandLogo variant="light" className="max-w-[150px]" />
+        <p className="mt-2 text-sm text-white/70">Asesoría Ambiental</p>
+        <p className="mt-1 text-xs text-white/48">Gestión · Cumplimiento · Sostenibilidad</p>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="min-h-screen bg-[#f6f8f7] text-erfor-ink">
+      {/* Sidebar Desktop */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[292px] flex-col bg-erfor-ink text-white lg:flex">
+        <SidebarContent />
+      </aside>
+
+      {/* Sidebar Mobile */}
+      <Transition.Root show={mobileMenuOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-40 lg:hidden" onClose={setMobileMenuOpen}>
+          <Transition.Child
+            as={Fragment}
+            enter="transition-opacity ease-linear duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="transition-opacity ease-linear duration-300"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-erfor-deep/80 backdrop-blur-sm" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 flex">
+            <Transition.Child
+              as={Fragment}
+              enter="transition ease-in-out duration-300 transform"
+              enterFrom="-translate-x-full"
+              enterTo="translate-x-0"
+              leave="transition ease-in-out duration-300 transform"
+              leaveFrom="translate-x-0"
+              leaveTo="-translate-x-full"
+            >
+              <Dialog.Panel className="relative flex w-full max-w-xs flex-1 flex-col bg-erfor-ink text-white">
+                <Transition.Child
+                  as={Fragment}
+                  enter="ease-in-out duration-300"
+                  enterFrom="opacity-0"
+                  enterTo="opacity-100"
+                  leave="ease-in-out duration-300"
+                  leaveFrom="opacity-100"
+                  leaveTo="opacity-0"
+                >
+                  <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
+                    <button type="button" className="-m-2.5 p-2.5" onClick={() => setMobileMenuOpen(false)}>
+                      <span className="sr-only">Cerrar menú</span>
+                      <X className="h-6 w-6 text-white" aria-hidden="true" />
+                    </button>
+                  </div>
+                </Transition.Child>
+                <SidebarContent />
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
+        </Dialog>
+      </Transition.Root>
+
+      <div className="lg:pl-[292px]">
+        <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/92 px-4 py-4 backdrop-blur lg:px-8">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                className="-m-2.5 p-2.5 text-slate-700 lg:hidden"
+                onClick={() => setMobileMenuOpen(true)}
+              >
+                <span className="sr-only">Abrir menú lateral</span>
+                <MenuIcon className="h-6 w-6" aria-hidden="true" />
+              </button>
+              <div>
+                <div className="mb-2 block lg:hidden">
+                  <BrandLogo variant="dark" className="max-w-[118px]" />
+                </div>
+                <h1 className="text-xl font-semibold hidden md:block">Bienvenido, <span className="text-erfor-green">Erwin Forero</span></h1>
+                <p className="text-sm text-slate-500 hidden md:block">Panel de Control</p>
+              </div>
+            </div>
+            
+            <div className="flex flex-1 items-center justify-end gap-3">
+              <div className="hidden md:block">
+                <ClientSelector />
+              </div>
+              <div className="hidden w-full max-w-[300px] items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 md:flex focus-within:border-erfor-green transition">
+                <input className="w-full bg-transparent text-sm outline-none" placeholder="Buscar..." />
+                <Search className="h-5 w-5 text-slate-500" />
+              </div>
+              <IconButton title="Notificaciones">
+                <Bell className="h-5 w-5" />
+              </IconButton>
+              
+              {/* Profile Dropdown */}
+              <Menu as="div" className="relative ml-3">
+                <Menu.Button className="flex items-center gap-3 rounded-md px-2 py-1 hover:bg-slate-100 transition outline-none">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-erfor-mist text-erfor-green">
+                    <UserRound className="h-5 w-5" />
+                  </span>
+                  <span className="hidden text-left text-sm md:block">
+                    <span className="block font-semibold">Erwin Forero</span>
+                    <span className="text-xs text-slate-500">Administrador</span>
+                  </span>
+                </Menu.Button>
+                <Transition
+                  as={Fragment}
+                  enter="transition ease-out duration-100"
+                  enterFrom="transform opacity-0 scale-95"
+                  enterTo="transform opacity-100 scale-100"
+                  leave="transition ease-in duration-75"
+                  leaveFrom="transform opacity-100 scale-100"
+                  leaveTo="transform opacity-0 scale-95"
+                >
+                  <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <Menu.Item>
+                      {({ active }) => (
+                        <Link href="/perfil" className={`${active ? 'bg-slate-50 text-erfor-green' : 'text-slate-700'} flex items-center px-4 py-2 text-sm`}>
+                          <User className="mr-3 h-4 w-4" />
+                          Mi Perfil
+                        </Link>
+                      )}
+                    </Menu.Item>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <Link href="/configuracion" className={`${active ? 'bg-slate-50 text-erfor-green' : 'text-slate-700'} flex items-center px-4 py-2 text-sm`}>
+                          <Settings className="mr-3 h-4 w-4" />
+                          Configuración
+                        </Link>
+                      )}
+                    </Menu.Item>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button onClick={logout} className={`${active ? 'bg-red-50 text-red-600' : 'text-slate-700'} flex w-full items-center px-4 py-2 text-sm`}>
+                          <LogOut className="mr-3 h-4 w-4" />
+                          Cerrar Sesión
+                        </button>
+                      )}
+                    </Menu.Item>
+                  </Menu.Items>
+                </Transition>
+              </Menu>
+
+            </div>
+          </div>
+        </header>
+        {children}
+      </div>
+      <AiPanel />
+    </div>
+  );
+}
+
+function IconButton({ children, title }: { children: React.ReactNode; title: string }) {
+  return (
+    <button title={title} className="flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 transition hover:border-erfor-green hover:text-erfor-green">
+      {children}
+    </button>
+  );
+}
+
+export function QuickActions() {
+  const actions: { label: string; sub: string; icon: LucideIcon }[] = [
+    { label: "Asistente IA", sub: "Preguntar ahora", icon: Bot },
+    { label: "Subir documento", sub: "Excel, PDF, Fotos", icon: Upload },
+    { label: "Nuevo proyecto", sub: "Crear expediente", icon: FolderKanban },
+    { label: "Nueva tarea", sub: "Agregar obligación", icon: Wrench }
+  ];
+  return (
+    <div className="grid min-w-[420px] grid-cols-4 overflow-hidden rounded-lg bg-erfor-green/80 text-white shadow-soft backdrop-blur">
+      {actions.map(({ label, sub, icon: Component }) => {
+        return (
+          <button key={label} className="border-r border-white/20 p-5 text-left transition last:border-r-0 hover:bg-white/10 group">
+            <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white text-erfor-green transition group-hover:scale-110">
+              <Component className="h-5 w-5" />
+            </span>
+            <span className="block text-sm font-semibold">{label}</span>
+            <span className="text-xs text-white/75">{sub}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
