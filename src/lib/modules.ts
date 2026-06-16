@@ -150,8 +150,7 @@ export const aliases: Record<string, string> = {
   "pqrs-respuestas": "requerimientos",
   "monitoreos-y-reportes": "obligaciones-ambientales",
   "fuentes-de-informacion": "documentos",
-  integraciones: "documentos",
-  configuracion: "requisitos-legales"
+  integraciones: "documentos"
 };
 
 export function getModule(slug: string) {
