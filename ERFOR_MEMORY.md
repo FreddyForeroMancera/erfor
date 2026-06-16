@@ -8,7 +8,7 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 ## 2. Stack Tecnológico
 - **Framework:** Next.js (App Router) con React.
 - **Estilos:** Tailwind CSS.
-- **Base de Datos:** Prisma ORM con SQLite (actualmente empaquetando `dev.db` para despliegues rápidos en Vercel).
+- **Base de Datos:** Prisma ORM con PostgreSQL (Vercel/Prisma Postgres).
 - **Iconografía y Componentes:** Lucide React para íconos, HeadlessUI para ventanas modales y transiciones.
 - **Validación:** Zod.
 
@@ -46,9 +46,9 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 ## 4. Estado de Despliegue
 - **Repositorio Git:** `FreddyForeroMancera/erfor`
 - **Hosting:** Vercel.
-- **Nota técnica:** Se forzó el seguimiento (tracking) de `dev.db` en el archivo `.gitignore` para permitir que Vercel tenga acceso de solo lectura a los datos simulados durante las presentaciones al cliente.
+- **Nota técnica:** La base de datos PostgreSQL se sincroniza (db push) y semilla (seed) automáticamente con datos de prueba durante el proceso de compilación (*build*) en Vercel, garantizando persistencia.
 
 ## 5. Próximos Pasos (Pendientes para Producción)
-1. **Migrar Base de Datos:** Reemplazar SQLite por una base de datos escalable en la nube (ej. PostgreSQL en Supabase o Vercel Postgres) para permitir escritura de nuevos datos sin perderlos por el entorno *Serverless*.
+1. ~~**Migrar Base de Datos:** Reemplazar SQLite por una base de datos escalable en la nube (ej. PostgreSQL en Supabase o Vercel Postgres) para permitir escritura de nuevos datos sin perderlos por el entorno *Serverless*.~~ *(¡COMPLETADO!)*
 2. **Implementar Motor IA Real:** Conectar el chat de IA Asistente con la API de OpenAI/Anthropic y conectar una base de datos vectorial para RAG (Recuperación Aumentada por Generación) de leyes colombianas.
 3. **Gestor de Archivos S3:** Configurar AWS S3 o Vercel Blob para la subida de PDFs y resoluciones ambientales.
