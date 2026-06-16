@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: "12mb"
+    },
+    outputFileTracingExcludes: {
+      "**/*": [".next/cache/**/*", ".git/**/*"]
     }
   }
 };
