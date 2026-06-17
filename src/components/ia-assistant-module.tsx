@@ -15,7 +15,7 @@ export function IaAssistantModule() {
     {
       id: "1",
       role: "assistant",
-      content: "¡Hola, Erwin! Soy tu Asistente Ambiental ERFOR. Puedo ayudarte a analizar documentos, extraer obligaciones legales, preparar informes técnicos o responder dudas normativas.\n\n¿En qué te puedo ayudar hoy?"
+      content: "¡Hola! Soy tu Asistente Ambiental. Puedo ayudarte a analizar documentos, extraer obligaciones legales, preparar informes técnicos o responder dudas normativas.\n\n¿En qué te puedo ayudar hoy?"
     }
   ]);
   const [loading, setLoading] = useState(false);
@@ -40,7 +40,7 @@ export function IaAssistantModule() {
         {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: "Entendido. Estoy analizando tu solicitud en la base de datos de expedientes y la matriz normativa de ERFOR...\n\n(Esta es una respuesta simulada para demostración. En producción, la IA procesará la orden, consultará RAG de documentos y entregará la información estructurada)."
+          content: "Entendido. Estoy analizando tu solicitud en la base de datos de expedientes y la matriz normativa...\n\n(Esta es una respuesta simulada para demostración. En producción, la IA procesará la orden, consultará RAG de documentos y entregará la información estructurada)."
         }
       ]);
       setLoading(false);
@@ -56,7 +56,7 @@ export function IaAssistantModule() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-800">IA Asistente Ambiental</h1>
-            <p className="text-sm text-slate-500">Agente experto en normativa y gestión ERFOR</p>
+            <p className="text-sm text-slate-500">Agente experto en normativa y gestión ambiental</p>
           </div>
         </div>
         <div className="hidden md:flex gap-2">

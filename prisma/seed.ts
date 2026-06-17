@@ -141,7 +141,7 @@ async function main() {
       priority: Priority.HIGH,
       riskLevel: RiskLevel.HIGH,
       responsibleUserId: erwin.id,
-      responseText: "Borrador pendiente de validación técnica por ERFOR.",
+      responseText: "Borrador pendiente de validación técnica.",
       extractedJson: JSON.stringify({
         entidad: "CAR Cundinamarca",
         radicado: "CAR-REQ-2026-0901",
@@ -260,7 +260,7 @@ async function main() {
       {
         name: "Informe Ejecutivo Ambiental",
         type: "EXECUTIVE_REPORT",
-        content: "Portada ERFOR\nResumen ejecutivo\nIndicadores\nHallazgos\nRiesgos\nRecomendaciones\nPróximas acciones"
+        content: "Portada\nResumen ejecutivo\nIndicadores\nHallazgos\nRiesgos\nRecomendaciones\nPróximas acciones"
       },
       {
         name: "Respuesta a requerimiento",
@@ -275,7 +275,7 @@ async function main() {
       userId: erwin.id,
       action: "SEED",
       entityType: "System",
-      description: "Datos iniciales ERFOR creados para operación local."
+      description: "Datos iniciales creados para operación local."
     }
   });
 }

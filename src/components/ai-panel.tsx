@@ -62,7 +62,7 @@ export function AiPanel() {
         className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-erfor-green px-5 py-3 font-semibold text-white shadow-2xl shadow-green-950/25 transition hover:scale-105 hover:bg-erfor-deep"
       >
         <Bot className="h-5 w-5" />
-        Asistente IA ERFOR
+        Asistente IA
       </button>
       {open ? (
         <section className="fixed bottom-5 right-5 z-50 flex h-[620px] w-[min(430px,calc(100vw-32px))] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xl">
@@ -72,7 +72,7 @@ export function AiPanel() {
                 <Sparkles className="h-5 w-5 text-erfor-green" />
               </span>
               <div>
-                <h2 className="font-semibold">Asistente IA ERFOR</h2>
+                <h2 className="font-semibold">Asistente IA</h2>
                 <p className="text-sm text-white/68">Especialista en cumplimiento</p>
               </div>
             </div>
