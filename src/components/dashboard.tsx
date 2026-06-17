@@ -124,7 +124,6 @@ export function Dashboard() {
               );
             })}
           </div>
-          </div>
 
           {/* Sección de Gráficos movida dentro de la columna izquierda para evitar el espacio en blanco */}
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
