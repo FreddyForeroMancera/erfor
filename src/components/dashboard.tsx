@@ -124,6 +124,61 @@ export function Dashboard() {
               );
             })}
           </div>
+          </div>
+
+          {/* Sección de Gráficos movida dentro de la columna izquierda para evitar el espacio en blanco */}
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm h-[320px] flex flex-col">
+              <h3 className="font-semibold text-slate-800 mb-4">Estado de Trámites</h3>
+              <div className="flex-1 min-h-0">
+                {loading ? (
+                  <div className="h-full flex items-center justify-center text-slate-500"><Loader2 className="animate-spin h-6 w-6" /></div>
+                ) : data?.charts.proceduresByStatus.length ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={data.charts.proceduresByStatus}
+                        dataKey="_count"
+                        nameKey="status"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                      >
+                        {data.charts.proceduresByStatus.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value, name) => [value, name]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-sm text-slate-500">Sin datos de trámites</div>
+                )}
+              </div>
+            </article>
+
+            <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm h-[320px] flex flex-col">
+              <h3 className="font-semibold text-slate-800 mb-4">Obligaciones por Categoría</h3>
+              <div className="flex-1 min-h-0">
+                {loading ? (
+                  <div className="h-full flex items-center justify-center text-slate-500"><Loader2 className="animate-spin h-6 w-6" /></div>
+                ) : data?.charts.obligationsByCategory.length ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={data.charts.obligationsByCategory}>
+                      <XAxis dataKey="category" tick={{fontSize: 10}} interval={0} />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="_count" fill="#0f7a3d" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-sm text-slate-500">Sin datos de obligaciones</div>
+                )}
+              </div>
+            </article>
+          </div>
         </div>
         
         {/* Panel lateral derecho para Actividad Reciente */}
@@ -136,7 +191,7 @@ export function Dashboard() {
               ) : data?.recentActivity.length ? (
                 data.recentActivity.map((act) => (
                   <div key={act.id} className="py-3 last:pb-0">
-                    <p className="text-sm font-medium text-slate-800">{act.action}</p>
+                    <p className="text-sm font-medium text-slate-800">{act.action === "SEED" ? "Configuración Inicial" : act.action}</p>
                     <p className="text-xs text-slate-600 mt-1 line-clamp-2">{act.description}</p>
                     <p className="text-[10px] text-slate-400 mt-2">{new Date(act.createdAt).toLocaleString("es-CO")}</p>
                   </div>
@@ -149,59 +204,6 @@ export function Dashboard() {
         </aside>
       </section>
 
-      {/* Sección de Gráficos */}
-      <section className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm h-[320px] flex flex-col">
-          <h3 className="font-semibold text-slate-800 mb-4">Estado de Trámites</h3>
-          <div className="flex-1 min-h-0">
-            {loading ? (
-              <div className="h-full flex items-center justify-center text-slate-500"><Loader2 className="animate-spin h-6 w-6" /></div>
-            ) : data?.charts.proceduresByStatus.length ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={data.charts.proceduresByStatus}
-                    dataKey="_count"
-                    nameKey="status"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                  >
-                    {data.charts.proceduresByStatus.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value, name) => [value, name]} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-sm text-slate-500">Sin datos de trámites</div>
-            )}
-          </div>
-        </article>
-
-        <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm h-[320px] flex flex-col">
-          <h3 className="font-semibold text-slate-800 mb-4">Obligaciones por Categoría</h3>
-          <div className="flex-1 min-h-0">
-            {loading ? (
-              <div className="h-full flex items-center justify-center text-slate-500"><Loader2 className="animate-spin h-6 w-6" /></div>
-            ) : data?.charts.obligationsByCategory.length ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.charts.obligationsByCategory}>
-                  <XAxis dataKey="category" tick={{fontSize: 10}} interval={0} />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="_count" fill="#0f7a3d" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-sm text-slate-500">Sin datos de obligaciones</div>
-            )}
-          </div>
-        </article>
-      </section>
     </main>
   );
 }
