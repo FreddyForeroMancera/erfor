@@ -190,7 +190,7 @@ export function Dashboard() {
               ) : data?.recentActivity.length ? (
                 data.recentActivity.map((act) => (
                   <div key={act.id} className="py-3 last:pb-0">
-                    <p className="text-sm font-medium text-slate-800">{act.action === "SEED" ? "Configuración Inicial" : act.action}</p>
+                    <p className="text-sm font-medium text-slate-800">{act.action}</p>
                     <p className="text-xs text-slate-600 mt-1 line-clamp-2">{act.description}</p>
                     <p className="text-[10px] text-slate-400 mt-2">{new Date(act.createdAt).toLocaleString("es-CO")}</p>
                   </div>

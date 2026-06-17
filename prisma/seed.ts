@@ -273,7 +273,7 @@ async function main() {
   await prisma.activityLog.create({
     data: {
       userId: erwin.id,
-      action: "SEED",
+      action: "Configuración Inicial",
       entityType: "System",
       description: "Datos iniciales creados para operación local."
     }
