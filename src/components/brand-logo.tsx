@@ -7,13 +7,21 @@ type BrandLogoProps = {
 };
 
 export function BrandLogo({ variant, className }: BrandLogoProps) {
-  const src = variant === "light" ? "/brand/ERFOR_logo_blanco.png" : "/brand/ERFOR_logo_negro.png";
+  const src = variant === "light" ? "/brand/agroambiental_logo_blanco.png" : "/brand/agroambiental_logo_negro.png";
   return (
-    <img
-      src={src}
-      alt="ERFOR"
-      className={cn("block h-auto w-full object-contain", className)}
-      draggable={false}
-    />
+    <div className={cn("flex items-center gap-3", className)}>
+      <img
+        src={src}
+        alt="Logo"
+        className="block max-h-[42px] w-auto object-contain shrink-0"
+        draggable={false}
+      />
+      <span className={cn(
+        "font-bold tracking-tight text-[1.35rem] leading-none",
+        variant === "light" ? "text-white" : "text-[#062c28]"
+      )}>
+        AgroAmbiental
+      </span>
+    </div>
   );
 }

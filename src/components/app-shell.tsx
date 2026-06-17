@@ -45,8 +45,6 @@ import { useClient } from "@/lib/client-context";
 const nav = [
   { label: "Panel Maestro", href: "/dashboard", icon: Gauge },
   { label: "Clientes y Proyectos", href: "/clientes-y-proyectos", icon: UsersRound },
-  { label: "Predios", href: "/predios", icon: Map },
-  { label: "Expedientes Ambientales", href: "/expedientes-ambientales", icon: FolderKanban },
   { label: "Requisitos Legales", href: "/requisitos-legales", icon: ShieldCheck },
   { label: "CAR Cundinamarca", href: "/car-cundinamarca", icon: Landmark },
   { label: "Trámites y Permisos", href: "/tramites-y-permisos", icon: FileCheck2 },
@@ -103,7 +101,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const SidebarContent = () => (
     <>
       <div className="p-8">
-        <BrandLogo variant="light" className="max-w-[170px]" />
+        <BrandLogo variant="light" className="w-max" />
         <p className="mt-3 max-w-[210px] text-sm leading-5 text-white/78">Plataforma Integral de Asesoría Ambiental</p>
       </div>
       <nav className="erfor-scroll flex-1 overflow-y-auto px-2 pb-6">
@@ -127,7 +125,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         })}
       </nav>
       <div className="p-7">
-        <BrandLogo variant="light" className="max-w-[150px]" />
+        <BrandLogo variant="light" className="w-max" />
         <p className="mt-2 text-sm text-white/70">Asesoría Ambiental</p>
         <p className="mt-1 text-xs text-white/48">Gestión · Cumplimiento · Sostenibilidad</p>
       </div>
@@ -204,7 +202,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
               <div>
                 <div className="mb-2 block lg:hidden">
-                  <BrandLogo variant="dark" className="max-w-[118px]" />
+                  <BrandLogo variant="dark" className="w-max" />
                 </div>
                 <h1 className="text-xl font-semibold hidden md:block">Bienvenido, <span className="text-erfor-green">Erwin Forero</span></h1>
                 <p className="text-sm text-slate-500 hidden md:block">Panel de Control</p>
@@ -244,44 +242,49 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </div>
                     <div className="max-h-96 overflow-y-auto divide-y divide-slate-100">
                       
-                      <div className="p-4 hover:bg-slate-50 transition cursor-pointer">
-                        <div className="flex gap-3">
-                          <div className="mt-0.5 h-8 w-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                            <AlertTriangle className="h-4 w-4 text-red-600" />
+                      {pathname.startsWith("/expedientes/") ? (
+                        <>
+                          <div className="p-4 hover:bg-slate-50 transition cursor-pointer">
+                            <div className="flex gap-3">
+                              <div className="mt-0.5 h-8 w-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                                <AlertTriangle className="h-4 w-4 text-red-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-slate-800">Alerta Crítica: Vencimiento de Obligación</p>
+                                <p className="text-xs text-slate-600 mt-1 line-clamp-2">Una de las obligaciones (Compensación) de este expediente vence en 15 días.</p>
+                                <p className="text-[10px] font-medium text-slate-400 mt-2">Hace 2 horas</p>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-semibold text-slate-800">Alerta Crítica: Vencimiento ANLA</p>
-                            <p className="text-xs text-slate-600 mt-1 line-clamp-2">La Licencia Ambiental del Lote Industrial Norte vence en 15 días. Requiere acción inmediata para evitar multas.</p>
-                            <p className="text-[10px] font-medium text-slate-400 mt-2">Hace 2 horas</p>
+                          <div className="p-4 hover:bg-slate-50 transition cursor-pointer">
+                            <div className="flex gap-3">
+                              <div className="mt-0.5 h-8 w-8 rounded-full bg-sky-100 flex items-center justify-center shrink-0">
+                                <FileCheck2 className="h-4 w-4 text-sky-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-slate-800">Recordatorio PUEAA</p>
+                                <p className="text-xs text-slate-600 mt-1 line-clamp-2">Verifica la fecha de aprobación del PUEAA para este expediente con la CAR.</p>
+                                <p className="text-[10px] font-medium text-slate-400 mt-2">Ayer</p>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-
-                      <div className="p-4 hover:bg-slate-50 transition cursor-pointer">
-                        <div className="flex gap-3">
-                          <div className="mt-0.5 h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                            <Bot className="h-4 w-4 text-amber-600" />
+                        </>
+                      ) : (
+                        <>
+                          <div className="p-4 hover:bg-slate-50 transition cursor-pointer">
+                            <div className="flex gap-3">
+                              <div className="mt-0.5 h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                                <FolderKanban className="h-4 w-4 text-slate-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-slate-800">Notificaciones Generales</p>
+                                <p className="text-xs text-slate-600 mt-1 line-clamp-2">Navega a un Expediente específico para ver sus alertas correspondientes.</p>
+                                <p className="text-[10px] font-medium text-slate-400 mt-2">Ahora</p>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-semibold text-slate-800">Insight IA: Consumo de Agua</p>
-                            <p className="text-xs text-slate-600 mt-1 line-clamp-2">He detectado un aumento del 15% en el consumo de agua en Hacienda La Esperanza comparado con el mes anterior. ¿Deseas que analice las causas?</p>
-                            <p className="text-[10px] font-medium text-slate-400 mt-2">Hace 5 horas</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="p-4 hover:bg-slate-50 transition cursor-pointer">
-                        <div className="flex gap-3">
-                          <div className="mt-0.5 h-8 w-8 rounded-full bg-sky-100 flex items-center justify-center shrink-0">
-                            <FileCheck2 className="h-4 w-4 text-sky-600" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-slate-800">Hallazgo: Auditoría Interna</p>
-                            <p className="text-xs text-slate-600 mt-1 line-clamp-2">Se registró un nuevo hallazgo (No Conformidad Menor) en la auditoría de Reserva El Paraíso relacionado con la matriz de residuos.</p>
-                            <p className="text-[10px] font-medium text-slate-400 mt-2">Ayer</p>
-                          </div>
-                        </div>
-                      </div>
+                        </>
+                      )}
 
                     </div>
                     <div className="bg-slate-50 border-t border-slate-200 p-2 text-center">

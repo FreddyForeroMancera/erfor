@@ -68,23 +68,16 @@ export function Dashboard() {
         ];
       }
       return [
-        { label: "Clientes Activos", value: data?.kpis.clients || 0, sub: "Cartera gestionada", icon: UsersRound, color: "text-erfor-green" },
-        { label: "Predios Activos", value: data?.kpis.projects || 0, sub: "Áreas bajo manejo", icon: Map, color: "text-erfor-green" },
-        { label: "Trámites en Curso", value: data?.kpis.procedures || 0, sub: "Ante autoridades", icon: FileCheck2, color: "text-sky-600" },
-        { label: "Alertas Críticas", value: data?.kpis.alerts || 0, sub: "Requieren atención inmediata", icon: AlertTriangle, color: "text-red-600" },
+        { label: "En Proceso", value: data?.kpis.enProceso || 0, sub: "Preparación y Revisión", icon: FolderKanban, color: "text-erfor-green" },
+        { label: "En Trámite", value: data?.kpis.enTramite || 0, sub: "Ante autoridades", icon: FileCheck2, color: "text-sky-600" },
+        { label: "Otorgado", value: data?.kpis.otorgado || 0, sub: "Permisos y Licencias", icon: FileArchive, color: "text-amber-500" },
+        { label: "En Seguimiento", value: data?.kpis.enSeguimiento || 0, sub: "Vigilancia de Obligaciones", icon: CalendarDays, color: "text-red-600" },
       ];
     },
     [data, selectedClientId]
   );
 
-  const obligations = (data?.charts.obligationsByCategory || []).map((item) => ({ name: item.category, value: item._count }));
-  const procedures = (data?.charts.proceduresByStatus || []).map((item) => ({ name: item.status.replaceAll("_", " "), value: item._count }));
-  const filesByAuth = (data?.charts.filesByAuthority || []).map((item) => ({ name: item.authority || "ND", value: item._count }));
-  
-  const complianceData = [
-    { name: "Completadas", value: data?.kpis.completedObligations || 0 },
-    { name: "Pendientes", value: data?.kpis.obligations || 0 }
-  ];
+
 
   return (
     <main className="p-4 lg:p-6 xl:p-8">
@@ -105,7 +98,7 @@ export function Dashboard() {
           </div>
 
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {loading ? Array.from({ length: 8 }).map((_, i) => (
+            {loading ? Array.from({ length: 4 }).map((_, i) => (
               <article key={i} className="animate-pulse rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex items-start justify-between">
                   <div className="w-full">
@@ -131,129 +124,84 @@ export function Dashboard() {
               );
             })}
           </div>
-
-          <div className="mt-4 grid gap-4 xl:grid-cols-[1fr_1.25fr_1fr]">
-            <ChartCard title={selectedClientId ? "Cumplimiento del Predio" : "Trámites por Autoridad"}>
-              <ResponsiveContainer width="100%" height={210}>
-                {selectedClientId ? (
-                  <PieChart>
-                    <Pie data={complianceData.some(d => d.value > 0) ? complianceData : [{ name: "Sin datos", value: 1 }]} innerRadius={58} outerRadius={86} dataKey="value">
-                      <Cell fill={colors[0]} />
-                      <Cell fill={colors[3]} />
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                ) : (
-                  <PieChart>
-                    <Pie data={filesByAuth.length ? filesByAuth : [{ name: "Sin datos", value: 1 }]} innerRadius={58} outerRadius={86} dataKey="value">
-                      {(filesByAuth.length ? filesByAuth : [{ name: "Sin datos" }]).map((_, index) => <Cell key={index} fill={colors[index % colors.length]} />)}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                )}
-              </ResponsiveContainer>
-            </ChartCard>
-            <ChartCard title="Obligaciones por Categoría">
-              <ResponsiveContainer width="100%" height={210}>
-                <BarChart data={obligations.length ? obligations : [{ name: "Sin datos", value: 0 }]}>
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#0f7a3d" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartCard>
-            <ChartCard title="Trámites por Estado">
-              <ResponsiveContainer width="100%" height={210}>
-                <PieChart>
-                  <Pie data={procedures.length ? procedures : [{ name: "Sin datos", value: 1 }]} innerRadius={58} outerRadius={86} dataKey="value">
-                    {(procedures.length ? procedures : [{ name: "Sin datos" }]).map((_, index) => <Cell key={index} fill={colors[index % colors.length]} />)}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </ChartCard>
-          </div>
-
-          <section className="mt-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 className="font-semibold">Integraciones y Fuentes de Información</h3>
-            <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-              {loading ? Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="animate-pulse rounded-md border border-slate-200 p-4">
-                  <div className="mb-3 h-8 w-8 rounded bg-slate-200"></div>
-                  <div className="mb-2 h-4 w-3/4 rounded bg-slate-200"></div>
-                  <div className="mb-4 h-3 w-1/2 rounded bg-slate-200"></div>
-                  <div className="h-8 w-full rounded bg-slate-200"></div>
-                </div>
-              )) : (data?.integrations || []).map((item) => (
-                <div key={item.id} className="rounded-md border border-slate-200 p-4 transition hover:border-erfor-green hover:shadow-sm">
-                  <DatabaseIcon type={item.type} />
-                  <p className="mt-3 text-sm font-semibold">{item.name}</p>
-                  <p className="mt-2 text-xs text-slate-500">{typeTranslations[item.type] || item.type.replaceAll("_", " ")}</p>
-                  <p className="mt-4 rounded-md bg-erfor-mist py-2 text-center text-xs font-semibold text-erfor-green">{statusTranslations[item.status] || item.status}</p>
-                </div>
-              ))}
+        </div>
+        
+        {/* Panel lateral derecho para Actividad Reciente */}
+        <aside className="space-y-4">
+          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <h3 className="mb-4 font-semibold text-slate-800">Actividad Reciente</h3>
+            <div className="divide-y divide-slate-100">
+              {loading ? (
+                <div className="py-8 text-center text-slate-500 text-sm">Cargando actividad...</div>
+              ) : data?.recentActivity.length ? (
+                data.recentActivity.map((act) => (
+                  <div key={act.id} className="py-3 last:pb-0">
+                    <p className="text-sm font-medium text-slate-800">{act.action}</p>
+                    <p className="text-xs text-slate-600 mt-1 line-clamp-2">{act.description}</p>
+                    <p className="text-[10px] text-slate-400 mt-2">{new Date(act.createdAt).toLocaleString("es-CO")}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-slate-500 text-sm">No hay actividad reciente</div>
+              )}
             </div>
           </section>
-        </div>
-
-        <aside className="space-y-4">
-          <SideList title="Tareas Próximas" loading={loading} items={(data?.tasks || []).map((item) => ({ title: item.title, sub: item.client?.name || "ERFOR", date: item.dueDate?.slice(0, 10) }))} />
-          <SideList title="Alertas Recientes" loading={loading} items={(data?.alerts || []).map((item) => ({ title: item.title, sub: item.description || item.severity, date: item.dueDate?.slice(0, 10) }))} />
-          <SideList title="Actividad Reciente" loading={loading} items={(data?.recentActivity || []).map((item) => ({ title: item.action, sub: item.description, date: new Date(item.createdAt).toLocaleDateString("es-CO") }))} />
-          <div className="rounded-lg bg-erfor-green p-6 text-white shadow-soft">
-            <h3 className="font-semibold">¿Necesitas ayuda?</h3>
-            <p className="mt-2 text-sm text-white/82">Nuestro asistente IA puede ayudarte con consultas ambientales y normativas.</p>
-          </div>
         </aside>
+      </section>
+
+      {/* Sección de Gráficos */}
+      <section className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm h-[320px] flex flex-col">
+          <h3 className="font-semibold text-slate-800 mb-4">Estado de Trámites</h3>
+          <div className="flex-1 min-h-0">
+            {loading ? (
+              <div className="h-full flex items-center justify-center text-slate-500"><Loader2 className="animate-spin h-6 w-6" /></div>
+            ) : data?.charts.proceduresByStatus.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data.charts.proceduresByStatus}
+                    dataKey="_count"
+                    nameKey="status"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                  >
+                    {data.charts.proceduresByStatus.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value, name) => [value, name]} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-sm text-slate-500">Sin datos de trámites</div>
+            )}
+          </div>
+        </article>
+
+        <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm h-[320px] flex flex-col">
+          <h3 className="font-semibold text-slate-800 mb-4">Obligaciones por Categoría</h3>
+          <div className="flex-1 min-h-0">
+            {loading ? (
+              <div className="h-full flex items-center justify-center text-slate-500"><Loader2 className="animate-spin h-6 w-6" /></div>
+            ) : data?.charts.obligationsByCategory.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.charts.obligationsByCategory}>
+                  <XAxis dataKey="category" tick={{fontSize: 10}} interval={0} />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="_count" fill="#0f7a3d" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-sm text-slate-500">Sin datos de obligaciones</div>
+            )}
+          </div>
+        </article>
       </section>
     </main>
   );
-}
-
-function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <h3 className="mb-4 font-semibold">{title}</h3>
-      {children}
-    </section>
-  );
-}
-
-function SideList({ title, items, loading }: { title: string; items: { title: string; sub: string; date?: string }[], loading?: boolean }) {
-  return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-semibold">{title}</h3>
-        <span className="cursor-pointer text-xs font-semibold text-erfor-green hover:underline">Ver todas</span>
-      </div>
-      <div className="divide-y divide-slate-100">
-        {loading ? Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="animate-pulse py-3 text-sm">
-            <div className="mb-2 h-4 w-3/4 rounded bg-slate-200"></div>
-            <div className="h-3 w-1/2 rounded bg-slate-200"></div>
-          </div>
-        )) : items.length ? items.map((item, index) => (
-          <div key={`${item.title}-${index}`} className="group py-3 text-sm transition hover:bg-slate-50">
-            <div className="flex justify-between gap-3">
-              <p className="font-semibold transition group-hover:text-erfor-green">{item.title}</p>
-              <span className="shrink-0 text-xs text-slate-500">{item.date || ""}</span>
-            </div>
-            <p className="mt-1 text-xs text-slate-500">{item.sub}</p>
-          </div>
-        )) : <p className="py-4 text-sm text-slate-500">Sin registros todavía.</p>}
-      </div>
-    </section>
-  );
-}
-
-function DatabaseIcon({ type }: { type: string }) {
-  const iconClass = "h-8 w-8 text-erfor-green";
-  if (type.includes("EXCEL")) return <FileBarChart className={iconClass} />;
-  if (type.includes("IMAGE")) return <FileArchive className={iconClass} />;
-  return <DatabaseZap className={iconClass} />;
-}
-
-function DatabaseZap(props: { className?: string }) {
-  return <Leaf {...props} />;
 }

@@ -184,6 +184,7 @@ model EnvironmentalFile {
   internalCode      String
   officialCode      String?
   authority         String
+  carRegional       String?
   type              String
   status            WorkStatus @default(PREPARATION)
   priority          Priority @default(MEDIUM)
@@ -383,6 +384,9 @@ model Document {
   uploadedBy          String?
   source              String?
   observations        String?
+  expirationDate      DateTime?
+  oneDriveId          String?   @unique
+  oneDriveSyncStatus  String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   client              Client?  @relation(fields: [clientId], references: [id])

@@ -48,7 +48,7 @@ export default function LoginPage() {
         <section className="relative flex flex-col justify-between overflow-hidden p-8 lg:p-14">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(47,168,79,.26),transparent_34%),linear-gradient(135deg,rgba(6,44,40,.96),rgba(4,20,24,.98))]" />
           <div className="relative">
-            <BrandLogo variant="light" className="max-w-[210px]" />
+            <BrandLogo variant="light" className="w-max" />
             <p className="mt-3 max-w-sm text-lg text-white/82">Plataforma Integral de Asesoría Ambiental</p>
           </div>
           <div className="relative max-w-xl">
@@ -56,7 +56,7 @@ export default function LoginPage() {
               <Leaf className="h-4 w-4 text-erfor-lime" />
               Cumplimiento, sostenibilidad y confianza
             </div>
-            <h1 className="text-4xl font-semibold leading-tight lg:text-6xl">Control ambiental empresarial para ERFOR.</h1>
+            <h1 className="text-4xl font-semibold leading-tight lg:text-6xl">Control ambiental empresarial para Agroambiental.</h1>
             <p className="mt-5 text-lg leading-8 text-white/72">
               Administra clientes, expedientes, obligaciones, documentos, alertas, reportes e IA contextual desde una sola operación.
             </p>
@@ -67,10 +67,10 @@ export default function LoginPage() {
         <section className="flex items-center justify-center bg-[#f6f8f7] p-6 text-erfor-ink">
           <form onSubmit={submit} className="w-full max-w-md rounded-lg border border-black/8 bg-white p-8 shadow-soft">
             <div className="mb-8">
-              <BrandLogo variant="dark" className="mb-6 max-w-[150px]" />
+              <BrandLogo variant="dark" className="mb-6 w-max" />
               <p className="text-sm font-semibold text-erfor-green">Bienvenido</p>
               <h2 className="mt-2 text-3xl font-semibold">Ingreso de Erwin Forero</h2>
-              <p className="mt-2 text-sm text-slate-500">Acceso seguro a la plataforma ERFOR.</p>
+              <p className="mt-2 text-sm text-slate-500">Acceso seguro a la plataforma Agroambiental.</p>
             </div>
             <label className="mb-4 block">
               <span className="mb-2 block text-sm font-medium">Correo</span>

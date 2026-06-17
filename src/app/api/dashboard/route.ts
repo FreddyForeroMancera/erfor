@@ -26,6 +26,10 @@ export async function GET(request: Request) {
       reports,
       visits,
       tasks,
+      enProceso,
+      enTramite,
+      otorgado,
+      enSeguimiento,
       recentActivity,
       integrations
     ] = await Promise.all([
@@ -42,6 +46,10 @@ export async function GET(request: Request) {
       prisma.report.count({ where: baseWhere }),
       prisma.visit.count({ where: baseWhere }),
       prisma.task.findMany({ where: baseWhere, orderBy: { dueDate: "asc" }, take: 6, include: { client: true } }),
+      prisma.procedure.count({ where: { ...baseWhere, status: { in: ["PREPARATION", "DRAFT", "IN_REVIEW"] } } }),
+      prisma.procedure.count({ where: { ...baseWhere, status: { in: ["FILED", "EVALUATION", "REQUIREMENT", "RESPONDED", "VISIT", "TECHNICAL_CONCEPT"] } } }),
+      prisma.procedure.count({ where: { ...baseWhere, status: "APPROVED" } }),
+      prisma.environmentalObligation.count({ where: { ...baseWhere, status: { not: "COMPLETED" } } }),
       // recentActivity no tiene clientId, pero podríamos filtrar si tuviera, 
       // por ahora mostramos toda la actividad o la general
       prisma.activityLog.findMany({ orderBy: { createdAt: "desc" }, take: 8 }),
@@ -98,7 +106,11 @@ export async function GET(request: Request) {
         documents, 
         alerts: alerts || 3, 
         reports, 
-        visits: visits || 5 
+        visits: visits || 5,
+        enProceso,
+        enTramite,
+        otorgado,
+        enSeguimiento
       },
       charts: { obligationsByCategory, proceduresByStatus, filesByAuthority },
       tasks: tasks.length ? tasks : simulatedTasks,

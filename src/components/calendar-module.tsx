@@ -17,7 +17,7 @@ type CalendarEvent = {
   priority: string;
 };
 
-export function CalendarModule() {
+export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded?: boolean }) {
   const { selectedClientId } = useClient();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -28,7 +28,11 @@ export function CalendarModule() {
     async function loadEvents() {
       setLoading(true);
       try {
-        const query = selectedClientId ? `?clientId=${selectedClientId}` : "";
+        const queryParams = new URLSearchParams();
+        if (selectedClientId) queryParams.set("clientId", selectedClientId);
+        if (fileId) queryParams.set("fileId", fileId);
+        
+        const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
         const res = await fetch(`/api/calendar${query}`);
         if (!res.ok) throw new Error("Error al cargar eventos");
         const data = await res.json();
@@ -40,7 +44,7 @@ export function CalendarModule() {
       }
     }
     loadEvents();
-  }, [selectedClientId, currentDate]);
+  }, [selectedClientId, fileId, currentDate]);
 
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
@@ -71,30 +75,51 @@ export function CalendarModule() {
   };
 
   return (
-    <div className="p-4 lg:p-6 xl:p-8 flex flex-col h-[calc(100vh-4rem)]">
-      <div className="flex items-center justify-between mb-6 flex-shrink-0">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <CalendarIcon className="h-6 w-6 text-erfor-green" />
-            Calendario y Alertas
-          </h1>
-          <p className="text-slate-500 text-sm mt-1">Visión consolidada de vencimientos, visitas y compromisos</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={today} className="px-3 py-1.5 text-sm font-medium border border-slate-200 rounded-md hover:bg-slate-50 transition-colors">Hoy</button>
-          <div className="flex items-center border border-slate-200 rounded-md overflow-hidden">
-            <button onClick={prevMonth} className="p-1.5 hover:bg-slate-50 transition-colors"><ChevronLeft className="h-5 w-5 text-slate-600" /></button>
-            <span className="px-4 py-1.5 font-medium text-slate-700 min-w-[140px] text-center capitalize">
-              {format(currentDate, "MMMM yyyy", { locale: es })}
-            </span>
-            <button onClick={nextMonth} className="p-1.5 hover:bg-slate-50 transition-colors"><ChevronRight className="h-5 w-5 text-slate-600" /></button>
+    <div className={`flex flex-col ${embedded ? "h-[600px]" : "p-4 lg:p-6 xl:p-8 h-[calc(100vh-4rem)]"}`}>
+      {!embedded && (
+        <div className="flex items-center justify-between mb-6 flex-shrink-0">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+              <CalendarIcon className="h-6 w-6 text-erfor-green" />
+              Calendario y Alertas
+            </h1>
+            <p className="text-slate-500 text-sm mt-1">Visión consolidada de vencimientos, visitas y compromisos</p>
           </div>
-          <button className="ml-2 flex items-center gap-2 bg-erfor-green text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition-colors shadow-sm">
-            <Plus className="h-4 w-4" />
-            Nuevo Evento
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={today} className="px-3 py-1.5 text-sm font-medium border border-slate-200 rounded-md hover:bg-slate-50 transition-colors">Hoy</button>
+            <div className="flex items-center border border-slate-200 rounded-md overflow-hidden">
+              <button onClick={prevMonth} className="p-1.5 hover:bg-slate-50 transition-colors"><ChevronLeft className="h-5 w-5 text-slate-600" /></button>
+              <span className="px-4 py-1.5 font-medium text-slate-700 min-w-[140px] text-center capitalize">
+                {format(currentDate, "MMMM yyyy", { locale: es })}
+              </span>
+              <button onClick={nextMonth} className="p-1.5 hover:bg-slate-50 transition-colors"><ChevronRight className="h-5 w-5 text-slate-600" /></button>
+            </div>
+            <button className="ml-2 flex items-center gap-2 bg-erfor-green text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition-colors shadow-sm">
+              <Plus className="h-4 w-4" />
+              Nuevo Evento
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+
+      {embedded && (
+        <div className="flex items-center justify-between mb-4 flex-shrink-0">
+          <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+            <CalendarIcon className="h-5 w-5 text-erfor-green" />
+            Calendario del Expediente
+          </h3>
+          <div className="flex items-center gap-2">
+            <button onClick={today} className="px-2 py-1 text-xs font-medium border border-slate-200 rounded-md hover:bg-slate-50 transition-colors">Hoy</button>
+            <div className="flex items-center border border-slate-200 rounded-md overflow-hidden text-sm">
+              <button onClick={prevMonth} className="p-1 hover:bg-slate-50 transition-colors"><ChevronLeft className="h-4 w-4 text-slate-600" /></button>
+              <span className="px-3 py-1 font-medium text-slate-700 min-w-[110px] text-center capitalize">
+                {format(currentDate, "MMM yyyy", { locale: es })}
+              </span>
+              <button onClick={nextMonth} className="p-1 hover:bg-slate-50 transition-colors"><ChevronRight className="h-4 w-4 text-slate-600" /></button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col overflow-hidden relative">
         {loading && (

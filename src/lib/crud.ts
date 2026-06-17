@@ -268,20 +268,20 @@ export const schemas = {
 };
 
 export const resourceMap = {
-  clients: { delegate: prisma.client, schema: schemas.clients, search: ["name", "documentNumber", "city"] },
-  projects: { delegate: prisma.project, schema: schemas.projects, search: ["name", "type", "city", "environmentalAuthority"] },
-  properties: { delegate: prisma.property, schema: schemas.properties, search: ["name", "cadastralCode", "city"] },
-  environmentalFiles: { delegate: prisma.environmentalFile, schema: schemas.environmentalFiles, search: ["internalCode", "officialCode", "authority", "type"] },
-  procedures: { delegate: prisma.procedure, schema: schemas.procedures, search: ["type", "authority", "filingNumber"] },
-  permits: { delegate: prisma.permit, schema: schemas.permits, search: ["type", "authority", "status"] },
-  obligations: { delegate: prisma.environmentalObligation, schema: schemas.obligations, search: ["title", "category", "status"] },
-  requirements: { delegate: prisma.requirement, schema: schemas.requirements, search: ["subject", "authority", "filingNumber"] },
-  visits: { delegate: prisma.visit, schema: schemas.visits, search: ["type", "objective", "findings"] },
-  documents: { delegate: prisma.document, schema: schemas.documents, search: ["name", "category", "extractedText", "tags"] },
-  tasks: { delegate: prisma.task, schema: schemas.tasks, search: ["title", "description"] },
-  alerts: { delegate: prisma.alert, schema: schemas.alerts, search: ["title", "description", "type"] },
-  legalRequirements: { delegate: prisma.legalRequirement, schema: schemas.legalRequirements, search: ["title", "category", "authority"] },
-  reports: { delegate: prisma.report, schema: schemas.reports, search: ["title", "type"] }
+  clients: { delegate: prisma.client, schema: schemas.clients, search: ["name", "documentNumber"] },
+  projects: { delegate: prisma.project, schema: schemas.projects, search: ["name", "client.name"] },
+  properties: { delegate: prisma.property, schema: schemas.properties, search: ["client.name"] },
+  environmentalFiles: { delegate: prisma.environmentalFile, schema: schemas.environmentalFiles, search: ["internalCode", "officialCode", "client.name"] },
+  procedures: { delegate: prisma.procedure, schema: schemas.procedures, search: ["environmentalFile.internalCode", "client.name", "filingNumber"] },
+  permits: { delegate: prisma.permit, schema: schemas.permits, search: ["client.name"] },
+  obligations: { delegate: prisma.environmentalObligation, schema: schemas.obligations, search: ["title", "client.name"] },
+  requirements: { delegate: prisma.requirement, schema: schemas.requirements, search: ["environmentalFile.internalCode", "client.name", "filingNumber"] },
+  visits: { delegate: prisma.visit, schema: schemas.visits, search: ["environmentalFile.internalCode", "client.name"] },
+  documents: { delegate: prisma.document, schema: schemas.documents, search: ["name", "client.name", "environmentalFile.internalCode"] },
+  tasks: { delegate: prisma.task, schema: schemas.tasks, search: ["title", "client.name", "environmentalFile.internalCode"] },
+  alerts: { delegate: prisma.alert, schema: schemas.alerts, search: ["title", "client.name", "environmentalFile.internalCode"] },
+  legalRequirements: { delegate: prisma.legalRequirement, schema: schemas.legalRequirements, search: ["title"] },
+  reports: { delegate: prisma.report, schema: schemas.reports, search: ["title", "client.name"] }
 } as Record<string, { delegate: PrismaDelegate; schema: z.ZodTypeAny; search: string[] }>;
 
 export type ResourceName = keyof typeof resourceMap;
@@ -300,9 +300,13 @@ export function buildWhere(searchParams: URLSearchParams, searchFields: string[]
     where[key] = value;
   }
   if (q) {
-    where.OR = searchFields.map((field) => ({
-      [field]: { contains: q }
-    }));
+    where.OR = searchFields.map((field) => {
+      if (field.includes(".")) {
+        const [rel, child] = field.split(".");
+        return { [rel]: { [child]: { contains: q, mode: "insensitive" } } };
+      }
+      return { [field]: { contains: q, mode: "insensitive" } };
+    });
   }
   return where;
 }

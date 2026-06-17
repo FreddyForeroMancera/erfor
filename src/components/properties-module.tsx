@@ -7,8 +7,9 @@ import toast from "react-hot-toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-export function PropertiesModule() {
+export function PropertiesModule({ clientId }: { clientId?: string }) {
   const { selectedClientId } = useClient();
+  const effectiveClientId = clientId || selectedClientId;
   const router = useRouter();
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +35,7 @@ export function PropertiesModule() {
       setLoading(true);
       try {
         const query = new URLSearchParams();
-        if (selectedClientId) query.set("clientId", selectedClientId);
+        if (effectiveClientId) query.set("clientId", effectiveClientId);
         if (search) query.set("q", search);
         
         const res = await fetch(`/api/properties?${query.toString()}`);
@@ -49,7 +50,7 @@ export function PropertiesModule() {
     }
     const timer = setTimeout(load, 300);
     return () => clearTimeout(timer);
-  }, [selectedClientId, search]);
+  }, [effectiveClientId, search]);
 
   return (
     <div className="p-4 lg:p-6 xl:p-8">

@@ -4,8 +4,8 @@ import { ClientProvider } from "@/lib/client-context";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ERFOR — Plataforma Integral de Asesoría Ambiental",
-  description: "Gestión ambiental, trámites, expedientes, cumplimiento, documentos e IA para ERFOR."
+  title: "Agroambiental — Plataforma Integral de Asesoría Ambiental",
+  description: "Gestión ambiental, trámites, expedientes, cumplimiento, documentos e IA para Agroambiental."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

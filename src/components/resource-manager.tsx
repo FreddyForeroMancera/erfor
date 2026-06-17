@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Download, FileText, Plus, RefreshCw, Search, Upload, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import type { Field, ModuleConfig } from "@/lib/modules";
+import Link from "next/link";
 import toast from "react-hot-toast";
 import {
   useReactTable,
@@ -131,10 +132,12 @@ export function ResourceManager({ config }: { config: ModuleConfig }) {
         cell: (info) => {
           const row = info.row.original;
           return typeof row.fileUrl === "string" ? (
-            <a href={row.fileUrl} className="inline-flex items-center gap-1 text-erfor-green hover:underline">
+            <a href={row.fileUrl as string} className="inline-flex items-center gap-1 text-erfor-green hover:underline">
               <Download className="h-4 w-4" />
               Descargar
             </a>
+          ) : config.resource === "clients" ? (
+            <Link href={`/clientes/${row.id}`} className="text-slate-400 hover:text-erfor-green transition">Detalle</Link>
           ) : (
             <button className="text-slate-400 hover:text-erfor-green transition">Detalle</button>
           );
