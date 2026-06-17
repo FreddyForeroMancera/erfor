@@ -81,7 +81,7 @@ export function Dashboard() {
 
   return (
     <main className="p-4 lg:p-6 xl:p-8">
-      <section className="grid gap-4 xl:grid-cols-[1fr_380px]">
+      <section className="flex flex-col gap-4">
         <div>
           <div className="relative overflow-hidden rounded-lg bg-erfor-ink p-7 text-white shadow-soft">
             <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,29,34,.98),rgba(7,29,34,.72)),url('https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1600&auto=format&fit=crop')]" />
@@ -180,27 +180,7 @@ export function Dashboard() {
           </div>
         </div>
         
-        {/* Panel lateral derecho para Actividad Reciente */}
-        <aside className="space-y-4">
-          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 className="mb-4 font-semibold text-slate-800">Actividad Reciente</h3>
-            <div className="divide-y divide-slate-100">
-              {loading ? (
-                <div className="py-8 text-center text-slate-500 text-sm">Cargando actividad...</div>
-              ) : data?.recentActivity.length ? (
-                data.recentActivity.map((act) => (
-                  <div key={act.id} className="py-3 last:pb-0">
-                    <p className="text-sm font-medium text-slate-800">{act.action}</p>
-                    <p className="text-xs text-slate-600 mt-1 line-clamp-2">{act.description}</p>
-                    <p className="text-[10px] text-slate-400 mt-2">{new Date(act.createdAt).toLocaleString("es-CO")}</p>
-                  </div>
-                ))
-              ) : (
-                <div className="py-8 text-center text-slate-500 text-sm">No hay actividad reciente</div>
-              )}
-            </div>
-          </section>
-        </aside>
+
       </section>
 
     </main>

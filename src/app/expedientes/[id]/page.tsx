@@ -184,7 +184,7 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
               { title: "Visita de inspección ocular programada", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-07-15" }
             ]} />
             <SideList title="Alertas" href="/calendario-y-alertas" items={(dashboardData?.alerts || []).map((item: any) => ({ title: item.title, sub: item.description || item.severity, date: item.dueDate?.slice(0, 10) }))} />
-            <SideList title="Actividad Reciente" href="#" items={(dashboardData?.recentActivity || []).map((item: any) => ({ title: item.action, sub: item.description, date: new Date(item.createdAt).toLocaleDateString("es-CO") }))} />
+
           </aside>
         </section>
 
