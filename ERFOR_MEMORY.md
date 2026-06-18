@@ -43,6 +43,12 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 ### G. Configuración del Sistema
 - Pantalla de preferencias estilo SaaS dividida en pestañas laterales: Perfil y Empresa, Notificaciones, Asistente IA (privacidad de datos), Integraciones (VITAL, SINA, IDEAM) y Usuarios.
 
+### H. Gestión de Expedientes y Documentos
+- Vista detallada de Expedientes en diseño descendente fluido (ancho completo).
+- Integración de módulos de **Obligaciones**, **Calendario Embebido** y **Módulo de Registro Fotográfico**.
+- Generación y almacenamiento local de recursos fotográficos (imágenes de Colombia creadas por IA) para evitar bloqueos por hotlinking externos (`/public/seed-images`).
+- Flujo funcional para carga de imágenes en el Registro Fotográfico con actualización instantánea sin recarga.
+
 ## 4. Estado de Despliegue
 - **Repositorio Git:** `FreddyForeroMancera/erfor`
 - **Hosting:** Vercel.
