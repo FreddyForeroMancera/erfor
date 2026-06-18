@@ -5,6 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import { Loader2, ArrowLeft, FolderKanban, FileBarChart, FileArchive, Leaf } from "lucide-react";
 import { ObligationsModule } from "@/components/obligations-module";
 import { CalendarModule } from "@/components/calendar-module";
+import { PhotoGalleryModule } from "@/components/photo-gallery-module";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -169,6 +170,8 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
               </div>
             </section>
             
+            <PhotoGalleryModule fileId={resolvedParams.id} />
+
             <section className="mt-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
               <CalendarModule fileId={resolvedParams.id} embedded={true} />
             </section>
