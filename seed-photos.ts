@@ -5,12 +5,10 @@ const prisma = new PrismaClient();
 async function seedPhotos() {
   const files = await prisma.environmentalFile.findMany();
   const photos = [
-    'https://upload.wikimedia.org/wikipedia/commons/e/e0/Cocora_valley_Colombia.jpg',
-    'https://upload.wikimedia.org/wikipedia/commons/8/87/Coffee_plantation_in_Colombia.jpg',
-    'https://upload.wikimedia.org/wikipedia/commons/d/da/Paisaje_Cultural_Cafetero.jpg',
-    'https://upload.wikimedia.org/wikipedia/commons/1/15/Piedra_del_Pe%C3%B1ol_en_Guatap%C3%A9%2C_Antioquia.jpg',
-    'https://upload.wikimedia.org/wikipedia/commons/6/67/Desierto_de_la_Tatacoa_en_Colombia.jpg',
-    'https://upload.wikimedia.org/wikipedia/commons/b/b8/Nevado_del_Tolima%2C_Colombia.jpg'
+    '/seed-images/cocora.png',
+    '/seed-images/coffee.png',
+    '/seed-images/paisaje.png',
+    '/seed-images/cultivo.png'
   ];
   
   let count = 0;
