@@ -99,8 +99,7 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
 
-        <section className="grid gap-4 xl:grid-cols-[1fr_380px]">
-          <div>
+        <section className="flex flex-col gap-4">
             {/* Gráficas */}
             <div className="grid gap-4 md:grid-cols-2">
               <ChartCard title="Cumplimiento del Expediente">
@@ -175,10 +174,7 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
             <section className="mt-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
               <CalendarModule fileId={resolvedParams.id} embedded={true} />
             </section>
-          </div>
 
-          {/* Panel Lateral */}
-          <aside className="space-y-4">
             <SideList title="Tareas del Expediente" href="/calendario-y-alertas" items={[
               { title: "Radicar respuesta a requerimiento CAR", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-06-20" },
               { title: "Actualizar Plan de Contingencia", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-06-25" },
@@ -188,7 +184,6 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
             ]} />
             <SideList title="Alertas" href="/calendario-y-alertas" items={(dashboardData?.alerts || []).map((item: any) => ({ title: item.title, sub: item.description || item.severity, date: item.dueDate?.slice(0, 10) }))} />
 
-          </aside>
         </section>
 
       </div>
