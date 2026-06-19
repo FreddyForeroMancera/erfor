@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Loader2, ArrowLeft, FolderKanban, FileBarChart, FileArchive, Leaf } from "lucide-react";
+import { Loader2, ArrowLeft, FolderKanban, FileBarChart, FileArchive, Leaf, Upload, FileCheck, Calendar } from "lucide-react";
 import { ObligationsModule } from "@/components/obligations-module";
 import { CalendarModule } from "@/components/calendar-module";
 import { PhotoGalleryModule } from "@/components/photo-gallery-module";
@@ -41,10 +41,9 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
         const dashData = await resDash.json();
         setDashboardData(dashData);
 
-        const resFile = await fetch("/api/expedientes");
+        const resFile = await fetch(`/api/expedientes/${resolvedParams.id}`);
         const fileData = await resFile.json();
-        const found = fileData.items?.find((f: any) => f.id === resolvedParams.id);
-        setFile(found);
+        setFile(fileData);
       } catch (err: any) {
         toast.error("Error al cargar detalles: " + err.message);
       } finally {
@@ -99,39 +98,144 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
 
-        <section className="flex flex-col gap-4">
-            {/* Gráficas */}
-            <div className="grid gap-4 md:grid-cols-2">
-              <ChartCard title="Cumplimiento del Expediente">
-                <ResponsiveContainer width="100%" height={210}>
-                  <PieChart>
-                    <Pie data={complianceData.some(d => d.value > 0) ? complianceData : [{ name: "Sin datos", value: 1 }]} innerRadius={58} outerRadius={86} dataKey="value">
-                      <Cell fill={colors[0]} />
-                      <Cell fill={colors[3]} />
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartCard>
-              <ChartCard title="Obligaciones por Categoría">
-                <ResponsiveContainer width="100%" height={210}>
-                  <BarChart data={obligations.length ? obligations : [{ name: "Sin datos", value: 0 }]}>
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#0f7a3d" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartCard>
+        {/* ESTADO KPI Cards */}
+        <div className="mb-3 mt-2">
+          <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Estado</h2>
+        </div>
+        <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-slate-600">En Proceso</p>
+                <p className="mt-4 text-3xl font-bold">0</p>
+                <p className="mt-3 text-xs text-slate-500">Preparación y Revisión</p>
+              </div>
+              <FolderKanban className="mt-6 h-8 w-8 text-erfor-green" />
             </div>
+          </article>
+          <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-slate-600">En Trámite</p>
+                <p className="mt-4 text-3xl font-bold">{file.procedures?.length || 0}</p>
+                <p className="mt-3 text-xs text-slate-500">Ante autoridades</p>
+              </div>
+              <FileBarChart className="mt-6 h-8 w-8 text-sky-600" />
+            </div>
+          </article>
+          <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-slate-600">Otorgado</p>
+                <p className="mt-4 text-3xl font-bold">0</p>
+                <p className="mt-3 text-xs text-slate-500">Permisos y Licencias</p>
+              </div>
+              <FileCheck className="mt-6 h-8 w-8 text-amber-500" />
+            </div>
+          </article>
+          <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-slate-600">En Seguimiento</p>
+                <p className="mt-4 text-3xl font-bold">{file.procedures?.length || 0}</p>
+                <p className="mt-3 text-xs text-slate-500">Vigilancia de Obligaciones</p>
+              </div>
+              <Calendar className="mt-6 h-8 w-8 text-red-600" />
+            </div>
+          </article>
+        </div>
+
+        <section className="flex flex-col gap-4">
+            {/* Detalles del Expediente (Reemplaza Gráficas) */}
+            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="mb-4 font-semibold text-slate-800 border-b pb-2">Datos del Expediente</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">EXPEDIENTE</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.officialCode || file.internalCode || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">DIRECCION REGIONAL</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.carRegional || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">TIPO DE EXPEDIENTE</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.type === "SANCIONATORIO" ? "Sancionatorio" : "Permisivo"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">NOMBRE CLIENTE</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.client?.name || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">IDENTIFICACION</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.client?.documentNumber || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">DIRECCION</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.client?.address || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">TELEFONO</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.client?.phone || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">NOMBRE DE LA FINCA</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.property?.name || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">CEDULA CATASTRAL</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.property?.cadastralCode || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">MATRICULA INMOBILIARIA</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.property?.realEstateRegistration || "-"}</p>
+                </div>
+                <div className="md:col-span-2 xl:col-span-2">
+                  <p className="text-xs font-semibold text-slate-500 uppercase">TRAMITE (PERMISOS)</p>
+                  {file.procedures && file.procedures.length > 0 ? (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {file.procedures.map((proc: any) => (
+                        <span key={proc.id} className="inline-flex items-center rounded-md bg-erfor-green/10 px-2 py-1 text-xs font-medium text-erfor-green ring-1 ring-inset ring-erfor-green/20">
+                          {proc.name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="font-medium text-slate-800 mt-1">-</p>
+                  )}
+                </div>
+              </div>
+            </section>
 
             <ObligationsModule fileId={resolvedParams.id} />
 
             {/* Documentos del Expediente */}
             <section className="mt-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold">Documentos del Expediente</h3>
-                <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">Top 10</span>
+                <div className="flex items-center gap-3">
+                  <h3 className="font-semibold">Documentos del Expediente</h3>
+                  <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">Top 10</span>
+                </div>
+                <div className="relative">
+                  <input 
+                    type="file" 
+                    id="document-upload" 
+                    className="hidden" 
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        toast.success(`Simulando subida de: ${e.target.files[0].name}`);
+                        e.target.value = ''; // reset
+                      }
+                    }}
+                  />
+                  <label 
+                    htmlFor="document-upload"
+                    className="flex cursor-pointer items-center gap-2 rounded-md bg-erfor-green px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-erfor-green/90"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Subir Documento
+                  </label>
+                </div>
               </div>
               <div className="flex flex-col border border-slate-100 rounded-md divide-y divide-slate-100">
                 {[

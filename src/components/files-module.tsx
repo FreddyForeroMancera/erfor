@@ -187,6 +187,27 @@ export function FilesModule({ clientId }: { clientId?: string }) {
                     </p>
                   </div>
                 </div>
+
+                {/* 4 Items de Estado Específico */}
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  <div className="bg-slate-50 rounded-md p-2 text-center border border-slate-100 flex flex-col items-center justify-center">
+                    <p className="text-[10px] text-slate-500 uppercase font-bold leading-tight mb-1">En Proceso</p>
+                    <p className="font-bold text-slate-800 text-lg leading-none">0</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-md p-2 text-center border border-slate-100 flex flex-col items-center justify-center">
+                    <p className="text-[10px] text-slate-500 uppercase font-bold leading-tight mb-1">En Trámite</p>
+                    <p className="font-bold text-slate-800 text-lg leading-none">{file.procedures?.length || 0}</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-md p-2 text-center border border-slate-100 flex flex-col items-center justify-center">
+                    <p className="text-[10px] text-slate-500 uppercase font-bold leading-tight mb-1">Otorgado</p>
+                    <p className="font-bold text-slate-800 text-lg leading-none">0</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-md p-2 text-center border border-slate-100 flex flex-col items-center justify-center">
+                    <p className="text-[10px] text-slate-500 uppercase font-bold leading-tight mb-1">Seguimiento</p>
+                    <p className="font-bold text-slate-800 text-lg leading-none">{file.procedures?.length || 0}</p>
+                  </div>
+                </div>
+
                 
                 <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                   <div className="flex flex-col text-slate-600 gap-1">

@@ -42,6 +42,8 @@ import toast from "react-hot-toast";
 import { ClientSelector } from "./client-selector";
 import { useClient } from "@/lib/client-context";
 
+import { NewExpedienteModal } from "./new-expediente-modal";
+
 const nav = [
   { label: "Panel Maestro", href: "/dashboard", icon: Gauge },
   { label: "Clientes y Proyectos", href: "/clientes-y-proyectos", icon: UsersRound },
@@ -362,25 +364,33 @@ function IconButton({ children, title }: { children: React.ReactNode; title: str
 }
 
 export function QuickActions() {
-  const actions: { label: string; sub: string; icon: LucideIcon }[] = [
+  const [isExpedienteModalOpen, setIsExpedienteModalOpen] = useState(false);
+
+  const actions: { label: string; sub: string; icon: LucideIcon; onClick?: () => void }[] = [
     { label: "Asistente IA", sub: "Preguntar ahora", icon: Bot },
     { label: "Subir documento", sub: "Excel, PDF, Fotos", icon: Upload },
-    { label: "Nuevo proyecto", sub: "Crear expediente", icon: FolderKanban },
-    { label: "Nueva tarea", sub: "Agregar obligación", icon: Wrench }
+    { label: "Nuevo proyecto", sub: "Crear expediente", icon: FolderKanban, onClick: () => setIsExpedienteModalOpen(true) }
   ];
   return (
-    <div className="grid min-w-[420px] grid-cols-4 overflow-hidden rounded-lg bg-erfor-green/80 text-white shadow-soft backdrop-blur">
-      {actions.map(({ label, sub, icon: Component }) => {
-        return (
-          <button key={label} className="border-r border-white/20 p-5 text-left transition last:border-r-0 hover:bg-white/10 group">
-            <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white text-erfor-green transition group-hover:scale-110">
-              <Component className="h-5 w-5" />
-            </span>
-            <span className="block text-sm font-semibold">{label}</span>
-            <span className="text-xs text-white/75">{sub}</span>
-          </button>
-        );
-      })}
-    </div>
+    <>
+      <div className="grid min-w-[320px] grid-cols-3 overflow-hidden rounded-lg bg-erfor-green/80 text-white shadow-soft backdrop-blur">
+        {actions.map(({ label, sub, icon: Component, onClick }) => {
+          return (
+            <button key={label} onClick={onClick} className="border-r border-white/20 p-5 text-left transition last:border-r-0 hover:bg-white/10 group">
+              <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white text-erfor-green transition group-hover:scale-110">
+                <Component className="h-5 w-5" />
+              </span>
+              <span className="block text-sm font-semibold">{label}</span>
+              <span className="text-xs text-white/75">{sub}</span>
+            </button>
+          );
+        })}
+      </div>
+      <NewExpedienteModal 
+        isOpen={isExpedienteModalOpen} 
+        onClose={() => setIsExpedienteModalOpen(false)} 
+        onSuccess={() => { window.location.reload(); }} 
+      />
+    </>
   );
 }

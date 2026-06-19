@@ -7,6 +7,7 @@ import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis
 import { QuickActions } from "@/components/app-shell";
 import toast from "react-hot-toast";
 import { useClient } from "@/lib/client-context";
+import { QuotesModal } from "@/components/quotes-modal";
 
 type DashboardData = {
   kpis: Record<string, number>;
@@ -43,6 +44,7 @@ export function Dashboard() {
   const { selectedClientId } = useClient();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isQuotesModalOpen, setIsQuotesModalOpen] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -68,7 +70,7 @@ export function Dashboard() {
         ];
       }
       return [
-        { label: "En Proceso", value: data?.kpis.enProceso || 0, sub: "Preparación y Revisión", icon: FolderKanban, color: "text-erfor-green" },
+        { label: "COTIZACIONES", value: data?.kpis.enProceso || 0, sub: "Presupuestos y Propuestas", icon: FolderKanban, color: "text-erfor-green" },
         { label: "En Trámite", value: data?.kpis.enTramite || 0, sub: "Ante autoridades", icon: FileCheck2, color: "text-sky-600" },
         { label: "Otorgado", value: data?.kpis.otorgado || 0, sub: "Permisos y Licencias", icon: FileArchive, color: "text-amber-500" },
         { label: "En Seguimiento", value: data?.kpis.enSeguimiento || 0, sub: "Vigilancia de Obligaciones", icon: CalendarDays, color: "text-red-600" },
@@ -85,19 +87,15 @@ export function Dashboard() {
         <div>
           <div className="relative overflow-hidden rounded-lg bg-erfor-ink p-7 text-white shadow-soft">
             <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,29,34,.98),rgba(7,29,34,.72)),url('https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1600&auto=format&fit=crop')]" />
-            <div className="relative flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
-              <div className="max-w-xl">
-                <p className="text-sm text-white/86">Plataforma integral para la gestión ambiental</p>
-                <h2 className="mt-2 text-2xl font-semibold">Cumplimiento, sostenibilidad y confianza</h2>
-                <p className="mt-5 max-w-lg text-sm leading-7 text-white/78">
-                  Administra clientes, proyectos, obligaciones, trámites, documentos y reportes ambientales de forma integrada y automatizada.
-                </p>
-              </div>
+            <div className="relative flex justify-end">
               <QuickActions />
             </div>
           </div>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-6 mb-3">
+            <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Estado</h2>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {loading ? Array.from({ length: 4 }).map((_, i) => (
               <article key={i} className="animate-pulse rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex items-start justify-between">
@@ -110,8 +108,13 @@ export function Dashboard() {
                 </div>
               </article>
             )) : kpis.map(({ label, value, sub, icon: Component, color }) => {
+              const isCotizaciones = label === "COTIZACIONES";
               return (
-                <article key={String(label)} className="group rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+                <article 
+                  key={String(label)} 
+                  className={`group rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md ${isCotizaciones ? "cursor-pointer ring-1 ring-transparent hover:ring-erfor-green hover:border-erfor-green" : ""}`}
+                  onClick={() => isCotizaciones && setIsQuotesModalOpen(true)}
+                >
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-sm text-slate-600">{label}</p>
@@ -125,55 +128,44 @@ export function Dashboard() {
             })}
           </div>
 
-          {/* Sección de Gráficos movida dentro de la columna izquierda para evitar el espacio en blanco */}
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm h-[320px] flex flex-col">
-              <h3 className="font-semibold text-slate-800 mb-4">Estado de Trámites</h3>
-              <div className="flex-1 min-h-0">
+          {/* Listado de Alertas General */}
+          <div className="mt-4">
+            <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+                Listado de Alertas General
+              </h3>
+              <div className="flex flex-col gap-3">
                 {loading ? (
-                  <div className="h-full flex items-center justify-center text-slate-500"><Loader2 className="animate-spin h-6 w-6" /></div>
-                ) : data?.charts.proceduresByStatus.length ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={data.charts.proceduresByStatus}
-                        dataKey="_count"
-                        nameKey="status"
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                      >
-                        {data.charts.proceduresByStatus.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value, name) => [value, name]} />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  <div className="flex justify-center p-4"><Loader2 className="animate-spin h-6 w-6 text-slate-500" /></div>
+                ) : data?.alerts && data.alerts.length > 0 ? (
+                  data.alerts.map(alert => {
+                    const severityColors: Record<string, string> = {
+                      CRITICAL: "bg-red-100 text-red-600 border-red-200",
+                      HIGH: "bg-orange-100 text-orange-600 border-orange-200",
+                      MEDIUM: "bg-amber-100 text-amber-600 border-amber-200",
+                      LOW: "bg-blue-100 text-blue-600 border-blue-200"
+                    };
+                    return (
+                      <div key={alert.id} className="flex items-start gap-4 p-4 rounded-md border border-slate-200 bg-white hover:bg-slate-50 transition shadow-sm">
+                        <div className={`mt-0.5 h-10 w-10 rounded-full flex items-center justify-center shrink-0 border ${severityColors[alert.severity] || "bg-slate-100 text-slate-600"}`}>
+                          <AlertTriangle className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-slate-800">{alert.title}</p>
+                          {alert.description && <p className="text-sm text-slate-600 mt-1">{alert.description}</p>}
+                          {alert.dueDate && <p className="text-xs text-slate-500 mt-2 font-medium">Vence: {new Date(alert.dueDate).toLocaleDateString("es-CO", { year: 'numeric', month: 'long', day: 'numeric' })}</p>}
+                        </div>
+                        <div className="shrink-0 flex items-center">
+                           <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${severityColors[alert.severity] || "bg-slate-100 text-slate-600"}`}>
+                             {alert.severity === 'CRITICAL' ? 'Crítica' : alert.severity === 'HIGH' ? 'Alta' : alert.severity === 'MEDIUM' ? 'Media' : 'Baja'}
+                           </span>
+                        </div>
+                      </div>
+                    );
+                  })
                 ) : (
-                  <div className="h-full flex items-center justify-center text-sm text-slate-500">Sin datos de trámites</div>
-                )}
-              </div>
-            </article>
-
-            <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm h-[320px] flex flex-col">
-              <h3 className="font-semibold text-slate-800 mb-4">Obligaciones por Categoría</h3>
-              <div className="flex-1 min-h-0">
-                {loading ? (
-                  <div className="h-full flex items-center justify-center text-slate-500"><Loader2 className="animate-spin h-6 w-6" /></div>
-                ) : data?.charts.obligationsByCategory.length ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data.charts.obligationsByCategory}>
-                      <XAxis dataKey="category" tick={{fontSize: 10}} interval={0} />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="_count" fill="#0f7a3d" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-sm text-slate-500">Sin datos de obligaciones</div>
+                  <p className="text-sm text-slate-500 text-center py-8 bg-slate-50 rounded-lg border border-slate-100">No hay alertas activas en este momento.</p>
                 )}
               </div>
             </article>
@@ -183,6 +175,10 @@ export function Dashboard() {
 
       </section>
 
+      <QuotesModal 
+        isOpen={isQuotesModalOpen} 
+        onClose={() => setIsQuotesModalOpen(false)} 
+      />
     </main>
   );
 }
