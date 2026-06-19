@@ -6,6 +6,23 @@ import { Fragment } from "react";
 import { X, FolderKanban, Loader2, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 
+const CAR_REGIONS = [
+  "Regional Sabana Centro",
+  "Regional Bogotá - La Calera",
+  "Regional Soacha",
+  "Regional Almeidas y Guatavita",
+  "Regional Alto Magdalena",
+  "Regional Bajo Magdalena",
+  "Regional Chiquinquirá",
+  "Regional Gualivá",
+  "Regional Magdalena Centro",
+  "Regional Rionegro",
+  "Regional Sabana Occidente",
+  "Regional Sumapaz",
+  "Regional Tequendama",
+  "Regional Ubaté"
+];
+
 interface NewExpedienteModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -149,7 +166,12 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1">Dirección Regional</label>
-                          <input type="text" value={carRegional} onChange={e => setCarRegional(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Ej. Sabana Centro" />
+                          <select value={carRegional} onChange={e => setCarRegional(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green bg-white">
+                            <option value="">Seleccione una regional...</option>
+                            {CAR_REGIONS.map(r => (
+                              <option key={r} value={r}>{r}</option>
+                            ))}
+                          </select>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Expediente</label>
