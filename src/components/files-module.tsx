@@ -5,6 +5,7 @@ import { useClient } from "@/lib/client-context";
 import { Loader2, Search, Plus, FolderKanban, ChevronRight, Building2, FileArchive, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { NewExpedienteModal } from "./new-expediente-modal";
 
 export function FilesModule({ clientId }: { clientId?: string }) {
   const { selectedClientId } = useClient();
@@ -231,58 +232,11 @@ export function FilesModule({ clientId }: { clientId?: string }) {
       )}
 
       {/* Modal Nuevo Expediente */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
-            <div className="flex items-center justify-between p-5 border-b border-slate-100">
-              <h3 className="font-bold text-lg text-slate-800">Crear Nuevo Expediente</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <form onSubmit={handleCreateFile} className="p-5 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Código Interno / Nombre</label>
-                <input required name="internalCode" className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:border-erfor-green outline-none" placeholder="Ej: EXP-2026-001" />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Regional CAR</label>
-                <select required name="carRegional" className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:border-erfor-green outline-none bg-white">
-                  <option value="">Seleccione una regional...</option>
-                  {CAR_REGIONS.map(r => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Permiso / Trámite principal</label>
-                <select required name="type" className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:border-erfor-green outline-none bg-white">
-                  <option value="">Seleccione...</option>
-                  <option value="Concesión de Aguas Subterráneas">Concesión de Aguas Subterráneas</option>
-                  <option value="Concesión de Aguas Superficiales">Concesión de Aguas Superficiales</option>
-                  <option value="Permiso de Vertimientos">Permiso de Vertimientos</option>
-                  <option value="Aprovechamiento Forestal">Aprovechamiento Forestal</option>
-                  <option value="Ocupación de Cauce">Ocupación de Cauce</option>
-                  <option value="Licencia Ambiental">Licencia Ambiental</option>
-                  <option value="Otro">Otro</option>
-                </select>
-              </div>
-
-              <div className="pt-4 flex justify-end gap-2">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-                  Cancelar
-                </button>
-                <button type="submit" disabled={creating} className="flex items-center gap-2 px-4 py-2 bg-erfor-green text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors disabled:opacity-70">
-                  {creating && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Crear Expediente
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <NewExpedienteModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={() => { window.location.reload(); }} 
+      />
     </div>
   );
 }
