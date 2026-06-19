@@ -376,8 +376,8 @@ export function QuickActions() {
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-erfor-green transition group-hover:scale-110">
             <FolderKanban className="h-4 w-4" />
           </span>
-          <span className="text-base font-semibold">Nuevo proyecto</span>
-          <span className="text-sm text-white/80 font-medium">(Crear expediente)</span>
+          <span className="text-base font-semibold">Crear nuevo Expediente</span>
+          <span className="text-sm text-white/80 font-medium ml-2"></span>
         </button>
       </div>
       <NewExpedienteModal 
