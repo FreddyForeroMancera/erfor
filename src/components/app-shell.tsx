@@ -58,7 +58,6 @@ const nav = [
   { label: "Calendario y Alertas", href: "/calendario-y-alertas", icon: CalendarDays },
   { label: "Monitoreos y Reportes", href: "/monitoreos-y-reportes", icon: FileBarChart },
   { label: "Fuentes de Información", href: "/fuentes-de-informacion", icon: DatabaseZap },
-  { label: "Carga Masiva", href: "/importar", icon: Upload },
   { label: "Informes y Reportes", href: "/informes-y-reportes", icon: FileBarChart },
   { label: "IA Asistente Ambiental", href: "/ia-asistente-ambiental", icon: Bot },
   { label: "Integraciones", href: "/integraciones", icon: Plug },

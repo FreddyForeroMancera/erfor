@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Building, Bell, Bot, Plug, Shield, Save, User, Mail, Smartphone, Globe, Lock } from "lucide-react";
+import { Building, Bell, Bot, Plug, Shield, Save, User, Mail, Smartphone, Globe, Lock, UploadCloud } from "lucide-react";
 import toast from "react-hot-toast";
+import { BulkImportModule } from "@/components/bulk-import-module";
 
 export function SettingsModule() {
   const [activeTab, setActiveTab] = useState("perfil");
@@ -13,6 +14,7 @@ export function SettingsModule() {
     { id: "ia", label: "Asistente IA", icon: Bot },
     { id: "integraciones", label: "Integraciones", icon: Plug },
     { id: "usuarios", label: "Usuarios y Roles", icon: Shield },
+    { id: "importacion", label: "Carga Masiva", icon: UploadCloud },
   ];
 
   const handleSave = () => {
@@ -216,6 +218,12 @@ export function SettingsModule() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {activeTab === "importacion" && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <BulkImportModule />
             </div>
           )}
 
