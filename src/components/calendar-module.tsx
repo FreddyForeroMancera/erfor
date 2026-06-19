@@ -117,6 +117,10 @@ export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded
               </span>
               <button onClick={nextMonth} className="p-1 hover:bg-slate-50 transition-colors"><ChevronRight className="h-4 w-4 text-slate-600" /></button>
             </div>
+            <button className="ml-1 flex items-center gap-1.5 bg-erfor-green text-white px-3 py-1.5 text-xs rounded-md font-medium hover:bg-green-700 transition-colors shadow-sm">
+              <Plus className="h-3 w-3" />
+              Nuevo Evento
+            </button>
           </div>
         </div>
       )}
