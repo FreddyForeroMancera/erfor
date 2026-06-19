@@ -87,7 +87,7 @@ export function Dashboard() {
         <div>
           <div className="relative overflow-hidden rounded-lg bg-erfor-ink p-7 text-white shadow-soft">
             <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,29,34,.98),rgba(7,29,34,.72)),url('https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1600&auto=format&fit=crop')]" />
-            <div className="relative flex justify-end">
+            <div className="relative flex w-full">
               <QuickActions />
             </div>
           </div>
