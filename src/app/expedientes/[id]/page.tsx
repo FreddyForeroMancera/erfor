@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, Fragment } from "react";
+import { Dialog, Transition } from "@headlessui/react";
 import { AppShell } from "@/components/app-shell";
-import { Loader2, ArrowLeft, FolderKanban, FileBarChart, FileArchive, Leaf, Upload, FileCheck, Calendar } from "lucide-react";
+import { Loader2, ArrowLeft, FolderKanban, FileBarChart, FileArchive, Leaf, Upload, FileCheck, Calendar, X } from "lucide-react";
 import { ObligationsModule } from "@/components/obligations-module";
 import { CalendarModule } from "@/components/calendar-module";
 import { PhotoGalleryModule } from "@/components/photo-gallery-module";
@@ -310,6 +311,8 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 }
 
 function SideList({ title, items, href, action }: { title: string; items: { title: string; sub: string; date?: string }[]; href?: string; action?: React.ReactNode }) {
+  const [selectedItem, setSelectedItem] = useState<{ title: string; sub: string; date?: string } | null>(null);
+
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
@@ -325,7 +328,11 @@ function SideList({ title, items, href, action }: { title: string; items: { titl
       </div>
       <div className="divide-y divide-slate-100">
         {items.length ? items.map((item, index) => (
-          <div key={`${item.title}-${index}`} className="group py-3 text-sm transition hover:bg-slate-50">
+          <div 
+            key={`${item.title}-${index}`} 
+            className="group py-3 text-sm transition hover:bg-slate-50 cursor-pointer"
+            onClick={() => setSelectedItem(item)}
+          >
             <div className="flex justify-between gap-3">
               <p className="font-semibold transition group-hover:text-erfor-green">{item.title}</p>
               <span className="shrink-0 text-xs text-slate-500">{item.date || ""}</span>
@@ -334,6 +341,68 @@ function SideList({ title, items, href, action }: { title: string; items: { titl
           </div>
         )) : <p className="py-4 text-sm text-slate-500">Sin registros.</p>}
       </div>
+
+      <Transition appear show={!!selectedItem} as={Fragment}>
+        <Dialog as="div" className="relative z-[100]" onClose={() => setSelectedItem(null)}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white text-left align-middle shadow-xl transition-all">
+                  <div className="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex items-center justify-between">
+                    <Dialog.Title as="h3" className="text-lg font-bold text-slate-800">
+                      Detalle del Registro
+                    </Dialog.Title>
+                    <button onClick={() => setSelectedItem(null)} className="text-slate-400 hover:text-slate-600 transition">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  <div className="px-6 py-6 space-y-4">
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Título</p>
+                      <p className="font-semibold text-slate-800 mt-1">{selectedItem?.title}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Descripción / Referencia</p>
+                      <p className="text-slate-700 mt-1">{selectedItem?.sub}</p>
+                    </div>
+                    {selectedItem?.date && (
+                      <div>
+                        <p className="text-xs font-semibold text-slate-500 uppercase">Fecha</p>
+                        <p className="text-slate-700 mt-1 font-medium">{selectedItem.date}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                    <button onClick={() => setSelectedItem(null)} className="px-4 py-2 bg-slate-200 text-slate-800 font-medium rounded-lg hover:bg-slate-300 transition text-sm">
+                      Cerrar
+                    </button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
     </section>
   );
 }
