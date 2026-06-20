@@ -11,15 +11,15 @@ interface ObligationItem {
   status: ObligationStatus;
   date?: string;
   isPUEAA?: boolean;
+  note?: string;
 }
 
 export function ObligationsModule({ fileId }: { fileId: string }) {
   const [obligations, setObligations] = useState<ObligationItem[]>([
-    { id: "1", category: "Compensación", status: "PENDIENTE" },
-    { id: "2", category: "Sistema de Medición", status: "CUMPLIDO" },
-    { id: "3", category: "PUEAA", status: "PENDIENTE", isPUEAA: true, date: "" },
-    { id: "4", category: "Consumos", status: "NO_CUMPLIDO" },
-    { id: "5", category: "Reporte de Vertimientos", status: "PENDIENTE" }
+    { id: "1", category: "Compensación", status: "PENDIENTE", note: "" },
+    { id: "2", category: "Sistema de Medición", status: "CUMPLIDO", note: "" },
+    { id: "3", category: "PUEAA", status: "PENDIENTE", isPUEAA: true, date: "", note: "" },
+    { id: "4", category: "Consumos", status: "NO_CUMPLIDO", note: "" }
   ]);
 
   const updateStatus = (id: string, status: ObligationStatus) => {
@@ -28,6 +28,10 @@ export function ObligationsModule({ fileId }: { fileId: string }) {
 
   const updateDate = (id: string, date: string) => {
     setObligations(prev => prev.map(o => o.id === id ? { ...o, date, status: date ? "CUMPLIDO" : "PENDIENTE" } : o));
+  };
+
+  const updateNote = (id: string, note: string) => {
+    setObligations(prev => prev.map(o => o.id === id ? { ...o, note } : o));
   };
 
   return (
@@ -43,6 +47,13 @@ export function ObligationsModule({ fileId }: { fileId: string }) {
             <span className="font-semibold text-slate-800 mb-3">{obs.category}</span>
             
             <div className="flex flex-col gap-3 mt-auto">
+              <input 
+                type="text" 
+                placeholder="Ingresar detalle u observación..." 
+                value={obs.note || ""}
+                onChange={(e) => updateNote(obs.id, e.target.value)}
+                className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-md focus:border-erfor-green focus:outline-none text-slate-700 bg-slate-50"
+              />
               <div className="flex gap-2">
                 <button
                   onClick={() => updateStatus(obs.id, "CUMPLIDO")}
