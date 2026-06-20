@@ -382,12 +382,12 @@ export function QuickActions() {
             <span className="text-base font-semibold">Crear nuevo Expediente</span>
           </button>
         </div>
-        <div className="w-full overflow-hidden rounded-lg bg-slate-800/90 text-white shadow-soft backdrop-blur transition hover:bg-slate-800">
+        <div className="w-full overflow-hidden rounded-lg bg-blue-700/90 text-white shadow-soft backdrop-blur transition hover:bg-blue-700">
           <button 
             onClick={() => setIsClientModalOpen(true)} 
             className="flex w-full items-center justify-center gap-3 py-3 px-4 transition group"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-800 transition group-hover:scale-110">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-blue-700 transition group-hover:scale-110">
               <UsersRound className="h-4 w-4" />
             </span>
             <span className="text-base font-semibold">Crear Nuevo Cliente</span>
