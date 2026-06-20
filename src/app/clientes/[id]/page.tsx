@@ -12,7 +12,7 @@ import Link from "next/link";
 
 export default function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const { data, error, isLoading: loading } = useSWR(`/api/clients?q=${resolvedParams.id}`, fetcher);
+  const { data, error, isLoading: loading } = useSWR<any>(`/api/clients?q=${resolvedParams.id}`, fetcher);
   const client = data?.items?.find((c: any) => c.id === resolvedParams.id);
   const [activeTab, setActiveTab] = useState<"info" | "expedientes" | "proyectos">("expedientes");
   const tabs = [

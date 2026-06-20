@@ -34,7 +34,7 @@ export function PropertiesModule({ clientId }: { clientId?: string }) {
   if (effectiveClientId) query.set("clientId", effectiveClientId);
   if (search) query.set("q", search);
   
-  const { data, error, isLoading: loading } = useSWR(`/api/properties?${query.toString()}`, fetcher);
+  const { data, error, isLoading: loading } = useSWR<any>(`/api/properties?${query.toString()}`, fetcher);
   const properties = data?.items || [];
   return (
     <div className="p-4 lg:p-6 xl:p-8">

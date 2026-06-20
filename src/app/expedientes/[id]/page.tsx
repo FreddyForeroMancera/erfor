@@ -34,8 +34,8 @@ const statusTranslations: Record<string, string> = {
 
 export default function FileDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const { data: dashboardData, isLoading: dashLoading } = useSWR("/api/dashboard", fetcher);
-  const { data: file, isLoading: fileLoading } = useSWR(`/api/expedientes/${resolvedParams.id}`, fetcher);
+  const { data: dashboardData, isLoading: dashLoading } = useSWR<any>("/api/dashboard", fetcher);
+  const { data: file, isLoading: fileLoading } = useSWR<any>(`/api/expedientes/${resolvedParams.id}`, fetcher);
   
   const loading = dashLoading || fileLoading;
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);

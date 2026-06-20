@@ -29,7 +29,7 @@ export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded
   if (fileId) queryParams.set("fileId", fileId);
   const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
   
-  const { data, error, isLoading: loading } = useSWR(`/api/calendar${query}`, fetcher);
+  const { data, error, isLoading: loading } = useSWR<any>(`/api/calendar${query}`, fetcher);
   const events = (data || []).filter((e: CalendarEvent) => e);
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));

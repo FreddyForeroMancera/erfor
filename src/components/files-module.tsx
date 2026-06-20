@@ -81,7 +81,7 @@ export function FilesModule({ clientId }: { clientId?: string }) {
   if (effectiveClientId) query.set("clientId", effectiveClientId);
   if (search) query.set("q", search);
   
-  const { data, error, isLoading: loading } = useSWR(`/api/expedientes?${query.toString()}`, fetcher);
+  const { data, error, isLoading: loading } = useSWR<any>(`/api/expedientes?${query.toString()}`, fetcher);
   const files = data?.items || [];
 
   return (

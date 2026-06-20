@@ -15,7 +15,7 @@ interface TramitesModalProps {
 
 export function TramitesModal({ isOpen, onClose, clientId }: TramitesModalProps) {
   const url = clientId ? `/api/expedientes?clientId=${clientId}` : "/api/expedientes";
-  const { data, isLoading } = useSWR(isOpen ? url : null, fetcher);
+  const { data, isLoading } = useSWR<any>(isOpen ? url : null, fetcher);
 
   const tramites = data?.items?.filter((f: any) => f.status === "TRACKING" || f.status === "IN_REVIEW" || f.status === "PREPARATION") || [];
 
