@@ -279,13 +279,18 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
               <CalendarModule fileId={resolvedParams.id} embedded={true} />
             </section>
 
-            <SideList title="Tareas del Expediente" href="/calendario-y-alertas" items={[
-              { title: "Radicar respuesta a requerimiento CAR", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-06-20" },
-              { title: "Actualizar Plan de Contingencia", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-06-25" },
-              { title: "Pago de Tasa por Uso de Agua", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-07-01" },
-              { title: "Preparar informe de monitoreo", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-07-10" },
-              { title: "Visita de inspección ocular programada", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-07-15" }
-            ]} />
+            <SideList 
+              title="Tareas del Expediente" 
+              href="/calendario-y-alertas" 
+              action={<button className="text-xs bg-erfor-green text-white px-2 py-1 rounded hover:bg-green-700 transition">Crear Tarea</button>}
+              items={[
+                { title: "Radicar respuesta a requerimiento CAR", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-06-20" },
+                { title: "Actualizar Plan de Contingencia", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-06-25" },
+                { title: "Pago de Tasa por Uso de Agua", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-07-01" },
+                { title: "Preparar informe de monitoreo", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-07-10" },
+                { title: "Visita de inspección ocular programada", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-07-15" }
+              ]} 
+            />
             <SideList title="Alertas" href="/calendario-y-alertas" items={(dashboardData?.alerts || []).map((item: any) => ({ title: item.title, sub: item.description || item.severity, date: item.dueDate?.slice(0, 10) }))} />
 
         </section>
@@ -304,11 +309,14 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
   );
 }
 
-function SideList({ title, items, href }: { title: string; items: { title: string; sub: string; date?: string }[]; href?: string }) {
+function SideList({ title, items, href, action }: { title: string; items: { title: string; sub: string; date?: string }[]; href?: string; action?: React.ReactNode }) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-semibold">{title}</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="font-semibold">{title}</h3>
+          {action}
+        </div>
         {href ? (
           <Link href={href} className="text-xs font-semibold text-erfor-green hover:underline">Ver</Link>
         ) : (
