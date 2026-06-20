@@ -81,10 +81,32 @@ export async function GET(request: Request) {
       }
     });
 
-    const formattedAlertsList = alertsList.map(a => ({
-      ...a,
-      clientName: a.client?.name,
-      fileCode: a.environmentalFile?.officialCode || a.environmentalFile?.internalCode
+    const formattedAlertsList = await Promise.all(alertsList.map(async (a) => {
+      let fileCode = a.environmentalFile?.officialCode || a.environmentalFile?.internalCode;
+      
+      if (!fileCode && a.relatedEntityType === "Procedure" && a.relatedEntityId) {
+        const proc = await prisma.procedure.findUnique({
+          where: { id: a.relatedEntityId },
+          include: { environmentalFile: true }
+        });
+        if (proc?.environmentalFile) {
+          fileCode = proc.environmentalFile.officialCode || proc.environmentalFile.internalCode;
+        }
+      } else if (!fileCode && a.relatedEntityType === "Requirement" && a.relatedEntityId) {
+        const req = await prisma.requirement.findUnique({
+          where: { id: a.relatedEntityId },
+          include: { environmentalFile: true }
+        });
+        if (req?.environmentalFile) {
+          fileCode = req.environmentalFile.officialCode || req.environmentalFile.internalCode;
+        }
+      }
+
+      return {
+        ...a,
+        clientName: a.client?.name,
+        fileCode
+      };
     }));
 
     const simulatedTasks = [
