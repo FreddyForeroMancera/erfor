@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check, X, Calendar as CalendarIcon, ClipboardCheck } from "lucide-react";
 
 type ObligationStatus = "CUMPLIDO" | "NO_CUMPLIDO" | "PENDIENTE";
@@ -16,6 +16,30 @@ interface ObligationItem {
 
 export function ObligationsModule({ fileId }: { fileId: string }) {
   const [isActive, setIsActive] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedState = localStorage.getItem(`obligations-active-${fileId}`);
+      if (savedState) {
+        setIsActive(savedState === "true");
+      }
+    }
+  }, [fileId]);
+
+  const handleToggleActive = () => {
+    const newState = !isActive;
+    setIsActive(newState);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`obligations-active-${fileId}`, newState.toString());
+    }
+  };
+
+  const handleActivate = () => {
+    setIsActive(true);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`obligations-active-${fileId}`, "true");
+    }
+  };
   const [obligations, setObligations] = useState<ObligationItem[]>([
     { id: "1", category: "Compensación", status: "PENDIENTE", note: "" },
     { id: "2", category: "Sistema de Medición", status: "CUMPLIDO", note: "" },
@@ -44,7 +68,7 @@ export function ObligationsModule({ fileId }: { fileId: string }) {
         </div>
         
         <button
-          onClick={() => setIsActive(!isActive)}
+          onClick={handleToggleActive}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-erfor-green focus:ring-offset-2 ${
             isActive ? 'bg-erfor-green' : 'bg-slate-300'
           }`}
@@ -62,7 +86,7 @@ export function ObligationsModule({ fileId }: { fileId: string }) {
           <ClipboardCheck className="h-8 w-8 text-slate-300 mb-2" />
           <p>El módulo de obligaciones se encuentra desactivado.</p>
           <button 
-            onClick={() => setIsActive(true)}
+            onClick={handleActivate}
             className="mt-2 text-erfor-green hover:underline font-medium"
           >
             Activar módulo
