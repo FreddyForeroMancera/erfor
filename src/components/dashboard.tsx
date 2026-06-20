@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { AlertTriangle, CalendarDays, FileArchive, FileBarChart, FileCheck2, FolderKanban, Leaf, UsersRound, Loader2, Building2, Map } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -42,22 +44,12 @@ const statusTranslations: Record<string, string> = {
 
 export function Dashboard() {
   const { selectedClientId } = useClient();
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isQuotesModalOpen, setIsQuotesModalOpen] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    const url = selectedClientId ? `/api/dashboard?clientId=${selectedClientId}` : "/api/dashboard";
-    fetch(url)
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Error fetching data");
-        return res.json();
-      })
-      .then(setData)
-      .catch((err) => toast.error("Error al cargar el dashboard: " + err.message))
-      .finally(() => setLoading(false));
-  }, [selectedClientId]);
+  const url = selectedClientId ? `/api/dashboard?clientId=${selectedClientId}` : "/api/dashboard";
+  const { data, error, isLoading: loading } = useSWR<DashboardData>(url, fetcher, {
+    onError: (err) => toast.error("Error al cargar el dashboard: " + err.message)
+  });
 
   const kpis = useMemo<{ label: string; value: number; sub: string; icon: LucideIcon; color: string }[]>(
     () => {

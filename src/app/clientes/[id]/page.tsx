@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useState, use } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { AppShell } from "@/components/app-shell";
 import { FilesModule } from "@/components/files-module";
 import { Building2, Map, FolderKanban, Loader2, ArrowLeft } from "lucide-react";
@@ -10,27 +12,9 @@ import Link from "next/link";
 
 export default function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const [client, setClient] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, error, isLoading: loading } = useSWR(`/api/clients?q=${resolvedParams.id}`, fetcher);
+  const client = data?.items?.find((c: any) => c.id === resolvedParams.id);
   const [activeTab, setActiveTab] = useState<"info" | "expedientes" | "proyectos">("expedientes");
-
-  useEffect(() => {
-    async function fetchClient() {
-      try {
-        const res = await fetch(`/api/clients?q=${resolvedParams.id}`);
-        const json = await res.json();
-        // Asumiendo que podemos encontrarlo en la lista (lo ideal sería un GET por ID)
-        const found = json.items?.find((c: any) => c.id === resolvedParams.id);
-        setClient(found);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchClient();
-  }, [resolvedParams.id]);
-
   const tabs = [
     { id: "info", label: "Información", icon: Building2 },
     { id: "expedientes", label: "Expedientes", icon: FolderKanban },

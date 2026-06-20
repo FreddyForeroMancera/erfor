@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState, use, Fragment } from "react";
+import { useState, use, Fragment } from "react";
+import useSWR, { mutate } from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { Dialog, Transition } from "@headlessui/react";
 import { AppShell } from "@/components/app-shell";
 import { Loader2, ArrowLeft, FolderKanban, FileBarChart, FileArchive, Leaf, Upload, FileCheck, Calendar, X, Check } from "lucide-react";
@@ -32,30 +34,12 @@ const statusTranslations: Record<string, string> = {
 
 export default function FileDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const [file, setFile] = useState<any>(null);
-  const [dashboardData, setDashboardData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: dashboardData, isLoading: dashLoading } = useSWR("/api/dashboard", fetcher);
+  const { data: file, isLoading: fileLoading } = useSWR(`/api/expedientes/${resolvedParams.id}`, fetcher);
+  
+  const loading = dashLoading || fileLoading;
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("En Proceso");
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const resDash = await fetch("/api/dashboard");
-        const dashData = await resDash.json();
-        setDashboardData(dashData);
-
-        const resFile = await fetch(`/api/expedientes/${resolvedParams.id}`);
-        const fileData = await resFile.json();
-        setFile(fileData);
-      } catch (err: any) {
-        toast.error("Error al cargar detalles: " + err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, [resolvedParams.id]);
 
   if (loading) {
     return (
@@ -117,7 +101,12 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
             return (
               <article 
                 key={label}
-                onClick={() => setCurrentStatus(label)}
+                onClick={() => {
+                  setCurrentStatus(label);
+                  mutate(key => typeof key === 'string' && key.startsWith('/api/dashboard'));
+                  mutate(key => typeof key === 'string' && key.startsWith('/api/expedientes'));
+                  toast.success(`Estado actualizado a: ${label}`);
+                }}
                 className={`relative cursor-pointer rounded-lg border p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md ${isActive ? activeColor : 'border-slate-200 bg-white hover:border-slate-300'}`}
               >
                 {isActive && (

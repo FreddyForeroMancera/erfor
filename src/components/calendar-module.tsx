@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo, Fragment } from "react";
+import { useState, useMemo, Fragment } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Loader2, X, MapPin, Clock, Tag } from "lucide-react";
 import { Dialog, Transition } from "@headlessui/react";
 import { useClient } from "@/lib/client-context";
@@ -20,32 +22,15 @@ type CalendarEvent = {
 export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded?: boolean }) {
   const { selectedClientId } = useClient();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
-  useEffect(() => {
-    async function loadEvents() {
-      setLoading(true);
-      try {
-        const queryParams = new URLSearchParams();
-        if (selectedClientId) queryParams.set("clientId", selectedClientId);
-        if (fileId) queryParams.set("fileId", fileId);
-        
-        const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
-        const res = await fetch(`/api/calendar${query}`);
-        if (!res.ok) throw new Error("Error al cargar eventos");
-        const data = await res.json();
-        setEvents(data);
-      } catch (error: any) {
-        toast.error(error.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadEvents();
-  }, [selectedClientId, fileId, currentDate]);
-
+  const queryParams = new URLSearchParams();
+  if (selectedClientId) queryParams.set("clientId", selectedClientId);
+  if (fileId) queryParams.set("fileId", fileId);
+  const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
+  
+  const { data, error, isLoading: loading } = useSWR(`/api/calendar${query}`, fetcher);
+  const events = data || [];
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const today = () => setCurrentDate(new Date());

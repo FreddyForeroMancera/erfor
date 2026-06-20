@@ -4,6 +4,7 @@ import { useState, Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { X, CalendarPlus, Loader2, Calendar, FileText, User } from "lucide-react";
 import toast from "react-hot-toast";
+import { mutate } from "swr";
 
 interface NewTaskModalProps {
   isOpen: boolean;
@@ -30,6 +31,9 @@ export function NewTaskModal({ isOpen, onClose, onSuccess }: NewTaskModalProps) 
       await new Promise(resolve => setTimeout(resolve, 800));
       
       toast.success("Tarea ambiental creada y asignada exitosamente");
+      mutate(key => typeof key === 'string' && key.startsWith('/api/dashboard'));
+      mutate(key => typeof key === 'string' && key.startsWith('/api/expedientes'));
+      mutate(key => typeof key === 'string' && key.startsWith('/api/calendar'));
       if (onSuccess) onSuccess();
       onClose();
       

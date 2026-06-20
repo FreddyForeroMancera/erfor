@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { useClient } from "@/lib/client-context";
 import { Loader2, MapPin, Search, Plus, Map as MapIcon, ChevronRight, FileArchive, Building2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -11,8 +13,6 @@ export function PropertiesModule({ clientId }: { clientId?: string }) {
   const { selectedClientId } = useClient();
   const effectiveClientId = clientId || selectedClientId;
   const router = useRouter();
-  const [properties, setProperties] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   const getImageForProperty = (name: string) => {
@@ -30,28 +30,12 @@ export function PropertiesModule({ clientId }: { clientId?: string }) {
     return { files: 0, visits: 0 };
   };
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      try {
-        const query = new URLSearchParams();
-        if (effectiveClientId) query.set("clientId", effectiveClientId);
-        if (search) query.set("q", search);
-        
-        const res = await fetch(`/api/properties?${query.toString()}`);
-        if (!res.ok) throw new Error("Error al cargar predios");
-        const data = await res.json();
-        setProperties(data.items || []);
-      } catch (error: any) {
-        toast.error(error.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    const timer = setTimeout(load, 300);
-    return () => clearTimeout(timer);
-  }, [effectiveClientId, search]);
-
+  const query = new URLSearchParams();
+  if (effectiveClientId) query.set("clientId", effectiveClientId);
+  if (search) query.set("q", search);
+  
+  const { data, error, isLoading: loading } = useSWR(`/api/properties?${query.toString()}`, fetcher);
+  const properties = data?.items || [];
   return (
     <div className="p-4 lg:p-6 xl:p-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">

@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useSWR, { mutate } from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { useClient } from "@/lib/client-context";
 import { Loader2, Search, Plus, FolderKanban, ChevronRight, Building2, FileArchive, X } from "lucide-react";
 import toast from "react-hot-toast";
@@ -11,8 +13,6 @@ export function FilesModule({ clientId }: { clientId?: string }) {
   const { selectedClientId } = useClient();
   const effectiveClientId = clientId || selectedClientId;
   const router = useRouter();
-  const [files, setFiles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -59,9 +59,8 @@ export function FilesModule({ clientId }: { clientId?: string }) {
       if (!res.ok) throw new Error("Error al crear expediente");
       toast.success("Expediente creado");
       setIsModalOpen(false);
-      // Recargar expedientes
-      setSearch(search + " ");
-      setTimeout(() => setSearch(search.trim()), 0);
+      mutate(key => typeof key === 'string' && key.startsWith('/api/expedientes'));
+      mutate(key => typeof key === 'string' && key.startsWith('/api/dashboard'));
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -78,27 +77,12 @@ export function FilesModule({ clientId }: { clientId?: string }) {
     return "En trámite";
   };
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      try {
-        const query = new URLSearchParams();
-        if (effectiveClientId) query.set("clientId", effectiveClientId);
-        if (search) query.set("q", search);
-        
-        const res = await fetch(`/api/expedientes?${query.toString()}`);
-        if (!res.ok) throw new Error("Error al cargar expedientes");
-        const data = await res.json();
-        setFiles(data.items || []);
-      } catch (error: any) {
-        toast.error(error.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    const timer = setTimeout(load, 300);
-    return () => clearTimeout(timer);
-  }, [effectiveClientId, search]);
+  const query = new URLSearchParams();
+  if (effectiveClientId) query.set("clientId", effectiveClientId);
+  if (search) query.set("q", search);
+  
+  const { data, error, isLoading: loading } = useSWR(`/api/expedientes?${query.toString()}`, fetcher);
+  const files = data?.items || [];
 
   return (
     <div className="p-4 lg:p-6 xl:p-8">
