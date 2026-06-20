@@ -43,6 +43,7 @@ import { ClientSelector } from "./client-selector";
 import { useClient } from "@/lib/client-context";
 
 import { NewExpedienteModal } from "./new-expediente-modal";
+import { NewClientModal } from "./new-client-modal";
 
 const nav = [
   { label: "Panel Maestro", href: "/dashboard", icon: Gauge },
@@ -365,25 +366,43 @@ function IconButton({ children, title }: { children: React.ReactNode; title: str
 
 export function QuickActions() {
   const [isExpedienteModalOpen, setIsExpedienteModalOpen] = useState(false);
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
 
   return (
     <>
-      <div className="w-full overflow-hidden rounded-lg bg-erfor-green/90 text-white shadow-soft backdrop-blur transition hover:bg-erfor-green">
-        <button 
-          onClick={() => setIsExpedienteModalOpen(true)} 
-          className="flex w-full items-center justify-center gap-3 py-3 px-4 transition group"
-        >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-erfor-green transition group-hover:scale-110">
-            <FolderKanban className="h-4 w-4" />
-          </span>
-          <span className="text-base font-semibold">Crear nuevo Expediente</span>
-          <span className="text-sm text-white/80 font-medium ml-2"></span>
-        </button>
+      <div className="grid grid-cols-2 gap-4 w-full">
+        <div className="w-full overflow-hidden rounded-lg bg-erfor-green/90 text-white shadow-soft backdrop-blur transition hover:bg-erfor-green">
+          <button 
+            onClick={() => setIsExpedienteModalOpen(true)} 
+            className="flex w-full items-center justify-center gap-3 py-3 px-4 transition group"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-erfor-green transition group-hover:scale-110">
+              <FolderKanban className="h-4 w-4" />
+            </span>
+            <span className="text-base font-semibold">Crear nuevo Expediente</span>
+          </button>
+        </div>
+        <div className="w-full overflow-hidden rounded-lg bg-slate-800/90 text-white shadow-soft backdrop-blur transition hover:bg-slate-800">
+          <button 
+            onClick={() => setIsClientModalOpen(true)} 
+            className="flex w-full items-center justify-center gap-3 py-3 px-4 transition group"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-800 transition group-hover:scale-110">
+              <UsersRound className="h-4 w-4" />
+            </span>
+            <span className="text-base font-semibold">Crear Nuevo Cliente</span>
+          </button>
+        </div>
       </div>
       <NewExpedienteModal 
         isOpen={isExpedienteModalOpen} 
         onClose={() => setIsExpedienteModalOpen(false)} 
         onSuccess={() => { window.location.reload(); }} 
+      />
+      <NewClientModal
+        isOpen={isClientModalOpen}
+        onClose={() => setIsClientModalOpen(false)}
+        onSuccess={() => { window.location.reload(); }}
       />
     </>
   );
