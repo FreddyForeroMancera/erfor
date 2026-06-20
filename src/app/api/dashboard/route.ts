@@ -83,8 +83,8 @@ export async function GET(request: Request) {
     ];
 
     const simulatedAlerts = [
-      { id: "sa-1", title: "Licencia ANLA por Vencer", description: "Vence en 15 días", severity: "CRITICAL", dueDate: new Date(new Date().setDate(new Date().getDate() + 15)).toISOString() },
-      { id: "sa-2", title: "Concepto Técnico Pendiente", description: "Requiere radicación en CAR", severity: "HIGH", dueDate: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString() }
+      { id: "sa-1", title: "Licencia ANLA por Vencer", description: "Vence en 15 días", severity: "CRITICAL", dueDate: new Date(new Date().setDate(new Date().getDate() + 15)).toISOString(), fileCode: "EXP-2024-156", clientName: "Hacienda Esperanza" },
+      { id: "sa-2", title: "Concepto Técnico Pendiente", description: "Requiere radicación en CAR", severity: "HIGH", dueDate: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString(), fileCode: "EXP-2023-089", clientName: "Lote Industrial" }
     ];
 
     const simulatedActivity = [

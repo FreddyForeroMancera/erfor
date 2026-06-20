@@ -17,7 +17,7 @@ type DashboardData = {
     filesByAuthority: { authority: string; _count: number }[];
   };
   tasks: { id: string; title: string; dueDate?: string; client?: { name: string } }[];
-  alerts: { id: string; title: string; description?: string; severity: string; dueDate?: string }[];
+  alerts: { id: string; title: string; description?: string; severity: string; dueDate?: string; fileCode?: string; clientName?: string }[];
   recentActivity: { id: string; action: string; description: string; createdAt: string }[];
   integrations: { id: string; name: string; type: string; status: string }[];
 };
@@ -164,6 +164,11 @@ export function Dashboard() {
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-bold text-slate-800">{alert.title}</p>
+                          {(alert.fileCode || alert.clientName) && (
+                            <p className="text-xs font-semibold text-erfor-green mt-1">
+                              {alert.fileCode} {alert.clientName ? `• Cliente: ${alert.clientName}` : ""}
+                            </p>
+                          )}
                           {alert.description && <p className="text-sm text-slate-600 mt-1">{alert.description}</p>}
                           {alert.dueDate && <p className="text-xs text-slate-500 mt-2 font-medium">Vence: {new Date(alert.dueDate).toLocaleDateString("es-CO", { year: 'numeric', month: 'long', day: 'numeric' })}</p>}
                         </div>
