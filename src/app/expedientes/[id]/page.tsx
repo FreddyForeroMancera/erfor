@@ -3,7 +3,7 @@
 import { useEffect, useState, use, Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { AppShell } from "@/components/app-shell";
-import { Loader2, ArrowLeft, FolderKanban, FileBarChart, FileArchive, Leaf, Upload, FileCheck, Calendar, X } from "lucide-react";
+import { Loader2, ArrowLeft, FolderKanban, FileBarChart, FileArchive, Leaf, Upload, FileCheck, Calendar, X, Check } from "lucide-react";
 import { ObligationsModule } from "@/components/obligations-module";
 import { CalendarModule } from "@/components/calendar-module";
 import { PhotoGalleryModule } from "@/components/photo-gallery-module";
@@ -36,6 +36,7 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState("En Proceso");
 
   useEffect(() => {
     async function loadData() {
@@ -106,46 +107,39 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
           <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Estado</h2>
         </div>
         <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-600">En Proceso</p>
-                <p className="mt-4 text-3xl font-bold">0</p>
-                <p className="mt-3 text-xs text-slate-500">Preparación y Revisión</p>
-              </div>
-              <FolderKanban className="mt-6 h-8 w-8 text-erfor-green" />
-            </div>
-          </article>
-          <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-600">En Trámite</p>
-                <p className="mt-4 text-3xl font-bold">{file.procedures?.length || 0}</p>
-                <p className="mt-3 text-xs text-slate-500">Ante autoridades</p>
-              </div>
-              <FileBarChart className="mt-6 h-8 w-8 text-sky-600" />
-            </div>
-          </article>
-          <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-600">Otorgado</p>
-                <p className="mt-4 text-3xl font-bold">0</p>
-                <p className="mt-3 text-xs text-slate-500">Permisos y Licencias</p>
-              </div>
-              <FileCheck className="mt-6 h-8 w-8 text-amber-500" />
-            </div>
-          </article>
-          <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-600">En Seguimiento</p>
-                <p className="mt-4 text-3xl font-bold">{file.procedures?.length || 0}</p>
-                <p className="mt-3 text-xs text-slate-500">Vigilancia de Obligaciones</p>
-              </div>
-              <Calendar className="mt-6 h-8 w-8 text-red-600" />
-            </div>
-          </article>
+          {[
+            { label: "En Proceso", sub: "Preparación y Revisión", icon: FolderKanban, color: "text-erfor-green", activeColor: "border-erfor-green bg-green-50/50 ring-1 ring-erfor-green" },
+            { label: "En Trámite", sub: "Ante autoridades", icon: FileBarChart, color: "text-sky-600", activeColor: "border-sky-600 bg-sky-50/50 ring-1 ring-sky-600" },
+            { label: "Otorgado", sub: "Permisos y Licencias", icon: FileCheck, color: "text-amber-500", activeColor: "border-amber-500 bg-amber-50/50 ring-1 ring-amber-500" },
+            { label: "En Seguimiento", sub: "Vigilancia de Obligaciones", icon: Calendar, color: "text-red-600", activeColor: "border-red-600 bg-red-50/50 ring-1 ring-red-600" },
+          ].map(({ label, sub, icon: Component, color, activeColor }) => {
+            const isActive = currentStatus === label;
+            return (
+              <article 
+                key={label}
+                onClick={() => setCurrentStatus(label)}
+                className={`relative cursor-pointer rounded-lg border p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md ${isActive ? activeColor : 'border-slate-200 bg-white hover:border-slate-300'}`}
+              >
+                {isActive && (
+                  <div className="absolute top-4 right-4 flex h-6 w-6 items-center justify-center rounded-full bg-slate-800 text-white shadow">
+                    <Check className="h-4 w-4" />
+                  </div>
+                )}
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className={`font-bold ${isActive ? 'text-slate-900' : 'text-slate-600'}`}>{label}</p>
+                    <p className="mt-1 text-xs text-slate-500">{sub}</p>
+                    {isActive ? (
+                      <span className="mt-4 inline-block rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800 shadow-sm border border-slate-200">Estado Actual</span>
+                    ) : (
+                      <span className="mt-4 inline-block text-xs font-medium text-slate-400">Clic para activar</span>
+                    )}
+                  </div>
+                  {!isActive && <Component className={`mt-1 h-8 w-8 ${color} opacity-70 transition-transform group-hover:scale-110`} />}
+                </div>
+              </article>
+            );
+          })}
         </div>
 
         <section className="flex flex-col gap-4">
