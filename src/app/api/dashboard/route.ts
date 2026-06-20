@@ -74,8 +74,18 @@ export async function GET(request: Request) {
     const alertsList = await prisma.alert.findMany({ 
       where: { ...baseWhere, status: "OPEN" }, 
       orderBy: { dueDate: "asc" }, 
-      take: 6 
+      take: 6,
+      include: {
+        client: true,
+        environmentalFile: true
+      }
     });
+
+    const formattedAlertsList = alertsList.map(a => ({
+      ...a,
+      clientName: a.client?.name,
+      fileCode: a.environmentalFile?.officialCode || a.environmentalFile?.internalCode
+    }));
 
     const simulatedTasks = [
       { id: "st-1", title: "Actualizar Matriz Legal", dueDate: new Date().toISOString(), client: { name: "Hacienda Esperanza" } },
@@ -114,7 +124,7 @@ export async function GET(request: Request) {
       },
       charts: { obligationsByCategory, proceduresByStatus, filesByAuthority },
       tasks: tasks.length ? tasks : simulatedTasks,
-      alerts: alertsList.length ? alertsList : simulatedAlerts,
+      alerts: formattedAlertsList.length ? formattedAlertsList : simulatedAlerts,
       recentActivity: recentActivity.length ? recentActivity : simulatedActivity,
       integrations
     });
