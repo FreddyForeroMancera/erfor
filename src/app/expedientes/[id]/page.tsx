@@ -287,11 +287,11 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
               href="/calendario-y-alertas" 
               action={<button onClick={() => setIsNewTaskModalOpen(true)} className="text-xs bg-erfor-green text-white px-2 py-1 rounded hover:bg-green-700 transition">Crear Tarea</button>}
               items={[
-                { title: "Radicar respuesta a requerimiento CAR", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-06-20" },
-                { title: "Actualizar Plan de Contingencia", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-06-25" },
-                { title: "Pago de Tasa por Uso de Agua", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-07-01" },
-                { title: "Preparar informe de monitoreo", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-07-10" },
-                { title: "Visita de inspección ocular programada", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-07-15" }
+                { title: "Radicar respuesta a requerimiento CAR", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-06-20", type: "Trámite CAR", priority: "🔴 Alta", assignee: "Abogado / Jurídico", requiresDocument: true, description: "Se debe entregar radicado oficial de respuesta al requerimiento." },
+                { title: "Actualizar Plan de Contingencia", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-06-25", type: "Informe", priority: "🟡 Media", assignee: "Ingeniero Residente", description: "Revisar anexos cartográficos y actualizar firmas responsables." },
+                { title: "Pago de Tasa por Uso de Agua", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-07-01", type: "Financiero", priority: "🔴 Alta", assignee: "Responsabilidad del Cliente", requiresDocument: true, description: "Subir comprobante de pago emitido por la entidad." },
+                { title: "Preparar informe de monitoreo", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-07-10", type: "Monitoreo", priority: "🟡 Media", assignee: "Auditor Ambiental", description: "Recopilar resultados de laboratorio y cruzar contra norma." },
+                { title: "Visita de inspección ocular programada", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-07-15", type: "Visita Técnica", priority: "🟡 Media", assignee: "Ingeniero Residente" }
               ]} 
             />
             <SideList title="Alertas" href="/calendario-y-alertas" items={(dashboardData?.alerts || []).map((item: any) => ({ title: item.title, sub: item.description || item.severity, date: item.dueDate?.slice(0, 10) }))} />
@@ -318,8 +318,19 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
   );
 }
 
-function SideList({ title, items, href, action }: { title: string; items: { title: string; sub: string; date?: string }[]; href?: string; action?: React.ReactNode }) {
-  const [selectedItem, setSelectedItem] = useState<{ title: string; sub: string; date?: string } | null>(null);
+type SideListItem = {
+  title: string;
+  sub: string;
+  date?: string;
+  type?: string;
+  priority?: string;
+  assignee?: string;
+  requiresDocument?: boolean;
+  description?: string;
+};
+
+function SideList({ title, items, href, action }: { title: string; items: SideListItem[]; href?: string; action?: React.ReactNode }) {
+  const [selectedItem, setSelectedItem] = useState<SideListItem | null>(null);
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -389,14 +400,50 @@ function SideList({ title, items, href, action }: { title: string; items: { titl
                       <p className="text-xs font-semibold text-slate-500 uppercase">Título</p>
                       <p className="font-semibold text-slate-800 mt-1">{selectedItem?.title}</p>
                     </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-500 uppercase">Descripción / Referencia</p>
-                      <p className="text-slate-700 mt-1">{selectedItem?.sub}</p>
-                    </div>
-                    {selectedItem?.date && (
+                    {selectedItem?.type && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs font-semibold text-slate-500 uppercase">Tipo</p>
+                          <p className="font-medium text-slate-800 mt-1">{selectedItem.type}</p>
+                        </div>
+                        {selectedItem.priority && (
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase">Prioridad</p>
+                            <p className="font-medium text-slate-800 mt-1">{selectedItem.priority}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {selectedItem?.assignee && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs font-semibold text-slate-500 uppercase">Asignado a</p>
+                          <p className="font-medium text-slate-800 mt-1">{selectedItem.assignee}</p>
+                        </div>
+                        {selectedItem.date && (
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase">Fecha Límite</p>
+                            <p className="font-medium text-slate-800 mt-1">{selectedItem.date}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {(!selectedItem?.assignee && selectedItem?.date) && (
                       <div>
-                        <p className="text-xs font-semibold text-slate-500 uppercase">Fecha</p>
-                        <p className="text-slate-700 mt-1 font-medium">{selectedItem.date}</p>
+                        <p className="text-xs font-semibold text-slate-500 uppercase">Fecha Límite</p>
+                        <p className="font-medium text-slate-800 mt-1">{selectedItem.date}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase">{selectedItem?.description ? "Descripción / Detalles" : "Descripción / Referencia"}</p>
+                      <p className="text-slate-700 mt-1">{selectedItem?.description || selectedItem?.sub}</p>
+                    </div>
+                    {selectedItem?.requiresDocument && (
+                      <div className="p-3 bg-blue-50 border border-blue-100 rounded-md">
+                        <p className="text-xs font-medium text-blue-800 flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-blue-500"></span>
+                          Requiere cargar comprobante o radicado al finalizar.
+                        </p>
                       </div>
                     )}
                   </div>
