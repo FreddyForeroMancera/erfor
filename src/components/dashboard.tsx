@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import { useClient } from "@/lib/client-context";
 import { QuotesModal } from "@/components/quotes-modal";
 import { TramitesModal } from "@/components/tramites-modal";
+import React from "react";
 
 type DashboardData = {
   kpis: Record<string, number>;
@@ -42,6 +43,29 @@ const statusTranslations: Record<string, string> = {
   READY: "Listo para Uso",
   PENDING_VALIDATION: "Pendiente"
 };
+
+const KpiCard = React.memo(({ 
+  label, value, sub, icon: Component, color, onClick, isClickable, isCotizaciones 
+}: { 
+  label: string, value: number, sub: string, icon: LucideIcon, color: string, onClick?: () => void, isClickable: boolean, isCotizaciones: boolean 
+}) => {
+  return (
+    <article 
+      className={`group rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md ${isClickable ? "cursor-pointer ring-1 ring-transparent " + (isCotizaciones ? "hover:ring-erfor-green hover:border-erfor-green" : "hover:ring-sky-600 hover:border-sky-600") : ""}`}
+      onClick={onClick}
+    >
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm text-slate-600">{label}</p>
+          <p className="mt-4 text-3xl font-bold">{String(value)}</p>
+          <p className="mt-3 text-xs text-slate-500">{sub}</p>
+        </div>
+        <Component className={`mt-6 h-8 w-8 ${color} transition group-hover:scale-110`} />
+      </div>
+    </article>
+  );
+});
+KpiCard.displayName = "KpiCard";
 
 export function Dashboard() {
   const { selectedClientId } = useClient();
@@ -77,6 +101,11 @@ export function Dashboard() {
 
   return (
     <main className="p-4 lg:p-6 xl:p-8">
+      {error && (
+        <div className="mb-4 rounded-md bg-red-50 p-4 border border-red-200">
+          <p className="text-sm text-red-700">Hubo un error al cargar los datos: {error.message}</p>
+        </div>
+      )}
       <section className="flex flex-col gap-4">
         <div>
           <div className="relative overflow-hidden rounded-lg bg-erfor-ink p-7 text-white shadow-soft">
@@ -101,29 +130,26 @@ export function Dashboard() {
                   <div className="mt-6 h-8 w-8 rounded-full bg-slate-200"></div>
                 </div>
               </article>
-            )) : kpis.map(({ label, value, sub, icon: Component, color }) => {
+            )) : kpis.map(({ label, value, sub, icon, color }) => {
               const isCotizaciones = label === "COTIZACIONES";
               const isEnTramite = label === "En Trámite";
               const isClickable = isCotizaciones || isEnTramite;
 
               return (
-                <article 
-                  key={String(label)} 
-                  className={`group rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md ${isClickable ? "cursor-pointer ring-1 ring-transparent " + (isCotizaciones ? "hover:ring-erfor-green hover:border-erfor-green" : "hover:ring-sky-600 hover:border-sky-600") : ""}`}
+                <KpiCard
+                  key={label}
+                  label={label}
+                  value={value}
+                  sub={sub}
+                  icon={icon}
+                  color={color}
+                  isClickable={isClickable}
+                  isCotizaciones={isCotizaciones}
                   onClick={() => {
                     if (isCotizaciones) setIsQuotesModalOpen(true);
                     if (isEnTramite) setIsTramitesModalOpen(true);
                   }}
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm text-slate-600">{label}</p>
-                      <p className="mt-4 text-3xl font-bold">{String(value)}</p>
-                      <p className="mt-3 text-xs text-slate-500">{sub}</p>
-                    </div>
-                    <Component className={`mt-6 h-8 w-8 ${color} transition group-hover:scale-110`} />
-                  </div>
-                </article>
+                />
               );
             })}
           </div>
@@ -131,11 +157,11 @@ export function Dashboard() {
           <div className="mt-3 mb-6 flex items-center gap-6 px-1 text-sm font-medium text-slate-600">
             <p className="flex items-center gap-2">
               <FolderKanban className="h-4 w-4 text-slate-400" />
-              Número de Expedientes: <span className="font-bold text-slate-800">142</span>
+              Número de Expedientes: <span className="font-bold text-slate-800">{data?.kpis?.files || 0}</span>
             </p>
             <p className="flex items-center gap-2">
               <UsersRound className="h-4 w-4 text-slate-400" />
-              Número de Clientes: <span className="font-bold text-slate-800">18</span>
+              Número de Clientes: <span className="font-bold text-slate-800">{data?.kpis?.clients || 0}</span>
             </p>
           </div>
 

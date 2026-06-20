@@ -1,11 +1,15 @@
-export const fetcher = async (url: string) => {
-  const res = await fetch(url);
+export const fetcher = async <T>(url: string): Promise<T> => {
+  const headers: HeadersInit = {};
+  if (process.env.NEXT_PUBLIC_API_TOKEN) {
+    headers["Authorization"] = `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}`;
+  }
+
+  const res = await fetch(url, { headers });
   if (!res.ok) {
     const error = new Error("An error occurred while fetching the data.");
-    // Attach extra info to the error object.
     (error as any).info = await res.json().catch(() => ({}));
     (error as any).status = res.status;
     throw error;
   }
-  return res.json();
+  return res.json() as Promise<T>;
 };

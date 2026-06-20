@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, Fragment } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { Listbox, Transition } from "@headlessui/react";
 import { Check, ChevronDown, Building2, Globe } from "lucide-react";
 import { useClient } from "@/lib/client-context";
@@ -12,20 +14,8 @@ type ClientLight = {
 
 export function ClientSelector() {
   const { selectedClientId, setSelectedClientId } = useClient();
-  const [clients, setClients] = useState<ClientLight[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/clients?limit=100")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.items) {
-          setClients(data.items.map((i: any) => ({ id: i.id, name: i.name })));
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+  const { data, error, isLoading: loading } = useSWR<{ items: ClientLight[] }>("/api/clients?limit=100", fetcher);
+  const clients = data?.items || [];
 
   const selected = clients.find((c) => c.id === selectedClientId);
 

@@ -50,7 +50,7 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
       setEmail("");
       setPhone("");
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.success("Cliente simulado exitosamente"); // Fallback for demo
       onClose();
     } finally {

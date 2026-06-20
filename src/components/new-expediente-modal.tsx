@@ -105,7 +105,7 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
       setClientName(""); setClientDocument(""); setClientAddress(""); setClientPhone("");
       setPropertyName(""); setPropertyCadastral(""); setPropertyRegistration("");
       setProcedures([]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message);
     } finally {
       setLoading(false);

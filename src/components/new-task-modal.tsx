@@ -45,7 +45,7 @@ export function NewTaskModal({ isOpen, onClose, onSuccess }: NewTaskModalProps) 
       setAssignee("");
       setDescription("");
       setRequiresDocument(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Hubo un error al crear la tarea");
     } finally {
       setLoading(false);

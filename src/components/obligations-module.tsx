@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Check, X, Calendar as CalendarIcon, ClipboardCheck } from "lucide-react";
+import { usePersistedToggle } from "@/hooks/use-persisted-toggle";
 
 type ObligationStatus = "CUMPLIDO" | "NO_CUMPLIDO" | "PENDIENTE";
 
@@ -15,30 +16,10 @@ interface ObligationItem {
 }
 
 export function ObligationsModule({ fileId }: { fileId: string }) {
-  const [isActive, setIsActive] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedState = localStorage.getItem(`obligations-active-${fileId}`);
-      if (savedState) {
-        setIsActive(savedState === "true");
-      }
-    }
-  }, [fileId]);
-
-  const handleToggleActive = () => {
-    const newState = !isActive;
-    setIsActive(newState);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(`obligations-active-${fileId}`, newState.toString());
-    }
-  };
+  const [isActive, handleToggleActive, setIsActive] = usePersistedToggle(`obligations-active-${fileId}`, false);
 
   const handleActivate = () => {
     setIsActive(true);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(`obligations-active-${fileId}`, "true");
-    }
   };
   const [obligations, setObligations] = useState<ObligationItem[]>([
     { id: "1", category: "Compensación", status: "PENDIENTE", note: "" },
