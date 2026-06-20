@@ -127,7 +127,7 @@ export function FilesModule({ clientId }: { clientId?: string }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {files.map(file => {
+          {files.map((file: any) => {
             const displayStatus = mapStatus(file.status);
             
             return (

@@ -76,7 +76,7 @@ export function PropertiesModule({ clientId }: { clientId?: string }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {properties.map(prop => {
+          {properties.map((prop: any) => {
             const bgImage = getImageForProperty(prop.name);
             const stats = getSimulatedStats(prop.name);
             

@@ -1,4 +1,4 @@
-export const fetcher = async <T>(url: string): Promise<T> => {
+export const fetcher = async <T = any>(url: string): Promise<T> => {
   const headers: HeadersInit = {};
   if (process.env.NEXT_PUBLIC_API_TOKEN) {
     headers["Authorization"] = `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}`;

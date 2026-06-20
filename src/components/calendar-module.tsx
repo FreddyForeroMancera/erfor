@@ -30,7 +30,7 @@ export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded
   const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
   
   const { data, error, isLoading: loading } = useSWR(`/api/calendar${query}`, fetcher);
-  const events = data || [];
+  const events = (data || []).filter((e: CalendarEvent) => e);
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const today = () => setCurrentDate(new Date());
@@ -48,7 +48,7 @@ export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded
   }
 
   const getDayEvents = (d: Date) => {
-    return events.filter(e => e.date && isSameDay(parseISO(e.date), d));
+    return events.filter((e: CalendarEvent) => e.date && isSameDay(parseISO(e.date), d));
   };
 
   const getEventColor = (type: string, priority: string) => {
@@ -143,7 +143,7 @@ export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded
                   {dayEvents.length > 0 && <span className="text-xs font-bold text-slate-400">{dayEvents.length}</span>}
                 </div>
                 <div className="flex flex-col gap-1 overflow-y-auto flex-1 no-scrollbar">
-                  {dayEvents.slice(0, 4).map((evt, idx) => (
+                  {dayEvents.slice(0, 4).map((evt: CalendarEvent, idx: number) => (
                     <div 
                       key={evt.id} 
                       onClick={(e) => { e.stopPropagation(); setSelectedEvent(evt); }}

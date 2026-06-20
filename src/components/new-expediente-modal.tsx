@@ -106,7 +106,7 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
       setPropertyName(""); setPropertyCadastral(""); setPropertyRegistration("");
       setProcedures([]);
     } catch (error: unknown) {
-      toast.error(error.message);
+      toast.error(error instanceof Error ? error.message : "Hubo un error");
     } finally {
       setLoading(false);
     }
