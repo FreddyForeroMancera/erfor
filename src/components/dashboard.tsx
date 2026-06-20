@@ -10,6 +10,7 @@ import { QuickActions } from "@/components/app-shell";
 import toast from "react-hot-toast";
 import { useClient } from "@/lib/client-context";
 import { QuotesModal } from "@/components/quotes-modal";
+import { TramitesModal } from "@/components/tramites-modal";
 
 type DashboardData = {
   kpis: Record<string, number>;
@@ -45,6 +46,7 @@ const statusTranslations: Record<string, string> = {
 export function Dashboard() {
   const { selectedClientId } = useClient();
   const [isQuotesModalOpen, setIsQuotesModalOpen] = useState(false);
+  const [isTramitesModalOpen, setIsTramitesModalOpen] = useState(false);
 
   const url = selectedClientId ? `/api/dashboard?clientId=${selectedClientId}` : "/api/dashboard";
   const { data, error, isLoading: loading } = useSWR<DashboardData>(url, fetcher, {
@@ -101,11 +103,17 @@ export function Dashboard() {
               </article>
             )) : kpis.map(({ label, value, sub, icon: Component, color }) => {
               const isCotizaciones = label === "COTIZACIONES";
+              const isEnTramite = label === "En Trámite";
+              const isClickable = isCotizaciones || isEnTramite;
+
               return (
                 <article 
                   key={String(label)} 
-                  className={`group rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md ${isCotizaciones ? "cursor-pointer ring-1 ring-transparent hover:ring-erfor-green hover:border-erfor-green" : ""}`}
-                  onClick={() => isCotizaciones && setIsQuotesModalOpen(true)}
+                  className={`group rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md ${isClickable ? "cursor-pointer ring-1 ring-transparent " + (isCotizaciones ? "hover:ring-erfor-green hover:border-erfor-green" : "hover:ring-sky-600 hover:border-sky-600") : ""}`}
+                  onClick={() => {
+                    if (isCotizaciones) setIsQuotesModalOpen(true);
+                    if (isEnTramite) setIsTramitesModalOpen(true);
+                  }}
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -183,10 +191,8 @@ export function Dashboard() {
 
       </section>
 
-      <QuotesModal 
-        isOpen={isQuotesModalOpen} 
-        onClose={() => setIsQuotesModalOpen(false)} 
-      />
+      <QuotesModal isOpen={isQuotesModalOpen} onClose={() => setIsQuotesModalOpen(false)} />
+      <TramitesModal isOpen={isTramitesModalOpen} onClose={() => setIsTramitesModalOpen(false)} clientId={selectedClientId} />
     </main>
   );
 }
