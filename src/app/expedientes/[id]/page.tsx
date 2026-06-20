@@ -7,6 +7,7 @@ import { Loader2, ArrowLeft, FolderKanban, FileBarChart, FileArchive, Leaf, Uplo
 import { ObligationsModule } from "@/components/obligations-module";
 import { CalendarModule } from "@/components/calendar-module";
 import { PhotoGalleryModule } from "@/components/photo-gallery-module";
+import { NewTaskModal } from "@/components/new-task-modal";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -34,6 +35,7 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
   const [file, setFile] = useState<any>(null);
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -283,7 +285,7 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
             <SideList 
               title="Tareas del Expediente" 
               href="/calendario-y-alertas" 
-              action={<button className="text-xs bg-erfor-green text-white px-2 py-1 rounded hover:bg-green-700 transition">Crear Tarea</button>}
+              action={<button onClick={() => setIsNewTaskModalOpen(true)} className="text-xs bg-erfor-green text-white px-2 py-1 rounded hover:bg-green-700 transition">Crear Tarea</button>}
               items={[
                 { title: "Radicar respuesta a requerimiento CAR", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-06-20" },
                 { title: "Actualizar Plan de Contingencia", sub: file?.officialCode || file?.internalCode || "Expediente", date: "2026-06-25" },
@@ -297,6 +299,12 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
         </section>
 
       </div>
+      
+      <NewTaskModal 
+        isOpen={isNewTaskModalOpen} 
+        onClose={() => setIsNewTaskModalOpen(false)} 
+        onSuccess={() => window.location.reload()} 
+      />
     </AppShell>
   );
 }
