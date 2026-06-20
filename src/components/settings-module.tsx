@@ -1,12 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Building, Bell, Bot, Plug, Shield, Save, User, Mail, Smartphone, Globe, Lock, UploadCloud } from "lucide-react";
 import toast from "react-hot-toast";
 import { BulkImportModule } from "@/components/bulk-import-module";
 
 export function SettingsModule() {
   const [activeTab, setActiveTab] = useState("perfil");
+
+  const [companyData, setCompanyData] = useState({
+    name: "ERFOR Consultores Ambientales",
+    nit: "900.123.456-7",
+    address: "Calle 100 # 15-20, Bogotá",
+    adminName: "Erwin Forero",
+    adminEmail: "contacto@erfor.com"
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("erfor_settings");
+      if (saved) {
+        setCompanyData(JSON.parse(saved));
+      }
+    }
+  }, []);
 
   const tabs = [
     { id: "perfil", label: "Perfil y Empresa", icon: Building },
@@ -18,6 +35,9 @@ export function SettingsModule() {
   ];
 
   const handleSave = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("erfor_settings", JSON.stringify(companyData));
+    }
     toast.success("Configuración guardada correctamente");
   };
 
@@ -71,18 +91,18 @@ export function SettingsModule() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Building className="h-4 w-4 text-slate-400" />
                       </div>
-                      <input type="text" defaultValue="ERFOR Consultores Ambientales" className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-erfor-green focus:border-erfor-green text-sm" />
+                      <input type="text" value={companyData.name} onChange={(e) => setCompanyData({...companyData, name: e.target.value})} className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-erfor-green focus:border-erfor-green text-sm" />
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">NIT</label>
-                    <input type="text" defaultValue="900.123.456-7" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-erfor-green focus:border-erfor-green text-sm" />
+                    <input type="text" value={companyData.nit} onChange={(e) => setCompanyData({...companyData, nit: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-erfor-green focus:border-erfor-green text-sm" />
                   </div>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Dirección Principal</label>
-                  <input type="text" defaultValue="Calle 100 # 15-20, Bogotá" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-erfor-green focus:border-erfor-green text-sm" />
+                  <input type="text" value={companyData.address} onChange={(e) => setCompanyData({...companyData, address: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-erfor-green focus:border-erfor-green text-sm" />
                 </div>
 
                 <h2 className="text-lg font-bold text-slate-800 mb-4 mt-8 border-b border-slate-100 pb-2">Perfil del Administrador</h2>
@@ -93,7 +113,7 @@ export function SettingsModule() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <User className="h-4 w-4 text-slate-400" />
                       </div>
-                      <input type="text" defaultValue="Erwin Forero" className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-erfor-green focus:border-erfor-green text-sm" />
+                      <input type="text" value={companyData.adminName} onChange={(e) => setCompanyData({...companyData, adminName: e.target.value})} className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-erfor-green focus:border-erfor-green text-sm" />
                     </div>
                   </div>
                   <div>
@@ -102,7 +122,7 @@ export function SettingsModule() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Mail className="h-4 w-4 text-slate-400" />
                       </div>
-                      <input type="email" defaultValue="admin@erfor.com" className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-erfor-green focus:border-erfor-green text-sm" />
+                      <input type="email" value={companyData.adminEmail} onChange={(e) => setCompanyData({...companyData, adminEmail: e.target.value})} className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-erfor-green focus:border-erfor-green text-sm" />
                     </div>
                   </div>
                 </div>
