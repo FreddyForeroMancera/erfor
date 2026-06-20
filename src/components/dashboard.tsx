@@ -128,6 +128,17 @@ export function Dashboard() {
             })}
           </div>
 
+          <div className="mt-3 mb-6 flex items-center gap-6 px-1 text-sm font-medium text-slate-600">
+            <p className="flex items-center gap-2">
+              <FolderKanban className="h-4 w-4 text-slate-400" />
+              Número de Expedientes: <span className="font-bold text-slate-800">142</span>
+            </p>
+            <p className="flex items-center gap-2">
+              <UsersRound className="h-4 w-4 text-slate-400" />
+              Número de Clientes: <span className="font-bold text-slate-800">18</span>
+            </p>
+          </div>
+
           {/* Listado de Alertas General */}
           <div className="mt-4">
             <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
