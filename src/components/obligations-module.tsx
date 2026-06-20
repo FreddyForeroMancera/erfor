@@ -15,6 +15,7 @@ interface ObligationItem {
 }
 
 export function ObligationsModule({ fileId }: { fileId: string }) {
+  const [isActive, setIsActive] = useState(false);
   const [obligations, setObligations] = useState<ObligationItem[]>([
     { id: "1", category: "Compensación", status: "PENDIENTE", note: "" },
     { id: "2", category: "Sistema de Medición", status: "CUMPLIDO", note: "" },
@@ -35,13 +36,40 @@ export function ObligationsModule({ fileId }: { fileId: string }) {
   };
 
   return (
-    <section className="mt-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center gap-2 border-b border-slate-100 pb-4 mb-4">
-        <ClipboardCheck className="h-5 w-5 text-erfor-green" />
-        <h3 className="font-semibold text-slate-800">Módulo de OBLIGACIONES</h3>
+    <section className={`mt-4 rounded-lg border ${isActive ? "border-erfor-green/30 bg-white" : "border-slate-200 bg-slate-50/50"} p-5 shadow-sm transition-colors`}>
+      <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+        <div className="flex items-center gap-2">
+          <ClipboardCheck className={`h-5 w-5 ${isActive ? "text-erfor-green" : "text-slate-400"}`} />
+          <h3 className={`font-semibold ${isActive ? "text-slate-800" : "text-slate-500"}`}>Módulo de OBLIGACIONES</h3>
+        </div>
+        
+        <button
+          onClick={() => setIsActive(!isActive)}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-erfor-green focus:ring-offset-2 ${
+            isActive ? 'bg-erfor-green' : 'bg-slate-300'
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              isActive ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
       </div>
       
-      <div className="grid gap-3 md:grid-cols-2">
+      {!isActive ? (
+        <div className="py-8 text-center text-sm text-slate-500 flex flex-col items-center gap-2">
+          <ClipboardCheck className="h-8 w-8 text-slate-300 mb-2" />
+          <p>El módulo de obligaciones se encuentra desactivado.</p>
+          <button 
+            onClick={() => setIsActive(true)}
+            className="mt-2 text-erfor-green hover:underline font-medium"
+          >
+            Activar módulo
+          </button>
+        </div>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
         {obligations.map((obs) => (
           <div key={obs.id} className="flex flex-col justify-between rounded-md border border-slate-200 p-4 transition hover:border-erfor-green/50">
             <span className="font-semibold text-slate-800 mb-3">{obs.category}</span>
@@ -94,7 +122,8 @@ export function ObligationsModule({ fileId }: { fileId: string }) {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
     </section>
   );
 }
