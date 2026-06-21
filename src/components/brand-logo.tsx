@@ -13,11 +13,11 @@ export function BrandLogo({ variant, className }: BrandLogoProps) {
       <img
         src={src}
         alt="Logo"
-        className="block max-h-[42px] w-auto object-contain shrink-0"
+        className="block max-h-[60px] w-auto object-contain shrink-0"
         draggable={false}
       />
       <span className={cn(
-        "font-bold tracking-tight text-[1.35rem] leading-none",
+        "font-bold tracking-tight text-[1.75rem] leading-none",
         variant === "light" ? "text-white" : "text-[#062c28]"
       )}>
         AgroAmbiental

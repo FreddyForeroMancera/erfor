@@ -56,9 +56,9 @@ export default function LoginPage() {
               <Leaf className="h-4 w-4 text-erfor-lime" />
               Cumplimiento, sostenibilidad y confianza
             </div>
-            <h1 className="text-4xl font-semibold leading-tight lg:text-6xl">Control ambiental empresarial para Agroambiental.</h1>
+            <h1 className="text-4xl font-semibold leading-tight lg:text-6xl">Control Agroambiental Empresarial</h1>
             <p className="mt-5 text-lg leading-8 text-white/72">
-              Administra clientes, expedientes, obligaciones, documentos, alertas, reportes e IA contextual desde una sola operación.
+              Administración de Clientes
             </p>
           </div>
           <p className="relative text-sm text-white/55">Gestión · Cumplimiento · Sostenibilidad</p>
