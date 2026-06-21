@@ -49,7 +49,8 @@ export default function LoginPage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(47,168,79,.26),transparent_34%),linear-gradient(135deg,rgba(6,44,40,.96),rgba(4,20,24,.98))]" />
           <div className="relative">
             <BrandLogo variant="light" size="xl" className="w-max" />
-            <p className="mt-3 max-w-sm text-lg text-white/82">Plataforma Integral de Asesoría Ambiental</p>
+            <p className="mt-4 max-w-sm text-xl font-medium text-white/90">Plataforma de Asesorías Agroambientales</p>
+            <p className="mt-2 text-sm tracking-wide text-white/70 uppercase">Gestión – Cumplimiento – Sostenibilidad</p>
           </div>
           <div className="relative max-w-xl">
             <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-4 py-2 text-sm text-white/78">
