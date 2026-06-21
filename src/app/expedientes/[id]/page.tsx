@@ -40,6 +40,17 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
   const loading = dashLoading || fileLoading;
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("En Proceso");
+  const [pendingStatusChange, setPendingStatusChange] = useState<string | null>(null);
+
+  const confirmStatusChange = () => {
+    if (pendingStatusChange) {
+      setCurrentStatus(pendingStatusChange);
+      mutate(key => typeof key === 'string' && key.startsWith('/api/dashboard'));
+      mutate(key => typeof key === 'string' && key.startsWith('/api/expedientes'));
+      toast.success(`Estado actualizado a: ${pendingStatusChange}`);
+      setPendingStatusChange(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -102,10 +113,9 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
               <article 
                 key={label}
                 onClick={() => {
-                  setCurrentStatus(label);
-                  mutate(key => typeof key === 'string' && key.startsWith('/api/dashboard'));
-                  mutate(key => typeof key === 'string' && key.startsWith('/api/expedientes'));
-                  toast.success(`Estado actualizado a: ${label}`);
+                  if (currentStatus !== label) {
+                    setPendingStatusChange(label);
+                  }
                 }}
                 className={`relative cursor-pointer rounded-lg border p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md ${isActive ? activeColor : 'border-slate-200 bg-white hover:border-slate-300'}`}
               >
@@ -288,6 +298,68 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
         onClose={() => setIsNewTaskModalOpen(false)} 
         onSuccess={() => window.location.reload()} 
       />
+
+      <Transition appear show={!!pendingStatusChange} as={Fragment}>
+        <Dialog as="div" className="relative z-[100]" onClose={() => setPendingStatusChange(null)}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-sm transform overflow-hidden rounded-2xl bg-white text-left align-middle shadow-xl transition-all">
+                  <div className="px-6 py-6 text-center">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 mb-4">
+                      <FileCheck className="h-6 w-6 text-amber-600" />
+                    </div>
+                    <Dialog.Title as="h3" className="text-lg font-bold text-slate-800">
+                      Confirmar Cambio de Estado
+                    </Dialog.Title>
+                    <div className="mt-2">
+                      <p className="text-sm text-slate-500">
+                        ¿Estás seguro que deseas cambiar el estado de este expediente a <span className="font-bold text-slate-800">{pendingStatusChange}</span>?
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 px-6 py-4 flex items-center justify-center gap-3 border-t border-slate-100">
+                    <button
+                      type="button"
+                      className="inline-flex justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none"
+                      onClick={() => setPendingStatusChange(null)}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex justify-center rounded-md border border-transparent bg-erfor-green px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:outline-none"
+                      onClick={confirmStatusChange}
+                    >
+                      Sí, cambiar estado
+                    </button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
     </AppShell>
   );
 }
