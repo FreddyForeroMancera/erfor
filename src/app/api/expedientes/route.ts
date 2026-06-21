@@ -40,9 +40,10 @@ export async function POST(request: Request) {
       const client = await prisma.client.create({
         data: {
           name: data.clientName,
-          type: "EMPRESA", // Default for now
-          documentType: "NIT",
+          type: data.clientType || "JURIDICA",
+          documentType: data.clientDocumentType || "NIT",
           documentNumber: data.clientDocument,
+          email: data.clientEmail,
           address: data.clientAddress,
           phone: data.clientPhone,
           status: "ACTIVE",
@@ -59,7 +60,9 @@ export async function POST(request: Request) {
           clientId,
           name: data.propertyName,
           cadastralCode: data.propertyCadastral,
-          realEstateRegistration: data.propertyRegistration
+          realEstateRegistration: data.propertyRegistration,
+          owner: data.propertyAdminName,
+          notes: data.propertyAdminPhone ? `Teléfono del administrador: ${data.propertyAdminPhone}` : undefined
         }
       });
       propertyId = property.id;

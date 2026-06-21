@@ -40,9 +40,15 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
   
   // Cliente
   const [clientName, setClientName] = useState("");
+  const [clientType, setClientType] = useState("JURIDICA");
+  const [clientDocumentType, setClientDocumentType] = useState("NIT");
   const [clientDocument, setClientDocument] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
   const [clientAddress, setClientAddress] = useState("");
   const [clientPhone, setClientPhone] = useState("");
+  const [propertyAdminName, setPropertyAdminName] = useState("");
+  const [propertyAdminPhone, setPropertyAdminPhone] = useState("");
+  const [rutFile, setRutFile] = useState<File | null>(null);
 
   // Predio
   const [propertyName, setPropertyName] = useState("");
@@ -82,12 +88,17 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
           carRegional,
           type,
           clientName,
+          clientType,
+          clientDocumentType,
           clientDocument,
+          clientEmail,
           clientAddress,
           clientPhone,
           propertyName,
           propertyCadastral,
           propertyRegistration,
+          propertyAdminName,
+          propertyAdminPhone,
           procedures
         })
       });
@@ -97,12 +108,31 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
         throw new Error(error.error || "Error al crear expediente");
       }
 
-      toast.success("Expediente creado correctamente");
+      const createdItem = await res.json();
+
+      if (rutFile && createdItem.clientId) {
+        const formData = new FormData();
+        formData.append("file", rutFile);
+        formData.append("clientId", createdItem.clientId);
+        formData.append("category", "RUT");
+        
+        const uploadRes = await fetch("/api/documents/upload", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!uploadRes.ok) {
+          toast.error("El cliente se creó, pero hubo un error al subir el RUT.");
+        }
+      }
+
+      toast.success("Cliente y expediente creados correctamente");
       onSuccess();
       onClose();
       // Reset form
       setInternalCode(""); setCarRegional(""); setType("PERMISIVO");
-      setClientName(""); setClientDocument(""); setClientAddress(""); setClientPhone("");
+      setClientName(""); setClientType("JURIDICA"); setClientDocumentType("NIT"); setClientDocument(""); setClientEmail(""); setClientAddress(""); setClientPhone("");
+      setPropertyAdminName(""); setPropertyAdminPhone(""); setRutFile(null);
       setPropertyName(""); setPropertyCadastral(""); setPropertyRegistration("");
       setProcedures([]);
     } catch (error: unknown) {
@@ -161,16 +191,47 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
                           <input required type="text" value={clientName} onChange={e => setClientName(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Nombre de la empresa o persona" />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Identificación (NIT/CC)</label>
-                          <input type="text" value={clientDocument} onChange={e => setClientDocument(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" />
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Persona</label>
+                          <select value={clientType} onChange={e => setClientType(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green bg-white">
+                            <option value="JURIDICA">Persona Jurídica</option>
+                            <option value="NATURAL">Persona Natural</option>
+                          </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Dirección</label>
-                          <input type="text" value={clientAddress} onChange={e => setClientAddress(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" />
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Identificación</label>
+                          <select value={clientDocumentType} onChange={e => setClientDocumentType(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green bg-white">
+                            <option value="NIT">NIT</option>
+                            <option value="CC">Cédula de Ciudadanía (CC)</option>
+                            <option value="CE">Cédula de Extranjería (CE)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Número de Identificación</label>
+                          <input type="text" value={clientDocument} onChange={e => setClientDocument(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Ej. 900.123.456-7" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Correo Electrónico</label>
+                          <input type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="ejemplo@correo.com" />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1">Teléfono</label>
-                          <input type="text" value={clientPhone} onChange={e => setClientPhone(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" />
+                          <input type="text" value={clientPhone} onChange={e => setClientPhone(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Ej. 300 123 4567" />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Dirección</label>
+                          <input type="text" value={clientAddress} onChange={e => setClientAddress(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Ej. Calle 123 # 45-67" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Nombre Administrador del Predio</label>
+                          <input type="text" value={propertyAdminName} onChange={e => setPropertyAdminName(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Nombre del administrador" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Teléfono del Administrador</label>
+                          <input type="text" value={propertyAdminPhone} onChange={e => setPropertyAdminPhone(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Teléfono del administrador" />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Cargar RUT (Opcional)</label>
+                          <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={e => setRutFile(e.target.files?.[0] || null)} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-erfor-green/10 file:text-erfor-green hover:file:bg-erfor-green/20" />
                         </div>
                       </div>
                     </section>
