@@ -142,7 +142,7 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
                 <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
                   <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-slate-800 flex items-center gap-2">
                     <FolderKanban className="h-5 w-5 text-erfor-green" />
-                    Nuevo Expediente Ambiental
+                    Crear Nuevo Cliente
                   </Dialog.Title>
                   <button onClick={onClose} className="rounded-full p-1 hover:bg-slate-100 transition">
                     <X className="h-5 w-5 text-slate-500" />
@@ -152,9 +152,32 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
                 <form onSubmit={handleSubmit}>
                   <div className="max-h-[70vh] overflow-y-auto p-6 space-y-8">
                     
+                    {/* SECCIÓN CLIENTE */}
+                    <section>
+                      <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 mb-4">1. Datos del Cliente</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Nombre Cliente *</label>
+                          <input required type="text" value={clientName} onChange={e => setClientName(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Nombre de la empresa o persona" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Identificación (NIT/CC)</label>
+                          <input type="text" value={clientDocument} onChange={e => setClientDocument(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Dirección</label>
+                          <input type="text" value={clientAddress} onChange={e => setClientAddress(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Teléfono</label>
+                          <input type="text" value={clientPhone} onChange={e => setClientPhone(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" />
+                        </div>
+                      </div>
+                    </section>
+
                     {/* SECCIÓN EXPEDIENTE */}
                     <section>
-                      <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 mb-4">1. Datos del Expediente</h4>
+                      <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 mb-4">2. Datos del Expediente</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1">Código / Expediente *</label>
@@ -179,29 +202,6 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
                             <option value="PERMISIVO">Permisivo</option>
                             <option value="SANCIONATORIO">Sancionatorio</option>
                           </select>
-                        </div>
-                      </div>
-                    </section>
-
-                    {/* SECCIÓN CLIENTE */}
-                    <section>
-                      <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 mb-4">2. Datos del Cliente</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Nombre Cliente *</label>
-                          <input required type="text" value={clientName} onChange={e => setClientName(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Nombre de la empresa o persona" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Identificación (NIT/CC)</label>
-                          <input type="text" value={clientDocument} onChange={e => setClientDocument(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Dirección</label>
-                          <input type="text" value={clientAddress} onChange={e => setClientAddress(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Teléfono</label>
-                          <input type="text" value={clientPhone} onChange={e => setClientPhone(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" />
                         </div>
                       </div>
                     </section>
@@ -258,7 +258,7 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
                       Cancelar
                     </button>
                     <button type="submit" disabled={loading} className="flex items-center justify-center min-w-[120px] rounded-md bg-erfor-green px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-erfor-green/90 transition disabled:opacity-70">
-                      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Crear Expediente"}
+                      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Guardar Registro"}
                     </button>
                   </div>
                 </form>

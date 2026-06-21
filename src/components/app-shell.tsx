@@ -43,7 +43,6 @@ import { ClientSelector } from "./client-selector";
 import { useClient } from "@/lib/client-context";
 
 import { NewExpedienteModal } from "./new-expediente-modal";
-import { NewClientModal } from "./new-client-modal";
 
 const nav = [
   { label: "Panel Maestro", href: "/dashboard", icon: Gauge },
@@ -370,21 +369,10 @@ export function QuickActions() {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4 w-full">
-        <div className="w-full overflow-hidden rounded-lg bg-erfor-green/90 text-white shadow-soft backdrop-blur transition hover:bg-erfor-green">
-          <button 
-            onClick={() => setIsExpedienteModalOpen(true)} 
-            className="flex w-full items-center justify-center gap-3 py-3 px-4 transition group"
-          >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-erfor-green transition group-hover:scale-110">
-              <FolderKanban className="h-4 w-4" />
-            </span>
-            <span className="text-base font-semibold">Crear nuevo Expediente</span>
-          </button>
-        </div>
+      <div className="w-full">
         <div className="w-full overflow-hidden rounded-lg bg-blue-700/90 text-white shadow-soft backdrop-blur transition hover:bg-blue-700">
           <button 
-            onClick={() => setIsClientModalOpen(true)} 
+            onClick={() => setIsExpedienteModalOpen(true)} 
             className="flex w-full items-center justify-center gap-3 py-3 px-4 transition group"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-blue-700 transition group-hover:scale-110">
@@ -398,11 +386,6 @@ export function QuickActions() {
         isOpen={isExpedienteModalOpen} 
         onClose={() => setIsExpedienteModalOpen(false)} 
         onSuccess={() => { window.location.reload(); }} 
-      />
-      <NewClientModal
-        isOpen={isClientModalOpen}
-        onClose={() => setIsClientModalOpen(false)}
-        onSuccess={() => { window.location.reload(); }}
       />
     </>
   );
