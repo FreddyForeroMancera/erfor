@@ -54,6 +54,9 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
   const [propertyName, setPropertyName] = useState("");
   const [propertyCadastral, setPropertyCadastral] = useState("");
   const [propertyRegistration, setPropertyRegistration] = useState("");
+  const [propertyCity, setPropertyCity] = useState("");
+  const [propertyVillage, setPropertyVillage] = useState("");
+  const [propertyArea, setPropertyArea] = useState("");
 
   // Trámites
   const [procedures, setProcedures] = useState<string[]>([]);
@@ -97,6 +100,9 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
           propertyName,
           propertyCadastral,
           propertyRegistration,
+          propertyCity,
+          propertyVillage,
+          propertyArea,
           propertyAdminName,
           propertyAdminPhone,
           procedures
@@ -134,6 +140,7 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
       setClientName(""); setClientType("JURIDICA"); setClientDocumentType("NIT"); setClientDocument(""); setClientEmail(""); setClientAddress(""); setClientPhone("");
       setPropertyAdminName(""); setPropertyAdminPhone(""); setRutFile(null);
       setPropertyName(""); setPropertyCadastral(""); setPropertyRegistration("");
+      setPropertyCity(""); setPropertyVillage(""); setPropertyArea("");
       setProcedures([]);
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : "Hubo un error");
@@ -282,6 +289,18 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1">Matrícula Inmobiliaria</label>
                           <input type="text" value={propertyRegistration} onChange={e => setPropertyRegistration(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Municipio</label>
+                          <input type="text" value={propertyCity} onChange={e => setPropertyCity(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Municipio" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Vereda</label>
+                          <input type="text" value={propertyVillage} onChange={e => setPropertyVillage(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Vereda o Corregimiento" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Área en Hectáreas</label>
+                          <input type="text" value={propertyArea} onChange={e => setPropertyArea(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Ej. 150.5" />
                         </div>
                       </div>
                     </section>

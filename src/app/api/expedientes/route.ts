@@ -61,6 +61,9 @@ export async function POST(request: Request) {
           name: data.propertyName,
           cadastralCode: data.propertyCadastral,
           realEstateRegistration: data.propertyRegistration,
+          city: data.propertyCity,
+          village: data.propertyVillage,
+          area: data.propertyArea,
           owner: data.propertyAdminName,
           notes: data.propertyAdminPhone ? `Teléfono del administrador: ${data.propertyAdminPhone}` : undefined
         }
