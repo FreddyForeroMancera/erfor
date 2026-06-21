@@ -142,7 +142,7 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
                 <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
                   <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-slate-800 flex items-center gap-2">
                     <FolderKanban className="h-5 w-5 text-erfor-green" />
-                    Crear Nuevo Cliente
+                    Nuevo Cliente Ambiental
                   </Dialog.Title>
                   <button onClick={onClose} className="rounded-full p-1 hover:bg-slate-100 transition">
                     <X className="h-5 w-5 text-slate-500" />
