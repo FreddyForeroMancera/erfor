@@ -48,7 +48,7 @@ export default function LoginPage() {
         <section className="relative flex flex-col justify-between overflow-hidden p-8 lg:p-14">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(47,168,79,.26),transparent_34%),linear-gradient(135deg,rgba(6,44,40,.96),rgba(4,20,24,.98))]" />
           <div className="relative">
-            <BrandLogo variant="light" className="w-max" />
+            <BrandLogo variant="light" size="xl" className="w-max" />
             <p className="mt-3 max-w-sm text-lg text-white/82">Plataforma Integral de Asesoría Ambiental</p>
           </div>
           <div className="relative max-w-xl">
