@@ -145,7 +145,7 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
             {/* Detalles del Expediente (Reemplaza Gráficas) */}
             <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
               <h3 className="mb-4 font-semibold text-slate-800 border-b pb-2">Datos del Expediente</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 <div>
                   <p className="text-xs font-semibold text-slate-500 uppercase">EXPEDIENTE</p>
                   <p className="font-medium text-slate-800 mt-1">{file.officialCode || file.internalCode || "-"}</p>
@@ -159,34 +159,6 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
                   <p className="font-medium text-slate-800 mt-1">{file.type === "SANCIONATORIO" ? "Sancionatorio" : "Permisivo"}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase">NOMBRE CLIENTE</p>
-                  <p className="font-medium text-slate-800 mt-1">{file.client?.name || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase">IDENTIFICACION</p>
-                  <p className="font-medium text-slate-800 mt-1">{file.client?.documentNumber || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase">DIRECCION</p>
-                  <p className="font-medium text-slate-800 mt-1">{file.client?.address || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase">TELEFONO</p>
-                  <p className="font-medium text-slate-800 mt-1">{file.client?.phone || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase">NOMBRE DE LA FINCA</p>
-                  <p className="font-medium text-slate-800 mt-1">{file.property?.name || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase">CEDULA CATASTRAL</p>
-                  <p className="font-medium text-slate-800 mt-1">{file.property?.cadastralCode || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase">MATRICULA INMOBILIARIA</p>
-                  <p className="font-medium text-slate-800 mt-1">{file.property?.realEstateRegistration || "-"}</p>
-                </div>
-                <div className="md:col-span-2 xl:col-span-2">
                   <p className="text-xs font-semibold text-slate-500 uppercase">TRAMITE (PERMISOS)</p>
                   {file.procedures && file.procedures.length > 0 ? (
                     <div className="mt-2 flex flex-wrap gap-2">
@@ -199,6 +171,72 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
                   ) : (
                     <p className="font-medium text-slate-800 mt-1">-</p>
                   )}
+                </div>
+
+                <div className="col-span-full border-t border-slate-100 my-1 pt-4">
+                   <h4 className="font-bold text-slate-700 text-sm">Datos del Cliente</h4>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">NOMBRE CLIENTE</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.client?.name || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">TIPO PERSONA</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.client?.type || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">IDENTIFICACION</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.client?.documentType ? `${file.client.documentType} ` : ""}{file.client?.documentNumber || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">CORREO ELECTRONICO</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.client?.email || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">DIRECCION</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.client?.address || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">TELEFONO</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.client?.phone || "-"}</p>
+                </div>
+
+                <div className="col-span-full border-t border-slate-100 my-1 pt-4">
+                   <h4 className="font-bold text-slate-700 text-sm">Datos del Predio</h4>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">NOMBRE DE LA FINCA</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.property?.name || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">MUNICIPIO</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.property?.city || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">VEREDA</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.property?.village || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">AREA (HA)</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.property?.area ? `${file.property.area} ha` : "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">CEDULA CATASTRAL</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.property?.cadastralCode || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">MATRICULA INMOBILIARIA</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.property?.realEstateRegistration || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">ADMINISTRADOR</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.property?.owner || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">TEL. ADMINISTRADOR</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.property?.notes ? file.property.notes.replace('Teléfono del administrador: ', '') : "-"}</p>
                 </div>
               </div>
             </section>
