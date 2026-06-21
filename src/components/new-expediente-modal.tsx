@@ -58,20 +58,7 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
   const [propertyVillage, setPropertyVillage] = useState("");
   const [propertyArea, setPropertyArea] = useState("");
 
-  // Trámites
-  const [procedures, setProcedures] = useState<string[]>([]);
-  const [newProcedure, setNewProcedure] = useState("");
 
-  const addProcedure = () => {
-    if (newProcedure.trim() && !procedures.includes(newProcedure.trim())) {
-      setProcedures([...procedures, newProcedure.trim()]);
-      setNewProcedure("");
-    }
-  };
-
-  const removeProcedure = (proc: string) => {
-    setProcedures(procedures.filter(p => p !== proc));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,8 +91,7 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
           propertyVillage,
           propertyArea,
           propertyAdminName,
-          propertyAdminPhone,
-          procedures
+          propertyAdminPhone
         })
       });
 
@@ -141,7 +127,6 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
       setPropertyAdminName(""); setPropertyAdminPhone(""); setRutFile(null);
       setPropertyName(""); setPropertyCadastral(""); setPropertyRegistration("");
       setPropertyCity(""); setPropertyVillage(""); setPropertyArea("");
-      setProcedures([]);
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : "Hubo un error");
     } finally {
@@ -303,32 +288,6 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
                           <input type="text" value={propertyArea} onChange={e => setPropertyArea(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Ej. 150.5" />
                         </div>
                       </div>
-                    </section>
-
-                    {/* SECCIÓN TRÁMITES */}
-                    <section>
-                      <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 mb-4">4. Trámites y Permisos</h4>
-                      <div className="flex gap-2 mb-3">
-                        <input type="text" value={newProcedure} onChange={e => setNewProcedure(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addProcedure())} className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Ej. Concesión de Aguas Subterráneas" />
-                        <button type="button" onClick={addProcedure} className="flex items-center gap-2 rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 transition">
-                          <Plus className="h-4 w-4" /> Agregar
-                        </button>
-                      </div>
-                      
-                      {procedures.length > 0 ? (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {procedures.map(proc => (
-                            <div key={proc} className="flex items-center gap-2 rounded-full bg-erfor-green/10 px-3 py-1 text-sm font-medium text-erfor-green border border-erfor-green/20">
-                              {proc}
-                              <button type="button" onClick={() => removeProcedure(proc)} className="rounded-full hover:bg-erfor-green/20 p-0.5 transition">
-                                <X className="h-3 w-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-slate-500 italic">No se han añadido trámites aún.</p>
-                      )}
                     </section>
 
                   </div>
