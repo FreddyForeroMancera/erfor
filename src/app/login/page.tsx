@@ -61,7 +61,13 @@ export default function LoginPage() {
               Administración de Clientes
             </p>
           </div>
-          <p className="relative text-sm text-white/55">Gestión · Cumplimiento · Sostenibilidad</p>
+          <div className="relative mt-8 text-sm text-white/60">
+            <p className="font-medium text-white/80">Erwin Diovan Forero Prieto</p>
+            <p>Medico Veterinario Zootecnista</p>
+            <p>Especialista en Gestión Ambiental.</p>
+            <p>TP. 06670</p>
+            <p className="mt-4 text-xs tracking-widest uppercase text-white/40">Gestión – Cumplimiento – Sostenibilidad</p>
+          </div>
         </section>
 
         <section className="flex items-center justify-center bg-[#f6f8f7] p-6 text-erfor-ink">
