@@ -66,7 +66,7 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientName || !internalCode || !authority) {
+    if (!clientName || !authority) {
       toast.error("Por favor completa los campos obligatorios (*)");
       return;
     }
@@ -180,8 +180,8 @@ export function NewExpedienteModal({ isOpen, onClose, onSuccess }: NewExpediente
                       <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 mb-4">2. Datos del Expediente</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Código / Expediente *</label>
-                          <input required type="text" value={internalCode} onChange={e => setInternalCode(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Ej. EXP-2026-001" />
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Número de Expediente (CAR)</label>
+                          <input type="text" value={internalCode} onChange={e => setInternalCode(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green" placeholder="Ej. EXP-2026-001 (Opcional si aún no lo tiene)" />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1">Autoridad Ambiental *</label>
