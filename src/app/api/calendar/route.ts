@@ -56,3 +56,65 @@ export async function GET(request: Request) {
     return fail(error);
   }
 }
+
+export async function POST(request: Request) {
+  try {
+    const user = await requireUser();
+    const body = await request.json();
+    const { title, date, type, priority, clientId } = body;
+
+    if (!title || !date || !type || !priority) {
+      return fail("Faltan datos requeridos", 400);
+    }
+
+    const parsedDate = new Date(date);
+
+    if (type === "TAREA") {
+      const task = await prisma.task.create({
+        data: {
+          title,
+          dueDate: parsedDate,
+          priority: priority as any,
+          status: "OPEN",
+          clientId: clientId || undefined,
+          assignedTo: user.id,
+        },
+      });
+      return ok({ id: `task-${task.id}`, type: "TAREA", title: task.title, date: task.dueDate, status: task.status, priority: task.priority });
+    } else if (type === "ALERTA") {
+      const alert = await prisma.alert.create({
+        data: {
+          type: "MANUAL",
+          title,
+          dueDate: parsedDate,
+          severity: priority as any,
+          status: "OPEN",
+          clientId: clientId || undefined,
+        },
+      });
+      return ok({ id: `alert-${alert.id}`, type: "ALERTA", title: alert.title, date: alert.dueDate, status: alert.status, priority: alert.severity });
+    } else if (type === "VISITA") {
+      let actualClientId = clientId;
+      if (!actualClientId) {
+        // Find any client if none provided (fallback for general calendar)
+        const firstClient = await prisma.client.findFirst();
+        if (!firstClient) return fail("No hay clientes en el sistema para asociar la visita", 400);
+        actualClientId = firstClient.id;
+      }
+      
+      const visit = await prisma.visit.create({
+        data: {
+          type: title,
+          scheduledAt: parsedDate,
+          status: "PREPARATION",
+          clientId: actualClientId,
+        },
+      });
+      return ok({ id: `visit-${visit.id}`, type: "VISITA", title: `Visita: ${visit.type}`, date: visit.scheduledAt, status: visit.status, priority: "MEDIUM" });
+    }
+
+    return fail("Tipo de evento no soportado", 400);
+  } catch (error) {
+    return fail(error);
+  }
+}

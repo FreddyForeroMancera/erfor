@@ -24,12 +24,16 @@ export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [formData, setFormData] = useState({ type: "TAREA", title: "", date: format(new Date(), "yyyy-MM-dd"), priority: "MEDIUM" });
+
   const queryParams = new URLSearchParams();
   if (selectedClientId) queryParams.set("clientId", selectedClientId);
   if (fileId) queryParams.set("fileId", fileId);
   const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
   
-  const { data, error, isLoading: loading } = useSWR<any>(`/api/calendar${query}`, fetcher);
+  const { data, error, isLoading: loading, mutate } = useSWR<any>(`/api/calendar${query}`, fetcher);
   const events = (data || []).filter((e: CalendarEvent) => e);
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
@@ -59,6 +63,35 @@ export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded
     return "bg-slate-100 text-slate-700 border-slate-200"; // TAREA
   };
 
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title || !formData.date) {
+      toast.error("Por favor completa los campos requeridos");
+      return;
+    }
+    
+    try {
+      setIsCreating(true);
+      const res = await fetch("/api/calendar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, clientId: selectedClientId }),
+      });
+      
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Error al crear el evento");
+      
+      toast.success("Evento creado exitosamente");
+      setIsCreateModalOpen(false);
+      setFormData({ type: "TAREA", title: "", date: format(new Date(), "yyyy-MM-dd"), priority: "MEDIUM" });
+      mutate();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <div className={`flex flex-col ${embedded ? "h-[600px]" : "p-4 lg:p-6 xl:p-8 h-[calc(100vh-4rem)]"}`}>
       {!embedded && (
@@ -79,7 +112,7 @@ export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded
               </span>
               <button onClick={nextMonth} className="p-1.5 hover:bg-slate-50 transition-colors"><ChevronRight className="h-5 w-5 text-slate-600" /></button>
             </div>
-            <button className="ml-2 flex items-center gap-2 bg-erfor-green text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition-colors shadow-sm">
+            <button onClick={() => setIsCreateModalOpen(true)} className="ml-2 flex items-center gap-2 bg-erfor-green text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition-colors shadow-sm">
               <Plus className="h-4 w-4" />
               Nuevo Evento
             </button>
@@ -102,7 +135,7 @@ export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded
               </span>
               <button onClick={nextMonth} className="p-1 hover:bg-slate-50 transition-colors"><ChevronRight className="h-4 w-4 text-slate-600" /></button>
             </div>
-            <button className="ml-1 flex items-center gap-1.5 bg-erfor-green text-white px-3 py-1.5 text-xs rounded-md font-medium hover:bg-green-700 transition-colors shadow-sm">
+            <button onClick={() => setIsCreateModalOpen(true)} className="ml-1 flex items-center gap-1.5 bg-erfor-green text-white px-3 py-1.5 text-xs rounded-md font-medium hover:bg-green-700 transition-colors shadow-sm">
               <Plus className="h-3 w-3" />
               Nuevo Evento
             </button>
@@ -217,6 +250,92 @@ export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded
                       </div>
                     </div>
                   )}
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+      <Transition appear show={isCreateModalOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={() => !isCreating && setIsCreateModalOpen(false)}>
+          <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
+            <div className="fixed inset-0 bg-erfor-ink/60 backdrop-blur-sm" />
+          </Transition.Child>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <div className="flex items-center justify-between mb-5">
+                    <Dialog.Title as="h3" className="text-lg font-bold leading-6 text-slate-900">
+                      Crear Nuevo Evento
+                    </Dialog.Title>
+                    <button onClick={() => setIsCreateModalOpen(false)} disabled={isCreating} className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full transition-colors">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  
+                  <form onSubmit={handleCreateSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Evento</label>
+                      <select 
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-erfor-green focus:border-erfor-green outline-none"
+                        value={formData.type}
+                        onChange={(e) => setFormData({...formData, type: e.target.value})}
+                      >
+                        <option value="TAREA">Tarea</option>
+                        <option value="ALERTA">Alerta</option>
+                        <option value="VISITA">Visita</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Título / Descripción</label>
+                      <input 
+                        type="text" 
+                        required
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-erfor-green focus:border-erfor-green outline-none"
+                        value={formData.title}
+                        onChange={(e) => setFormData({...formData, title: e.target.value})}
+                        placeholder="Ej. Revisar documentación PQR..."
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Fecha</label>
+                        <input 
+                          type="date" 
+                          required
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-erfor-green focus:border-erfor-green outline-none"
+                          value={formData.date}
+                          onChange={(e) => setFormData({...formData, date: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Prioridad</label>
+                        <select 
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-erfor-green focus:border-erfor-green outline-none"
+                          value={formData.priority}
+                          onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                        >
+                          <option value="LOW">Baja</option>
+                          <option value="MEDIUM">Media</option>
+                          <option value="HIGH">Alta</option>
+                          <option value="CRITICAL">Crítica</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 pt-5 border-t border-slate-100 flex justify-end gap-3">
+                      <button type="button" onClick={() => setIsCreateModalOpen(false)} disabled={isCreating} className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                        Cancelar
+                      </button>
+                      <button type="submit" disabled={isCreating} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-erfor-green rounded-lg hover:bg-green-700 transition-colors shadow-sm shadow-green-900/20 disabled:opacity-70">
+                        {isCreating && <Loader2 className="h-4 w-4 animate-spin" />}
+                        {isCreating ? "Guardando..." : "Crear Evento"}
+                      </button>
+                    </div>
+                  </form>
                 </Dialog.Panel>
               </Transition.Child>
             </div>
