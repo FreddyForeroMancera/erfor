@@ -103,6 +103,10 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                   <p className="text-xs font-semibold text-slate-500 uppercase">Prioridad</p>
                   <p className="mt-1 font-medium text-erfor-green">{client.priority || "MEDIUM"}</p>
                 </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">Fecha de Registro</p>
+                  <p className="mt-1 font-medium">{client.createdAt ? new Date(client.createdAt).toLocaleDateString('es-CO') : "N/D"}</p>
+                </div>
                 <div className="col-span-full">
                   <p className="text-xs font-semibold text-slate-500 uppercase">Notas Internas</p>
                   <p className="mt-1 whitespace-pre-wrap text-sm">{client.notes || "Sin notas adicionales."}</p>

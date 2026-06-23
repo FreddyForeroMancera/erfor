@@ -201,6 +201,10 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
                   <p className="text-xs font-semibold text-slate-500 uppercase">TELEFONO</p>
                   <p className="font-medium text-slate-800 mt-1">{file.client?.phone || "-"}</p>
                 </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">FECHA DE REGISTRO</p>
+                  <p className="font-medium text-slate-800 mt-1">{file.client?.createdAt ? new Date(file.client.createdAt).toLocaleDateString('es-CO') : "-"}</p>
+                </div>
 
                 <div className="col-span-full border-t border-slate-100 my-1 pt-4">
                    <h4 className="font-bold text-slate-700 text-sm">Datos del Predio</h4>
