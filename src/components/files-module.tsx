@@ -156,7 +156,7 @@ export function FilesModule({ clientId }: { clientId?: string }) {
                   </span>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 mb-4 mt-4">
+                <div className="grid grid-cols-3 gap-4 mb-4 mt-4">
                   <div>
                     <p className="text-xs text-slate-500 uppercase font-semibold">Propietario / Cliente</p>
                     <p className="text-sm font-medium text-slate-800 flex items-center mt-1">
@@ -169,6 +169,12 @@ export function FilesModule({ clientId }: { clientId?: string }) {
                     <p className="text-sm font-medium text-slate-800 flex items-center mt-1">
                       <FileArchive className="h-3 w-3 mr-1 text-slate-400" />
                       {file.type || "N/D"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase font-semibold">Registro Cliente</p>
+                    <p className="text-sm font-medium text-slate-800 mt-1">
+                      {file.client?.createdAt ? new Date(file.client.createdAt).toLocaleDateString('es-CO') : "N/D"}
                     </p>
                   </div>
                 </div>
