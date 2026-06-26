@@ -41,6 +41,8 @@ import { Menu, Transition, Dialog } from "@headlessui/react";
 import toast from "react-hot-toast";
 import { ClientSelector } from "./client-selector";
 import { useClient } from "@/lib/client-context";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 
 import { NewExpedienteModal } from "./new-expediente-modal";
 
@@ -57,6 +59,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { selectedClientId } = useClient();
+  const [hiddenAlerts, setHiddenAlerts] = useState<string[]>([]);
+  
+  const { data: alertsData } = useSWR<any[]>(
+    `/api/notifications${selectedClientId ? `?clientId=${selectedClientId}` : ''}`, 
+    fetcher, 
+    { refreshInterval: 60000 }
+  );
+
+  const activeAlerts = (alertsData || []).filter(a => !hiddenAlerts.includes(a.id));
+
+  const handleMarkAllAsRead = () => {
+    if (alertsData) {
+      setHiddenAlerts([...hiddenAlerts, ...alertsData.map(a => a.id)]);
+    }
+  };
 
   async function logout() {
     try {
@@ -190,10 +207,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Menu as="div" className="relative ml-1">
                 <Menu.Button as="button" title="Notificaciones" className="relative flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 transition hover:border-erfor-green hover:text-erfor-green outline-none">
                   <Bell className="h-5 w-5" />
-                  <span className="absolute right-2 top-2 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 ring-2 ring-white"></span>
-                  </span>
+                  {activeAlerts.length > 0 && (
+                    <span className="absolute right-2 top-2 flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 ring-2 ring-white"></span>
+                    </span>
+                  )}
                 </Menu.Button>
                 <Transition
                   as={Fragment}
@@ -206,53 +225,51 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 >
                   <Menu.Items className="absolute right-0 z-50 mt-2 w-80 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden flex flex-col">
                     <div className="bg-slate-50 border-b border-slate-200 p-3 flex justify-between items-center">
-                      <h3 className="font-bold text-sm text-slate-800">Centro de Notificaciones</h3>
-                      <span className="text-xs text-erfor-green font-medium cursor-pointer hover:underline">Marcar leídas</span>
+                      <h3 className="font-bold text-sm text-slate-800">
+                        Centro de Notificaciones {activeAlerts.length > 0 && <span className="ml-1 text-xs font-semibold bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">{activeAlerts.length}</span>}
+                      </h3>
+                      {activeAlerts.length > 0 && (
+                        <span onClick={handleMarkAllAsRead} className="text-xs text-erfor-green font-medium cursor-pointer hover:underline">Marcar leídas</span>
+                      )}
                     </div>
                     <div className="max-h-96 overflow-y-auto divide-y divide-slate-100">
                       
-                      {pathname.startsWith("/expedientes/") ? (
-                        <>
-                          <div className="p-4 hover:bg-slate-50 transition cursor-pointer">
+                      {activeAlerts.length > 0 ? (
+                        activeAlerts.map(alert => (
+                          <div 
+                            key={alert.id}
+                            onClick={() => {
+                              setHiddenAlerts([...hiddenAlerts, alert.id]);
+                              if (alert.environmentalFile?.id) {
+                                router.push(`/expedientes/${alert.environmentalFile.id}`);
+                              }
+                            }}
+                            className="p-4 hover:bg-slate-50 transition cursor-pointer"
+                          >
                             <div className="flex gap-3">
-                              <div className="mt-0.5 h-8 w-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                                <AlertTriangle className="h-4 w-4 text-red-600" />
+                              <div className={`mt-0.5 h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
+                                alert.severity === "HIGH" ? "bg-red-100 text-red-600" :
+                                alert.severity === "MEDIUM" ? "bg-amber-100 text-amber-600" : "bg-sky-100 text-sky-600"
+                              }`}>
+                                {alert.severity === "HIGH" ? <AlertTriangle className="h-4 w-4" /> : 
+                                 alert.severity === "MEDIUM" ? <FileCheck2 className="h-4 w-4" /> : <FolderKanban className="h-4 w-4" />}
                               </div>
                               <div>
-                                <p className="text-sm font-semibold text-slate-800">Alerta Crítica: Vencimiento de Obligación</p>
-                                <p className="text-xs text-slate-600 mt-1 line-clamp-2">Una de las obligaciones (Compensación) de este expediente vence en 15 días.</p>
-                                <p className="text-[10px] font-medium text-slate-400 mt-2">Hace 2 horas</p>
+                                <p className="text-sm font-semibold text-slate-800 line-clamp-1" title={alert.title}>{alert.title}</p>
+                                <p className="text-xs text-slate-600 mt-1 line-clamp-2" title={alert.description || ''}>{alert.description || "Sin descripción"}</p>
+                                <p className="text-[10px] font-medium text-slate-400 mt-2">
+                                  {alert.dueDate ? `Vence: ${new Date(alert.dueDate).toLocaleDateString('es-CO')}` : 'Sin fecha límite'}
+                                </p>
                               </div>
                             </div>
                           </div>
-                          <div className="p-4 hover:bg-slate-50 transition cursor-pointer">
-                            <div className="flex gap-3">
-                              <div className="mt-0.5 h-8 w-8 rounded-full bg-sky-100 flex items-center justify-center shrink-0">
-                                <FileCheck2 className="h-4 w-4 text-sky-600" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-semibold text-slate-800">Recordatorio PUEAA</p>
-                                <p className="text-xs text-slate-600 mt-1 line-clamp-2">Verifica la fecha de aprobación del PUEAA para este expediente con la CAR.</p>
-                                <p className="text-[10px] font-medium text-slate-400 mt-2">Ayer</p>
-                              </div>
-                            </div>
-                          </div>
-                        </>
+                        ))
                       ) : (
-                        <>
-                          <div className="p-4 hover:bg-slate-50 transition cursor-pointer">
-                            <div className="flex gap-3">
-                              <div className="mt-0.5 h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                                <FolderKanban className="h-4 w-4 text-slate-600" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-semibold text-slate-800">Notificaciones Generales</p>
-                                <p className="text-xs text-slate-600 mt-1 line-clamp-2">Navega a un Expediente específico para ver sus alertas correspondientes.</p>
-                                <p className="text-[10px] font-medium text-slate-400 mt-2">Ahora</p>
-                              </div>
-                            </div>
-                          </div>
-                        </>
+                        <div className="p-6 flex flex-col items-center justify-center text-center">
+                          <Bell className="h-8 w-8 text-slate-300 mb-2" />
+                          <p className="text-sm font-semibold text-slate-600">Al día</p>
+                          <p className="text-xs text-slate-500 mt-1">No tienes nuevas notificaciones en este momento.</p>
+                        </div>
                       )}
 
                     </div>
