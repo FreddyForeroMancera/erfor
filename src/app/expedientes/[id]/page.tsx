@@ -5,7 +5,7 @@ import useSWR, { mutate } from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { Dialog, Transition } from "@headlessui/react";
 import { AppShell } from "@/components/app-shell";
-import { Loader2, ArrowLeft, FolderKanban, FileBarChart, FileArchive, Leaf, Upload, FileCheck, Calendar, X, Check } from "lucide-react";
+import { Loader2, ArrowLeft, FolderKanban, FileBarChart, FileArchive, Leaf, Upload, FileCheck, FileCheck2, Calendar, X, Check } from "lucide-react";
 import { ObligationsModule } from "@/components/obligations-module";
 import { CalendarModule } from "@/components/calendar-module";
 import { PhotoGalleryModule } from "@/components/photo-gallery-module";
@@ -101,11 +101,12 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
         <div className="mb-3 mt-2">
           <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Estado</h2>
         </div>
-        <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {[
-            { label: "En Proceso", sub: "Preparación y Revisión", icon: FolderKanban, color: "text-erfor-green", activeColor: "border-erfor-green bg-green-50/50 ring-1 ring-erfor-green" },
-            { label: "En Trámite", sub: "Ante autoridades", icon: FileBarChart, color: "text-sky-600", activeColor: "border-sky-600 bg-sky-50/50 ring-1 ring-sky-600" },
-            { label: "Otorgado", sub: "Permisos y Licencias", icon: FileCheck, color: "text-amber-500", activeColor: "border-amber-500 bg-amber-50/50 ring-1 ring-amber-500" },
+            { label: "Cotizaciones", sub: "Presupuestos y Propuestas", icon: FolderKanban, color: "text-erfor-green", activeColor: "border-erfor-green bg-green-50/50 ring-1 ring-erfor-green" },
+            { label: "En Proceso", sub: "Preparación y Revisión", icon: FileBarChart, color: "text-indigo-600", activeColor: "border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600" },
+            { label: "En Trámite", sub: "Ante autoridades", icon: FileCheck2, color: "text-sky-600", activeColor: "border-sky-600 bg-sky-50/50 ring-1 ring-sky-600" },
+            { label: "Otorgado", sub: "Permisos y Licencias", icon: FileArchive, color: "text-amber-500", activeColor: "border-amber-500 bg-amber-50/50 ring-1 ring-amber-500" },
             { label: "En Seguimiento", sub: "Vigilancia de Obligaciones", icon: Calendar, color: "text-red-600", activeColor: "border-red-600 bg-red-50/50 ring-1 ring-red-600" },
           ].map(({ label, sub, icon: Component, color, activeColor }) => {
             const isActive = currentStatus === label;
