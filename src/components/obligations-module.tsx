@@ -87,7 +87,21 @@ export function ObligationsModule({ fileId }: { fileId: string }) {
                 onChange={(e) => updateNote(obs.id, e.target.value)}
                 className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-md focus:border-erfor-green focus:outline-none text-slate-700 bg-slate-50"
               />
-              <div className="flex gap-2">
+              
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs font-medium text-slate-600 whitespace-nowrap">Fecha de comienzo:</span>
+                <div className="relative flex-1">
+                  <CalendarIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <input 
+                    type="date" 
+                    value={obs.date || ""}
+                    onChange={(e) => updateDate(obs.id, e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-md focus:border-erfor-green focus:outline-none bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => updateStatus(obs.id, "CUMPLIDO")}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-semibold border transition-colors ${
@@ -109,21 +123,6 @@ export function ObligationsModule({ fileId }: { fileId: string }) {
                   <X className="h-3.5 w-3.5" /> No Cumplido
                 </button>
               </div>
-
-              {obs.isPUEAA && (
-                <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-                  <span className="text-sm text-slate-600 whitespace-nowrap">Aprobado en fecha:</span>
-                  <div className="relative flex-1">
-                    <CalendarIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                    <input 
-                      type="date" 
-                      value={obs.date || ""}
-                      onChange={(e) => updateDate(obs.id, e.target.value)}
-                      className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 rounded-md focus:border-erfor-green focus:outline-none"
-                    />
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         ))}
