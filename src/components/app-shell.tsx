@@ -47,20 +47,8 @@ import { NewExpedienteModal } from "./new-expediente-modal";
 const nav = [
   { label: "Panel Maestro", href: "/dashboard", icon: Gauge },
   { label: "Clientes y Proyectos", href: "/clientes-y-proyectos", icon: UsersRound },
-  { label: "Requisitos Legales", href: "/requisitos-legales", icon: ShieldCheck },
-  { label: "CAR Cundinamarca", href: "/car-cundinamarca", icon: Landmark },
-  { label: "Trámites y Permisos", href: "/tramites-y-permisos", icon: FileCheck2 },
-  { label: "Obligaciones Ambientales", href: "/obligaciones-ambientales", icon: ClipboardCheck },
-  { label: "Requerimientos", href: "/requerimientos", icon: AlertTriangle },
-  { label: "Visitas e Inspecciones", href: "/visitas-e-inspecciones", icon: Building2 },
-  { label: "PQRS / Respuestas", href: "/pqrs-respuestas", icon: MessageSquareText },
-  { label: "Documentos", href: "/documentos", icon: FileArchive },
   { label: "Calendario y Alertas", href: "/calendario-y-alertas", icon: CalendarDays },
-  { label: "Monitoreos y Reportes", href: "/monitoreos-y-reportes", icon: FileBarChart },
-  { label: "Fuentes de Información", href: "/fuentes-de-informacion", icon: DatabaseZap },
-  { label: "Informes y Reportes", href: "/informes-y-reportes", icon: FileBarChart },
   { label: "IA Asistente Ambiental", href: "/ia-asistente-ambiental", icon: Bot },
-  { label: "Integraciones", href: "/integraciones", icon: Plug },
   { label: "Configuración", href: "/configuracion", icon: Settings }
 ];
 
@@ -126,11 +114,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           );
         })}
       </nav>
-      <div className="p-7">
-        <BrandLogo variant="light" className="w-max" />
-        <p className="mt-2 text-sm text-white/70">Asesoría Ambiental</p>
-        <p className="mt-1 text-xs text-white/48">Gestión · Cumplimiento · Sostenibilidad</p>
-      </div>
     </>
   );
 
