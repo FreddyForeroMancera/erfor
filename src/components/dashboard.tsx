@@ -79,17 +79,9 @@ export function Dashboard() {
 
   const kpis = useMemo<{ label: string; value: number; sub: string; icon: LucideIcon; color: string }[]>(
     () => {
-      if (selectedClientId) {
-        return [
-          { label: "Expedientes Ambientales", value: data?.kpis.files || 0, sub: "Carpetas vivas", icon: FolderKanban, color: "text-sky-600" },
-          { label: "Obligaciones Pendientes", value: data?.kpis.obligations || 0, sub: "Del Plan de Manejo", icon: CalendarDays, color: "text-amber-500" },
-          { label: "Requerimientos Abiertos", value: data?.kpis.requirements || 0, sub: "Requieren respuesta", icon: AlertTriangle, color: "text-red-600" },
-          { label: "Visitas e Inspecciones", value: data?.kpis.visits || 0, sub: "Registros en campo", icon: Building2, color: "text-erfor-green" },
-        ];
-      }
       return [
-        { label: "COTIZACIONES", value: data?.kpis.cotizaciones || 0, sub: "Presupuestos y Propuestas", icon: FolderKanban, color: "text-erfor-green" },
-        { label: "EN PROCESO", value: data?.kpis.enProceso || 0, sub: "Preparación y Revisión", icon: FileBarChart, color: "text-indigo-600" },
+        { label: "Cotizaciones", value: data?.kpis.cotizaciones || 0, sub: "Presupuestos y Propuestas", icon: FolderKanban, color: "text-erfor-green" },
+        { label: "En Proceso", value: data?.kpis.enProceso || 0, sub: "Preparación y Revisión", icon: FileBarChart, color: "text-indigo-600" },
         { label: "En Trámite", value: data?.kpis.enTramite || 0, sub: "Ante autoridades", icon: FileCheck2, color: "text-sky-600" },
         { label: "Otorgado", value: data?.kpis.otorgado || 0, sub: "Permisos y Licencias", icon: FileArchive, color: "text-amber-500" },
         { label: "En Seguimiento", value: data?.kpis.enSeguimiento || 0, sub: "Vigilancia de Obligaciones", icon: CalendarDays, color: "text-red-600" },
@@ -132,7 +124,7 @@ export function Dashboard() {
                 </div>
               </article>
             )) : kpis.map(({ label, value, sub, icon, color }) => {
-              const isCotizaciones = label === "COTIZACIONES";
+              const isCotizaciones = label === "Cotizaciones";
               const isEnTramite = label === "En Trámite";
               const isClickable = isCotizaciones || isEnTramite;
 
