@@ -53,10 +53,7 @@ export default function LoginPage() {
             <p className="mt-2 text-sm tracking-wide text-white/70 uppercase">Gestión – Cumplimiento – Sostenibilidad</p>
           </div>
           <div className="relative max-w-xl">
-            <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-4 py-2 text-sm text-white/78">
-              <Leaf className="h-4 w-4 text-erfor-lime" />
-              Cumplimiento, sostenibilidad y confianza
-            </div>
+
             <h1 className="text-4xl font-semibold leading-tight lg:text-6xl">Control Agroambiental Empresarial</h1>
             <p className="mt-5 text-lg leading-8 text-white/72">
               Administración de Clientes
@@ -67,7 +64,7 @@ export default function LoginPage() {
             <p>Medico Veterinario Zootecnista</p>
             <p>Especialista en Gestión Ambiental.</p>
             <p>TP. 06670</p>
-            <p className="mt-4 text-xs tracking-widest uppercase text-white/40">Gestión – Cumplimiento – Sostenibilidad</p>
+
           </div>
         </section>
 
