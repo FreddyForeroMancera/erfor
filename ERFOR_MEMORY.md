@@ -21,6 +21,8 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 
 ### B. Arquitectura de Navegación (AppShell)
 - Barra lateral (Sidebar) estática y consolidada con exactamente 5 módulos principales: Panel Maestro, Clientes y Proyectos, Calendario y Alertas, IA Asistente Ambiental, Configuración. Eliminada la lógica de inyección dinámica para evitar problemas de caché.
+- **Campana de Notificaciones:** Conectada a la base de datos real (modelo `Alert`) mediante un endpoint dedicado (`/api/notifications`), consumo en tiempo real vía `useSWR`, e interfaz dinámica de colores/íconos según severidad. Incluye ocultamiento local de alertas marcadas como leídas.
+- **Buscador Global:** Implementado un motor de búsqueda global con `Combobox` (Headless UI) y `useDebounce` que consulta simultáneamente en Clientes, Expedientes y Predios a través de `/api/search`, permitiendo navegación rápida con autocompletado en todo el sistema.
 
 ### C. Panel Maestro (Dashboard)
 - Indicadores clave (KPIs) apuntando directamente al núcleo de negocio: Conteo de "Predios Activos" en lugar de proyectos genéricos.
