@@ -58,22 +58,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { selectedClientId } = useClient();
 
-  const clientSpecificPaths = [
-    "/expedientes-ambientales",
-    "/requisitos-legales",
-    "/car-cundinamarca",
-    "/tramites-y-permisos",
-    "/obligaciones-ambientales",
-    "/requerimientos",
-    "/visitas-e-inspecciones",
-    "/pqrs-respuestas",
-    "/documentos",
-    "/monitoreos-y-reportes",
-    "/fuentes-de-informacion",
-    "/informes-y-reportes",
-    "/integraciones"
-  ];
-
   async function logout() {
     try {
       const response = await fetch("/api/auth/logout", { method: "POST" });
@@ -95,7 +79,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <p className="mt-3 max-w-[210px] text-sm leading-5 text-white/78">Plataforma Integral de Asesoría Ambiental</p>
       </div>
       <nav className="erfor-scroll flex-1 overflow-y-auto px-2 pb-6">
-        {nav.filter(item => selectedClientId ? true : !clientSpecificPaths.includes(item.href)).map((item) => {
+        {nav.map((item) => {
           // Mejorado el chequeo de ruta activa
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
