@@ -88,7 +88,8 @@ export function Dashboard() {
         ];
       }
       return [
-        { label: "COTIZACIONES", value: data?.kpis.enProceso || 0, sub: "Presupuestos y Propuestas", icon: FolderKanban, color: "text-erfor-green" },
+        { label: "COTIZACIONES", value: data?.kpis.cotizaciones || 0, sub: "Presupuestos y Propuestas", icon: FolderKanban, color: "text-erfor-green" },
+        { label: "EN PROCESO", value: data?.kpis.enProceso || 0, sub: "Preparación y Revisión", icon: FileBarChart, color: "text-indigo-600" },
         { label: "En Trámite", value: data?.kpis.enTramite || 0, sub: "Ante autoridades", icon: FileCheck2, color: "text-sky-600" },
         { label: "Otorgado", value: data?.kpis.otorgado || 0, sub: "Permisos y Licencias", icon: FileArchive, color: "text-amber-500" },
         { label: "En Seguimiento", value: data?.kpis.enSeguimiento || 0, sub: "Vigilancia de Obligaciones", icon: CalendarDays, color: "text-red-600" },
@@ -118,8 +119,8 @@ export function Dashboard() {
           <div className="mt-6 mb-3">
             <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Estado</h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {loading ? Array.from({ length: 4 }).map((_, i) => (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            {loading ? Array.from({ length: 5 }).map((_, i) => (
               <article key={i} className="animate-pulse rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex items-start justify-between">
                   <div className="w-full">
