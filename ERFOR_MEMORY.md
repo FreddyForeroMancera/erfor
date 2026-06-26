@@ -20,11 +20,12 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 - Rutas protegidas mediante validación de sesión.
 
 ### B. Arquitectura de Navegación (AppShell)
-- Barra lateral (Sidebar) responsiva con enlaces a: Panel Maestro, Clientes y Proyectos, Predios, Calendario y Alertas, IA Asistente Ambiental, Configuración.
+- Barra lateral (Sidebar) estática y consolidada con exactamente 5 módulos principales: Panel Maestro, Clientes y Proyectos, Calendario y Alertas, IA Asistente Ambiental, Configuración. Eliminada la lógica de inyección dinámica para evitar problemas de caché.
 
 ### C. Panel Maestro (Dashboard)
 - Indicadores clave (KPIs) apuntando directamente al núcleo de negocio: Conteo de "Predios Activos" en lugar de proyectos genéricos.
 - Tarjetas de resumen para Alertas Críticas y Trámites en Curso.
+- Reestructuración de tarjetas de Estado (KPIs) a un formato de 5 columnas que incluye: Cotizaciones, En Proceso, En Trámite, Otorgado y En Seguimiento.
 
 ### D. Módulo de Predios (Core)
 - Interfaz dividida: Listado de predios y visualización de mapa a la derecha.
@@ -48,6 +49,7 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 - Integración de módulos de **Obligaciones**, **Calendario Embebido** y **Módulo de Registro Fotográfico**.
 - Generación y almacenamiento local de recursos fotográficos (imágenes de Colombia creadas por IA) para evitar bloqueos por hotlinking externos (`/public/seed-images`).
 - Flujo funcional para carga de imágenes en el Registro Fotográfico con actualización instantánea sin recarga.
+- Alineación del componente de Tarjetas de Estado dentro del detalle de cada Expediente para que coincida con el estándar de 5 fases (Cotizaciones, En Proceso, En Trámite, Otorgado, En Seguimiento).
 
 ## 4. Estado de Despliegue
 - **Repositorio Git:** `FreddyForeroMancera/erfor`
