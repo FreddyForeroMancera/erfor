@@ -43,6 +43,7 @@ import { ClientSelector } from "./client-selector";
 import { useClient } from "@/lib/client-context";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
+import { GlobalSearch } from "./global-search";
 
 import { NewExpedienteModal } from "./new-expediente-modal";
 
@@ -198,6 +199,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="flex flex-1 items-center justify-end gap-3">
               <div className="hidden md:block">
                 <ClientSelector />
+              </div>
+              <div className="hidden md:block">
+                <GlobalSearch />
               </div>
 
               {/* Notifications Dropdown */}
