@@ -53,7 +53,12 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 - Flujo funcional para carga de imágenes en el Registro Fotográfico con actualización instantánea sin recarga.
 - Alineación del componente de Tarjetas de Estado dentro del detalle de cada Expediente para que coincida con el estándar de 5 fases (Cotizaciones, En Proceso, En Trámite, Otorgado, En Seguimiento).
 
-## 4. Estado de Despliegue
+## 4. Arquitectura de Infraestructura (Hosting)
+- **Frontend / Backend (Next.js):** Plataforma PaaS de Vercel (Capa Hobby para inicio a $0/mes, escalable a plan Pro por $20 USD/mes). Garantiza despliegues automáticos (CI/CD) desde GitHub y Edge Network.
+- **Base de Datos (PostgreSQL):** Supabase o Vercel Postgres (PostgreSQL relacional) aprovechando los planes gratuitos generosos (500MB) para mantener costos operativos en cero durante la etapa de MVP. Se descartaron opciones de VPS tradicional con cPanel/PHP por ser costosas e incompatibles arquitectónicamente con SSR y Server Actions de Next.js.
+- **Almacenamiento de Archivos (S3):** Se delega el almacenamiento de blobs (imágenes, PDFs de resoluciones) a Supabase Storage o AWS S3 para no saturar la base de datos ni el entorno Serverless.
+
+## 5. Estado de Despliegue
 - **Repositorio Git:** `FreddyForeroMancera/erfor`
 - **Hosting:** Vercel.
 - **Nota técnica:** La base de datos PostgreSQL se sincroniza (db push) y semilla (seed) automáticamente con datos de prueba durante el proceso de compilación (*build*) en Vercel, garantizando persistencia.
