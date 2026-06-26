@@ -199,10 +199,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <div className="hidden md:block">
                 <ClientSelector />
               </div>
-              <div className="hidden w-full max-w-[300px] items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 md:flex focus-within:border-erfor-green transition">
-                <input className="w-full bg-transparent text-sm outline-none" placeholder="Buscar..." />
-                <Search className="h-5 w-5 text-slate-500" />
-              </div>
+
               {/* Notifications Dropdown */}
               <Menu as="div" className="relative ml-1">
                 <Menu.Button as="button" title="Notificaciones" className="relative flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 transition hover:border-erfor-green hover:text-erfor-green outline-none">
