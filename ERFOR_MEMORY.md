@@ -66,4 +66,4 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 ## 5. Próximos Pasos (Pendientes para Producción)
 1. ~~**Migrar Base de Datos:** Reemplazar SQLite por una base de datos escalable en la nube (ej. PostgreSQL en Supabase o Vercel Postgres) para permitir escritura de nuevos datos sin perderlos por el entorno *Serverless*.~~ *(¡COMPLETADO!)*
 2. **Implementar Motor IA Real:** Conectar el chat de IA Asistente con la API de OpenAI/Anthropic y conectar una base de datos vectorial para RAG (Recuperación Aumentada por Generación) de leyes colombianas.
-3. **Gestor de Archivos S3:** Configurar AWS S3 o Vercel Blob para la subida de PDFs y resoluciones ambientales.
+3. ~~**Gestor de Archivos S3:** Configurar AWS S3 o Vercel Blob para la subida de PDFs y resoluciones ambientales.~~ *(¡COMPLETADO con Supabase Storage!)*
