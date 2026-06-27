@@ -1,8 +1,10 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import { requireUser } from "@/lib/auth";
 import { createRequirementAutomation } from "@/lib/automations";
 import { fail, ok } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
-import { put } from "@vercel/blob";
+import { ensureDir } from "@/lib/report";
 
 export async function POST(request: Request) {
   try {
@@ -11,14 +13,13 @@ export async function POST(request: Request) {
     const file = form.get("file");
     if (!(file instanceof File)) return Response.json({ error: "Archivo requerido" }, { status: 400 });
 
+    const uploadRoot = process.env.UPLOAD_DIR || "./uploads";
+    const dir = path.resolve(process.cwd(), uploadRoot, "documents");
+    await ensureDir(dir);
     const bytes = Buffer.from(await file.arrayBuffer());
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const storedName = `${Date.now()}-${safeName}`;
-    
-    // Subir a Vercel Blob con acceso público
-    const blob = await put(`documents/${storedName}`, file, {
-      access: 'public',
-    });
+    await fs.writeFile(path.join(dir, storedName), bytes);
 
     const extractedText = await extractTextLike(file, bytes);
     const document = await prisma.document.create({
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
         requirementId: String(form.get("requirementId") || "") || undefined,
         visitId: String(form.get("visitId") || "") || undefined,
         name: file.name,
-        fileUrl: blob.url,
+        fileUrl: `/uploads/documents/${storedName}`,
         fileType: file.type || "application/octet-stream",
         category: String(form.get("category") || "Documento ambiental"),
         extractedText,
