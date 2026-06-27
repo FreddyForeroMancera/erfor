@@ -1,24 +1,16 @@
-import { createWriteStream } from "node:fs";
-import fs from "node:fs/promises";
-import path from "node:path";
+import { PassThrough } from "node:stream";
 import PDFDocument from "pdfkit";
 import { prisma } from "@/lib/prisma";
-
-export async function ensureDir(dir: string) {
-  await fs.mkdir(dir, { recursive: true });
-}
+import { createClient } from "@supabase/supabase-js";
 
 export async function generateExecutivePdf(input: {
   userId: string;
+  userName: string;
   clientId?: string | null;
   projectId?: string | null;
   title: string;
   type: string;
 }) {
-  const uploadRoot = process.env.UPLOAD_DIR || "./uploads";
-  const reportsDir = path.resolve(process.cwd(), uploadRoot, "reports");
-  await ensureDir(reportsDir);
-
   const [client, project, obligations, requirements, alerts] = await Promise.all([
     input.clientId ? prisma.client.findUnique({ where: { id: input.clientId } }) : null,
     input.projectId ? prisma.project.findUnique({ where: { id: input.projectId } }) : null,
@@ -28,14 +20,17 @@ export async function generateExecutivePdf(input: {
   ]);
 
   const fileName = `${Date.now()}-${input.type.toLowerCase()}.pdf`;
-  const filePath = path.join(reportsDir, fileName);
-  const publicUrl = `/uploads/reports/${fileName}`;
 
-  await new Promise<void>((resolve, reject) => {
+  const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
     const doc = new PDFDocument({ margin: 48, size: "A4" });
-    const stream = doc.pipe(createWriteStream(filePath));
-    stream.on("finish", resolve);
-    stream.on("error", reject);
+    const buffers: Buffer[] = [];
+    const stream = new PassThrough();
+
+    stream.on('data', chunk => buffers.push(chunk));
+    stream.on('end', () => resolve(Buffer.concat(buffers)));
+    stream.on('error', reject);
+
+    doc.pipe(stream);
 
     doc.fontSize(24).fillColor("#0f7a3d").text("ERFOR", { continued: true }).fillColor("#071d22").text(" — Plataforma Integral de Asesoría Ambiental");
     doc.moveDown();
@@ -44,7 +39,7 @@ export async function generateExecutivePdf(input: {
     doc.moveDown();
     doc.fillColor("#071d22").fontSize(12).text(`Cliente: ${client?.name || "Todos"}`);
     doc.text(`Proyecto: ${project?.name || "Todos"}`);
-    doc.text("Responsable: Erwin Forero");
+    doc.text(`Responsable: ${input.userName}`);
     doc.moveDown();
     doc.fontSize(14).text("Resumen ejecutivo");
     doc.fontSize(11).text("Este informe consolida indicadores, hallazgos, riesgos y próximas acciones ambientales con base en la información cargada en ERFOR. Debe ser revisado por el responsable profesional antes de radicación externa.");
@@ -65,6 +60,31 @@ export async function generateExecutivePdf(input: {
     }
     doc.end();
   });
+
+  const supabaseUrl = process.env.SUPABASE_URL || "";
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Supabase no está configurado");
+  }
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  const { data: uploadData, error: uploadError } = await supabase.storage
+    .from("erfor-uploads")
+    .upload(`reports/${fileName}`, pdfBuffer, {
+      contentType: 'application/pdf',
+      cacheControl: '3600',
+      upsert: false
+    });
+
+  if (uploadError) {
+    throw new Error("Error subiendo reporte a Supabase Storage: " + uploadError.message);
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from("erfor-uploads")
+    .getPublicUrl(`reports/${fileName}`);
+
+  const publicUrl = publicUrlData.publicUrl;
 
   const report = await prisma.report.create({
     data: {

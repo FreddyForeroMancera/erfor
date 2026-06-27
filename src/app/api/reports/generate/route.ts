@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   try {
     const user = await requireUser();
     const input = schema.parse(await readJson(request));
-    const report = await generateExecutivePdf({ ...input, userId: user.id });
+    const report = await generateExecutivePdf({ ...input, userId: user.id, userName: user.name || "Usuario" });
     return ok({ report }, { status: 201 });
   } catch (error) {
     return fail(error);
