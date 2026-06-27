@@ -93,7 +93,7 @@ export function GlobalSearch() {
             {(results?.clients?.length ?? 0) > 0 && (
               <div className="py-1">
                 <div className="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Clientes</div>
-                {results.clients.map((client: any) => (
+                {results?.clients?.map((client: any) => (
                   <Combobox.Option
                     key={`client-${client.id}`}
                     value={{ ...client, type: 'client' }}
@@ -109,7 +109,7 @@ export function GlobalSearch() {
             {(results?.files?.length ?? 0) > 0 && (
               <div className="py-1">
                 <div className="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Expedientes</div>
-                {results.files.map((file: any) => (
+                {results?.files?.map((file: any) => (
                   <Combobox.Option
                     key={`file-${file.id}`}
                     value={{ ...file, type: 'file' }}
@@ -125,7 +125,7 @@ export function GlobalSearch() {
             {(results?.properties?.length ?? 0) > 0 && (
               <div className="py-1">
                 <div className="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Predios</div>
-                {results.properties.map((prop: any) => (
+                {results?.properties?.map((prop: any) => (
                   <Combobox.Option
                     key={`prop-${prop.id}`}
                     value={{ ...prop, type: 'property' }}
