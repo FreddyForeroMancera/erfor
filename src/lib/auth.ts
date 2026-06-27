@@ -71,6 +71,14 @@ export async function requireUser() {
   return user;
 }
 
+export async function requireConsultant() {
+  const user = await requireUser();
+  if (user.role === "CLIENTE_EXTERNO") {
+    throw new Response(JSON.stringify({ error: "Acceso denegado: Se requiere rol de consultor" }), { status: 403 });
+  }
+  return user;
+}
+
 export function canWrite(role: Role) {
   return role !== Role.AUDITOR && role !== Role.CLIENTE_EXTERNO;
 }

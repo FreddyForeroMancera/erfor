@@ -38,7 +38,14 @@ export default function LoginPage() {
       setError("Credenciales inválidas o seed pendiente.");
       return;
     }
-    router.push("/dashboard");
+    
+    const data = await response.json();
+    
+    if (data?.user?.role === "CLIENTE_EXTERNO") {
+      router.push("/portal");
+    } else {
+      router.push("/dashboard");
+    }
     router.refresh();
   }
 
