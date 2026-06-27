@@ -49,17 +49,12 @@ export function PhotoGalleryModule({ fileId }: { fileId: string }) {
     try {
       const res = await fetch(`/api/documents?id=${photoToDelete.id}`, { method: "DELETE" });
       if (!res.ok) {
-        // Fallback simulación si no existe el endpoint
-        setPhotos(prev => prev.filter(p => p.id !== photoToDelete.id));
-        toast.success("Fotografía eliminada correctamente (simulado)");
-      } else {
-        toast.success("Fotografía eliminada correctamente");
-        await fetchPhotos();
+        throw new Error("No se pudo eliminar la fotografía");
       }
+      toast.success("Fotografía eliminada correctamente");
+      await fetchPhotos();
     } catch (err: any) {
-      // Fallback simulación
-      setPhotos(prev => prev.filter(p => p.id !== photoToDelete.id));
-      toast.success("Fotografía eliminada correctamente (simulado)");
+      toast.error(err.message || "Error al eliminar");
     } finally {
       setIsDeleting(false);
       setPhotoToDelete(null);

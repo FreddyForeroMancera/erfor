@@ -68,6 +68,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { shouldRetryOnError: false }
   );
 
+  const { data: userData } = useSWR<{ user: { name: string, email: string, role: string } }>('/api/auth/me', fetcher);
+  const user = userData?.user;
+
   const activeAlerts = (alertsData || []).filter(a => !hiddenAlerts.includes(a.id));
 
   const handleMarkAllAsRead = () => {
@@ -191,7 +194,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <div className="mb-2 block lg:hidden">
                   <BrandLogo variant="dark" className="w-max" />
                 </div>
-                <h1 className="text-xl font-semibold hidden md:block">Bienvenido, <span className="text-erfor-green">Erwin Forero</span></h1>
+                <h1 className="text-xl font-semibold hidden md:block">Bienvenido, <span className="text-erfor-green">{user?.name || "Usuario"}</span></h1>
                 <p className="text-sm text-slate-500 hidden md:block">Panel de Control</p>
               </div>
             </div>
@@ -288,8 +291,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <UserRound className="h-5 w-5" />
                   </span>
                   <span className="hidden text-left text-sm md:block">
-                    <span className="block font-semibold">Erwin Forero</span>
-                    <span className="text-xs text-slate-500">Administrador</span>
+                    <span className="block font-semibold">{user?.name || "Usuario"}</span>
+                    <span className="text-xs text-slate-500">{user?.role === "ADMIN" ? "Administrador" : "Usuario"}</span>
                   </span>
                 </Menu.Button>
                 <Transition
@@ -304,7 +307,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                     <Menu.Item>
                       {({ active }) => (
-                        <Link href="/perfil" className={`${active ? 'bg-slate-50 text-erfor-green' : 'text-slate-700'} flex items-center px-4 py-2 text-sm`}>
+                        <Link href="/configuracion" className={`${active ? 'bg-slate-50 text-erfor-green' : 'text-slate-700'} flex items-center px-4 py-2 text-sm`}>
                           <User className="mr-3 h-4 w-4" />
                           Mi Perfil
                         </Link>

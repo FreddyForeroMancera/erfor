@@ -56,17 +56,12 @@ export function ResourceManager({ config }: { config: ModuleConfig }) {
     try {
       const response = await fetch(`${endpoint}?id=${rowToDelete.id}`, { method: "DELETE" });
       if (!response.ok) {
-        // Fallback simulación
-        setRows(prev => prev.filter(r => r.id !== rowToDelete.id));
-        toast.success("Registro eliminado correctamente (simulado)");
-      } else {
-        toast.success("Registro eliminado correctamente");
-        await load();
+        throw new Error("No se pudo eliminar el registro");
       }
-    } catch (err) {
-      // Fallback simulación
-      setRows(prev => prev.filter(r => r.id !== rowToDelete.id));
-      toast.success("Registro eliminado correctamente (simulado)");
+      toast.success("Registro eliminado correctamente");
+      await load();
+    } catch (err: any) {
+      toast.error(err.message || "Error al eliminar el registro");
     } finally {
       setIsDeleting(false);
       setRowToDelete(null);

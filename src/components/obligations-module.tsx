@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Check, X, Calendar as CalendarIcon, ClipboardCheck } from "lucide-react";
 import { usePersistedToggle } from "@/hooks/use-persisted-toggle";
 
@@ -8,45 +8,23 @@ type ObligationStatus = "CUMPLIDO" | "NO_CUMPLIDO" | "PENDIENTE";
 
 interface ObligationItem {
   id: string;
+  title: string;
   category: string;
   status: ObligationStatus;
-  date?: string;
-  resolution?: string;
-  isPUEAA?: boolean;
-  note?: string;
+  dueDate?: string;
+  resolutionNumber?: string;
+  comments?: string;
 }
 
 export function ObligationsModule({ fileId }: { fileId: string }) {
   const [isActive, handleToggleActive, setIsActive] = usePersistedToggle(`obligations-active-${fileId}`, false);
+  const [loading, setLoading] = useState(false);
 
   const handleActivate = () => {
     setIsActive(true);
   };
-  const [obligations, setObligations] = useState<ObligationItem[]>([
-    { id: "1", category: "Compensación", status: "PENDIENTE", note: "" },
-    { id: "2", category: "Sistema de Medición", status: "CUMPLIDO", note: "" },
-    { id: "3", category: "PUEAA", status: "PENDIENTE", isPUEAA: true, date: "", note: "" },
-    { id: "4", category: "Consumos", status: "NO_CUMPLIDO", note: "" },
-    { id: "5", category: "Cuadro de Costos", status: "PENDIENTE", note: "" },
-    { id: "6", category: "Obras de Captación", status: "PENDIENTE", note: "" }
-  ]);
 
-  const updateStatus = (id: string, status: ObligationStatus) => {
-    setObligations(prev => prev.map(o => o.id === id ? { ...o, status } : o));
-  };
-
-  const updateDate = (id: string, date: string) => {
-    setObligations(prev => prev.map(o => o.id === id ? { ...o, date, status: date ? "CUMPLIDO" : "PENDIENTE" } : o));
-  };
-
-  const updateResolution = (id: string, resolution: string) => {
-    setObligations(prev => prev.map(o => o.id === id ? { ...o, resolution } : o));
-  };
-
-  const updateNote = (id: string, note: string) => {
-    setObligations(prev => prev.map(o => o.id === id ? { ...o, note } : o));
-  };
-
+  const [obligations, setObligations] = useState<ObligationItem[]>([]);
   const [demands, setDemands] = useState([
     { id: '1', uso: 'Pecuario', ltsSeg: '0,03', m3Dia: '2,6', m3Mes: '78' },
     { id: '2', uso: 'Riego', ltsSeg: '0,9', m3Dia: '77,8', m3Mes: '2.334' },
@@ -54,8 +32,94 @@ export function ObligationsModule({ fileId }: { fileId: string }) {
     { id: '4', uso: '', ltsSeg: '', m3Dia: '', m3Mes: '' }
   ]);
 
+  const loadData = useCallback(async () => {
+    if (!isActive) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/obligations?fileId=${fileId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setObligations(data);
+      }
+      const resDemands = await fetch(`/api/obligations/demands?fileId=${fileId}`);
+      if (resDemands.ok) {
+        const dataDemands = await resDemands.json();
+        setDemands(dataDemands);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [fileId, isActive]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const saveObligation = async (id: string, field: string, value: any) => {
+    try {
+      const obs = obligations.find(o => o.id === id);
+      if (!obs) return;
+      
+      const payload: any = { id };
+      if (field === 'status') payload.status = value;
+      if (field === 'date') payload.date = value;
+      if (field === 'resolution') payload.resolution = value;
+      if (field === 'note') payload.note = value;
+
+      const res = await fetch(`/api/obligations`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setObligations(prev => prev.map(o => o.id === id ? updated : o));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const updateStatus = (id: string, status: ObligationStatus) => {
+    setObligations(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    saveObligation(id, 'status', status);
+  };
+
+  const updateDate = (id: string, date: string) => {
+    const status = date ? "CUMPLIDO" : "PENDIENTE";
+    setObligations(prev => prev.map(o => o.id === id ? { ...o, dueDate: date ? new Date(date).toISOString() : undefined, status } : o));
+    saveObligation(id, 'date', date);
+    saveObligation(id, 'status', status);
+  };
+
+  const updateResolution = (id: string, resolution: string) => {
+    setObligations(prev => prev.map(o => o.id === id ? { ...o, resolutionNumber: resolution } : o));
+    saveObligation(id, 'resolution', resolution);
+  };
+
+  const updateNote = (id: string, note: string) => {
+    setObligations(prev => prev.map(o => o.id === id ? { ...o, comments: note } : o));
+    saveObligation(id, 'note', note);
+  };
+
+  const saveDemands = async (newDemands: any) => {
+    try {
+      await fetch(`/api/obligations/demands`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileId, demands: newDemands })
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const updateDemand = (id: string, field: string, value: string) => {
-    setDemands(prev => prev.map(d => d.id === id ? { ...d, [field]: value } : d));
+    const newDemands = demands.map(d => d.id === id ? { ...d, [field]: value } : d);
+    setDemands(newDemands);
+    saveDemands(newDemands);
   };
 
   const parseLocalNum = (val: string) => {
@@ -129,7 +193,7 @@ export function ObligationsModule({ fileId }: { fileId: string }) {
                   <input 
                     type="text" 
                     placeholder="Ingresar detalle u observación..." 
-                    value={obs.note || ""}
+                    value={obs.comments || ""}
                     onChange={(e) => updateNote(obs.id, e.target.value)}
                     className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-md focus:border-erfor-green focus:outline-none text-slate-700 bg-slate-50"
                   />
@@ -141,7 +205,7 @@ export function ObligationsModule({ fileId }: { fileId: string }) {
                         <CalendarIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                         <input 
                           type="date" 
-                          value={obs.date || ""}
+                          value={obs.dueDate ? new Date(obs.dueDate).toISOString().slice(0, 10) : ""}
                           onChange={(e) => updateDate(obs.id, e.target.value)}
                           className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-md focus:border-erfor-green focus:outline-none bg-white"
                         />
@@ -152,7 +216,7 @@ export function ObligationsModule({ fileId }: { fileId: string }) {
                       <input 
                         type="text" 
                         placeholder="Ej. RES-001"
-                        value={obs.resolution || ""}
+                        value={obs.resolutionNumber || ""}
                         onChange={(e) => updateResolution(obs.id, e.target.value)}
                         className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-md focus:border-erfor-green focus:outline-none bg-white"
                       />
