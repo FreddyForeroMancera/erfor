@@ -17,6 +17,8 @@ type CalendarEvent = {
   date: string;
   status: string;
   priority: string;
+  location?: string;
+  fileId?: string;
 };
 
 export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded?: boolean }) {
@@ -232,7 +234,7 @@ export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded
                         </div>
                         <div className="flex items-center gap-3">
                           <MapPin className="h-4 w-4 text-slate-400" />
-                          <span><strong>Ubicación:</strong> Predio Asignado (Simulado)</span>
+                          <span><strong>Ubicación:</strong> {selectedEvent.location || "No especificada"}</span>
                         </div>
                         <div className="flex items-center gap-3">
                           <Tag className="h-4 w-4 text-slate-400" />
@@ -244,9 +246,11 @@ export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded
                         <button onClick={() => setSelectedEvent(null)} className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
                           Cerrar
                         </button>
-                        <button onClick={() => toast.success("Simulación: Redirigiendo al expediente...")} className="px-4 py-2 text-sm font-medium text-white bg-erfor-green rounded-lg hover:bg-green-700 transition-colors shadow-sm shadow-green-900/20">
-                          Ver Expediente
-                        </button>
+                        {selectedEvent.fileId && (
+                          <button onClick={() => window.location.href = `/expedientes/${selectedEvent.fileId}`} className="px-4 py-2 text-sm font-medium text-white bg-erfor-green rounded-lg hover:bg-green-700 transition-colors shadow-sm shadow-green-900/20">
+                            Ver Expediente
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}

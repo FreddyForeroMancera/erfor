@@ -3,9 +3,8 @@
 import { useMemo, useState } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
-import { AlertTriangle, CalendarDays, FileArchive, FileBarChart, FileCheck2, FolderKanban, Leaf, UsersRound, Loader2, Building2, Map } from "lucide-react";
+import { AlertTriangle, CalendarDays, FileArchive, FileBarChart, FileCheck2, FolderKanban, UsersRound, Loader2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { QuickActions } from "@/components/app-shell";
 import toast from "react-hot-toast";
 import { useClient } from "@/lib/client-context";
@@ -26,23 +25,7 @@ type DashboardData = {
   integrations: { id: string; name: string; type: string; status: string }[];
 };
 
-const colors = ["#0f7a3d", "#0ea5e9", "#f59e0b", "#dc2626", "#6b7280"];
 
-const typeTranslations: Record<string, string> = {
-  AUTHORITY_LINKS: "Enlaces Oficiales (CAR)",
-  EXCEL: "Archivos de Cálculo",
-  IMAGES: "Repositorio Fotográfico",
-  GOOGLE_SHEETS: "Sincronización en la Nube",
-  LEGAL_REPOSITORY: "Repositorio Normativo",
-  EXTERNAL_SOURCE: "Sistemas Externos (SINA)"
-};
-
-const statusTranslations: Record<string, string> = {
-  CONFIGURED: "Configurado",
-  CONNECTED: "Conectado",
-  READY: "Listo para Uso",
-  PENDING_VALIDATION: "Pendiente"
-};
 
 const KpiCard = React.memo(({ 
   label, value, sub, icon: Component, color, onClick, isClickable, isCotizaciones 

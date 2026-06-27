@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { ok, fail } from "@/lib/http";
+import { NextResponse } from "next/server";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -17,7 +18,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     });
     
     if (!file) {
-      throw new Error("Expediente no encontrado");
+      return NextResponse.json({ error: "Expediente no encontrado" }, { status: 404 });
     }
     
     return ok(file);

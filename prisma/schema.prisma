@@ -23,6 +23,12 @@ enum Status {
   ARCHIVED
 }
 
+enum ObligationStatus {
+  CUMPLIDO
+  NO_CUMPLIDO
+  PENDIENTE
+}
+
 enum Priority {
   LOW
   MEDIUM
@@ -131,7 +137,7 @@ model Project {
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
   client                 Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  responsible            User?    @relation("ProjectResponsible", fields: [responsibleUserId], references: [id])
+  responsible            User?    @relation("ProjectResponsible", fields: [responsibleUserId], references: [id], onDelete: SetNull)
   properties             Property[]
   files                  EnvironmentalFile[]
   procedures             Procedure[]
@@ -170,7 +176,7 @@ model Property {
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
   client                    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  project                   Project? @relation(fields: [projectId], references: [id])
+  project                   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
   files                     EnvironmentalFile[]
   visits                    Visit[]
   documents                 Document[]
@@ -198,9 +204,9 @@ model EnvironmentalFile {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   client            Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  project           Project? @relation(fields: [projectId], references: [id])
-  property          Property? @relation(fields: [propertyId], references: [id])
-  responsible       User?    @relation("FileResponsible", fields: [responsibleUserId], references: [id])
+  project           Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  property          Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  responsible       User?    @relation("FileResponsible", fields: [responsibleUserId], references: [id], onDelete: SetNull)
   procedures        Procedure[]
   requirements      Requirement[]
   visits            Visit[]
@@ -232,9 +238,9 @@ model Procedure {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   client              Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  project             Project? @relation(fields: [projectId], references: [id])
-  environmentalFile   EnvironmentalFile? @relation(fields: [environmentalFileId], references: [id])
-  responsible         User?    @relation("ProcedureResponsible", fields: [responsibleUserId], references: [id])
+  project             Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  environmentalFile   EnvironmentalFile? @relation(fields: [environmentalFileId], references: [id], onDelete: SetNull)
+  responsible         User?    @relation("ProcedureResponsible", fields: [responsibleUserId], references: [id], onDelete: SetNull)
   permits             Permit[]
   documents           Document[]
 }
@@ -255,8 +261,8 @@ model Permit {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   client        Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  project       Project? @relation(fields: [projectId], references: [id])
-  procedure     Procedure? @relation(fields: [procedureId], references: [id])
+  project       Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  procedure     Procedure? @relation(fields: [procedureId], references: [id], onDelete: SetNull)
   environmentalObligations EnvironmentalObligation[]
 }
 
@@ -296,19 +302,21 @@ model EnvironmentalObligation {
   periodicity        String?
   startDate          DateTime?
   dueDate            DateTime?
-  status             String   @default("IN_RISK")
+  status             ObligationStatus @default(PENDIENTE)
   riskLevel          RiskLevel @default(MEDIUM)
   evidenceRequired   String?
   evidenceLoaded     String?
   nextAction         String?
   notes              String?
+  resolutionNumber   String?
+  comments           String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   client             Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  project            Project? @relation(fields: [projectId], references: [id])
-  permit             Permit?  @relation(fields: [permitId], references: [id])
-  legalRequirement   LegalRequirement? @relation(fields: [legalRequirementId], references: [id])
-  responsible        User?    @relation("ObligationResponsible", fields: [responsibleUserId], references: [id])
+  project            Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  permit             Permit?  @relation(fields: [permitId], references: [id], onDelete: SetNull)
+  legalRequirement   LegalRequirement? @relation(fields: [legalRequirementId], references: [id], onDelete: SetNull)
+  responsible        User?    @relation("ObligationResponsible", fields: [responsibleUserId], references: [id], onDelete: SetNull)
 }
 
 model Requirement {
@@ -334,9 +342,9 @@ model Requirement {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   client              Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  project             Project? @relation(fields: [projectId], references: [id])
-  environmentalFile   EnvironmentalFile? @relation(fields: [environmentalFileId], references: [id])
-  responsible         User?    @relation("RequirementResponsible", fields: [responsibleUserId], references: [id])
+  project             Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  environmentalFile   EnvironmentalFile? @relation(fields: [environmentalFileId], references: [id], onDelete: SetNull)
+  responsible         User?    @relation("RequirementResponsible", fields: [responsibleUserId], references: [id], onDelete: SetNull)
   documents           Document[]
 }
 
@@ -358,9 +366,9 @@ model Visit {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   client              Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  project             Project? @relation(fields: [projectId], references: [id])
-  property            Property? @relation(fields: [propertyId], references: [id])
-  environmentalFile   EnvironmentalFile? @relation(fields: [environmentalFileId], references: [id])
+  project             Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  property            Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  environmentalFile   EnvironmentalFile? @relation(fields: [environmentalFileId], references: [id], onDelete: SetNull)
   documents           Document[]
 }
 
@@ -413,10 +421,10 @@ model Task {
   completedAt         DateTime?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
-  client              Client? @relation(fields: [clientId], references: [id])
-  project             Project? @relation(fields: [projectId], references: [id])
-  environmentalFile   EnvironmentalFile? @relation(fields: [environmentalFileId], references: [id])
-  assignee            User? @relation("TaskAssignee", fields: [assignedTo], references: [id])
+  client              Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project             Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  environmentalFile   EnvironmentalFile? @relation(fields: [environmentalFileId], references: [id], onDelete: Cascade)
+  assignee            User? @relation("TaskAssignee", fields: [assignedTo], references: [id], onDelete: SetNull)
 }
 
 model Alert {
@@ -434,9 +442,9 @@ model Alert {
   dueDate           DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  client            Client? @relation(fields: [clientId], references: [id])
-  project           Project? @relation(fields: [projectId], references: [id])
-  environmentalFile EnvironmentalFile? @relation(fields: [environmentalFileId], references: [id])
+  client            Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project           Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  environmentalFile EnvironmentalFile? @relation(fields: [environmentalFileId], references: [id], onDelete: Cascade)
 }
 
 model Report {

@@ -41,8 +41,11 @@ async function main() {
     }
   });
 
-  const project = await prisma.project.create({
-    data: {
+  const project = await prisma.project.upsert({
+    where: { id: "seed-project-1" },
+    update: {},
+    create: {
+      id: "seed-project-1",
       clientId: client.id,
       name: "Regularización ambiental predio El Porvenir",
       type: "Proyecto rural",
@@ -61,8 +64,11 @@ async function main() {
     }
   });
 
-  const property = await prisma.property.create({
-    data: {
+  const property = await prisma.property.upsert({
+    where: { id: "seed-property-1" },
+    update: {},
+    create: {
+      id: "seed-property-1",
       clientId: client.id,
       projectId: project.id,
       name: "Predio El Porvenir",
@@ -84,8 +90,11 @@ async function main() {
     }
   });
 
-  const file = await prisma.environmentalFile.create({
-    data: {
+  const file = await prisma.environmentalFile.upsert({
+    where: { id: "seed-file-1" },
+    update: {},
+    create: {
+      id: "seed-file-1",
       clientId: client.id,
       projectId: project.id,
       propertyId: property.id,
@@ -105,8 +114,11 @@ async function main() {
     }
   });
 
-  const procedure = await prisma.procedure.create({
-    data: {
+  const procedure = await prisma.procedure.upsert({
+    where: { id: "seed-procedure-1" },
+    update: {},
+    create: {
+      id: "seed-procedure-1",
       clientId: client.id,
       projectId: project.id,
       environmentalFileId: file.id,
@@ -125,8 +137,11 @@ async function main() {
     }
   });
 
-  await prisma.requirement.create({
-    data: {
+  await prisma.requirement.upsert({
+    where: { id: "seed-requirement-1" },
+    update: {},
+    create: {
+      id: "seed-requirement-1",
       clientId: client.id,
       projectId: project.id,
       environmentalFileId: file.id,
@@ -151,8 +166,11 @@ async function main() {
     }
   });
 
-  await prisma.legalRequirement.create({
-    data: {
+  await prisma.legalRequirement.upsert({
+    where: { id: "seed-legal-req-1" },
+    update: {},
+    create: {
+      id: "seed-legal-req-1",
       title: "Gestión de permiso de vertimientos",
       normType: "Decreto",
       normNumber: "1076",
@@ -171,8 +189,11 @@ async function main() {
     }
   });
 
-  await prisma.environmentalObligation.create({
-    data: {
+  await prisma.environmentalObligation.upsert({
+    where: { id: "seed-obligation-1" },
+    update: {},
+    create: {
+      id: "seed-obligation-1",
       clientId: client.id,
       projectId: project.id,
       title: "Entregar caracterización actualizada de vertimientos",
@@ -182,7 +203,7 @@ async function main() {
       periodicity: "Única",
       startDate: new Date("2026-05-05"),
       dueDate: new Date("2026-05-23"),
-      status: "IN_RISK",
+      status: "PENDIENTE",
       riskLevel: RiskLevel.HIGH,
       evidenceRequired: "Informe de laboratorio y cadena de custodia.",
       nextAction: "Solicitar documento al cliente y revisar completitud."

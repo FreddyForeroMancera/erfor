@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 5173",
-    "build": "prisma generate && prisma db push --accept-data-loss && npm run prisma:seed && next build",
+    "build": "prisma generate && next build",
     "start": "next start -p 5173",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -13,6 +13,7 @@
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:push": "prisma db push",
     "db:init": "tsx scripts/apply-schema.ts && tsx prisma/seed.ts",
+    "db:setup": "prisma generate && prisma db push --accept-data-loss && npm run prisma:seed",
     "prisma:seed": "tsx prisma/seed.ts",
     "test": "vitest run"
   },
