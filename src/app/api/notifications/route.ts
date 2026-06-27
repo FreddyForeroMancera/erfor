@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
+    await requireUser();
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get("clientId");
 

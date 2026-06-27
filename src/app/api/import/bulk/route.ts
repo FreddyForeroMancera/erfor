@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireUser } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
+    const user = await requireUser();
     const { clients } = await req.json();
 
     if (!clients || !Array.isArray(clients)) {
