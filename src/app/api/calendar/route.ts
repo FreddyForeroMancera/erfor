@@ -40,18 +40,7 @@ export async function GET(request: Request) {
       ...obligations.map(o => ({ id: `obligation-${o.id}`, type: "OBLIGACION", title: o.title, date: o.dueDate, status: o.status, priority: o.riskLevel }))
     ];
 
-    const simulatedEvents = [
-      { id: "sim-1", type: "ALERTA", title: "Vencimiento Licencia Ambiental ANLA", date: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(), status: "PENDING", priority: "CRITICAL" },
-      { id: "sim-2", type: "VISITA", title: "Inspección CAR Cundinamarca", date: new Date(new Date().setDate(new Date().getDate() + 5)).toISOString(), status: "SCHEDULED", priority: "HIGH" },
-      { id: "sim-3", type: "TRAMITE", title: "Renovación Permiso Vertimientos SDA", date: new Date(new Date().setDate(new Date().getDate() + 10)).toISOString(), status: "PENDING", priority: "MEDIUM" },
-      { id: "sim-4", type: "OBLIGACION", title: "Reporte mensual RUA", date: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(), status: "PENDING", priority: "HIGH" },
-      { id: "sim-5", type: "TAREA", title: "Revisar matrices legales de predios", date: new Date().toISOString(), status: "PENDING", priority: "LOW" },
-      { id: "sim-6", type: "ALERTA", title: "Respuesta a Requerimiento PQR 1204", date: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), status: "OVERDUE", priority: "CRITICAL" },
-      { id: "sim-7", type: "VISITA", title: "Auditoría Interna ISO 14001", date: new Date(new Date().setDate(new Date().getDate() + 15)).toISOString(), status: "SCHEDULED", priority: "MEDIUM" },
-      { id: "sim-8", type: "TRAMITE", title: "Radicar concepto técnico ICA", date: new Date(new Date().setDate(new Date().getDate() + 20)).toISOString(), status: "PENDING", priority: "HIGH" },
-    ];
-
-    return ok([...events, ...simulatedEvents]);
+    return ok(events);
   } catch (error) {
     return fail(error);
   }
