@@ -11,6 +11,7 @@ interface ObligationItem {
   category: string;
   status: ObligationStatus;
   date?: string;
+  resolution?: string;
   isPUEAA?: boolean;
   note?: string;
 }
@@ -25,7 +26,9 @@ export function ObligationsModule({ fileId }: { fileId: string }) {
     { id: "1", category: "Compensación", status: "PENDIENTE", note: "" },
     { id: "2", category: "Sistema de Medición", status: "CUMPLIDO", note: "" },
     { id: "3", category: "PUEAA", status: "PENDIENTE", isPUEAA: true, date: "", note: "" },
-    { id: "4", category: "Consumos", status: "NO_CUMPLIDO", note: "" }
+    { id: "4", category: "Consumos", status: "NO_CUMPLIDO", note: "" },
+    { id: "5", category: "Cuadro de Costos", status: "PENDIENTE", note: "" },
+    { id: "6", category: "Obras de Captación", status: "PENDIENTE", note: "" }
   ]);
 
   const updateStatus = (id: string, status: ObligationStatus) => {
@@ -36,8 +39,41 @@ export function ObligationsModule({ fileId }: { fileId: string }) {
     setObligations(prev => prev.map(o => o.id === id ? { ...o, date, status: date ? "CUMPLIDO" : "PENDIENTE" } : o));
   };
 
+  const updateResolution = (id: string, resolution: string) => {
+    setObligations(prev => prev.map(o => o.id === id ? { ...o, resolution } : o));
+  };
+
   const updateNote = (id: string, note: string) => {
     setObligations(prev => prev.map(o => o.id === id ? { ...o, note } : o));
+  };
+
+  const [demands, setDemands] = useState([
+    { id: '1', uso: 'Pecuario', ltsSeg: '0,03', m3Dia: '2,6', m3Mes: '78' },
+    { id: '2', uso: 'Riego', ltsSeg: '0,9', m3Dia: '77,8', m3Mes: '2.334' },
+    { id: '3', uso: 'Uso doméstico', ltsSeg: '', m3Dia: '', m3Mes: '' },
+    { id: '4', uso: '', ltsSeg: '', m3Dia: '', m3Mes: '' }
+  ]);
+
+  const updateDemand = (id: string, field: string, value: string) => {
+    setDemands(prev => prev.map(d => d.id === id ? { ...d, [field]: value } : d));
+  };
+
+  const parseLocalNum = (val: string) => {
+    if (!val) return 0;
+    const clean = val.replace(/\./g, '').replace(/,/g, '.');
+    const num = parseFloat(clean);
+    return isNaN(num) ? 0 : num;
+  };
+
+  const formatLocalNum = (num: number) => {
+    if (num === 0) return "0";
+    return new Intl.NumberFormat('es-CO', { maximumFractionDigits: 2 }).format(num);
+  };
+
+  const totals = {
+    ltsSeg: formatLocalNum(demands.reduce((sum, d) => sum + parseLocalNum(d.ltsSeg), 0)),
+    m3Dia: formatLocalNum(demands.reduce((sum, d) => sum + parseLocalNum(d.m3Dia), 0)),
+    m3Mes: formatLocalNum(demands.reduce((sum, d) => sum + parseLocalNum(d.m3Mes), 0))
   };
 
   return (
@@ -74,59 +110,146 @@ export function ObligationsModule({ fileId }: { fileId: string }) {
           </button>
         </div>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2">
-        {obligations.map((obs) => (
-          <div key={obs.id} className="flex flex-col justify-between rounded-md border border-slate-200 p-4 transition hover:border-erfor-green/50">
-            <span className="font-semibold text-slate-800 mb-3">{obs.category}</span>
-            
-            <div className="flex flex-col gap-3 mt-auto">
-              <input 
-                type="text" 
-                placeholder="Ingresar detalle u observación..." 
-                value={obs.note || ""}
-                onChange={(e) => updateNote(obs.id, e.target.value)}
-                className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-md focus:border-erfor-green focus:outline-none text-slate-700 bg-slate-50"
-              />
-              
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs font-medium text-slate-600 whitespace-nowrap">Fecha de comienzo:</span>
-                <div className="relative flex-1">
-                  <CalendarIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+        <div className="space-y-6">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {obligations.map((obs) => (
+              <div key={obs.id} className="flex flex-col justify-between rounded-md border border-slate-200 p-4 transition hover:border-erfor-green/50 bg-white shadow-sm">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-bold text-slate-800 text-sm">{obs.category}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                    obs.status === "CUMPLIDO" ? "bg-green-100 text-green-700" :
+                    obs.status === "NO_CUMPLIDO" ? "bg-red-100 text-red-700" :
+                    "bg-amber-100 text-amber-700"
+                  }`}>
+                    {obs.status}
+                  </span>
+                </div>
+                
+                <div className="flex flex-col gap-3 mt-auto">
                   <input 
-                    type="date" 
-                    value={obs.date || ""}
-                    onChange={(e) => updateDate(obs.id, e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-md focus:border-erfor-green focus:outline-none bg-white"
+                    type="text" 
+                    placeholder="Ingresar detalle u observación..." 
+                    value={obs.note || ""}
+                    onChange={(e) => updateNote(obs.id, e.target.value)}
+                    className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-md focus:border-erfor-green focus:outline-none text-slate-700 bg-slate-50"
                   />
+                  
+                  <div className="flex gap-2 mt-2">
+                    <div className="flex-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Fecha de presentación</span>
+                      <div className="relative">
+                        <CalendarIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                        <input 
+                          type="date" 
+                          value={obs.date || ""}
+                          onChange={(e) => updateDate(obs.id, e.target.value)}
+                          className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-md focus:border-erfor-green focus:outline-none bg-white"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Núm. de Resolución</span>
+                      <input 
+                        type="text" 
+                        placeholder="Ej. RES-001"
+                        value={obs.resolution || ""}
+                        onChange={(e) => updateResolution(obs.id, e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-md focus:border-erfor-green focus:outline-none bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => updateStatus(obs.id, "CUMPLIDO")}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-semibold border transition-colors ${
+                        obs.status === "CUMPLIDO" 
+                          ? "bg-erfor-green text-white border-erfor-green" 
+                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      <Check className="h-3.5 w-3.5" /> Cumplido
+                    </button>
+                    <button
+                      onClick={() => updateStatus(obs.id, "NO_CUMPLIDO")}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-semibold border transition-colors ${
+                        obs.status === "NO_CUMPLIDO" 
+                          ? "bg-red-500 text-white border-red-500" 
+                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      <X className="h-3.5 w-3.5" /> No Cumplido
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              <div className="flex gap-2 mt-2">
-                <button
-                  onClick={() => updateStatus(obs.id, "CUMPLIDO")}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-semibold border transition-colors ${
-                    obs.status === "CUMPLIDO" 
-                      ? "bg-erfor-green text-white border-erfor-green" 
-                      : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                  }`}
-                >
-                  <Check className="h-3.5 w-3.5" /> Cumplido
-                </button>
-                <button
-                  onClick={() => updateStatus(obs.id, "NO_CUMPLIDO")}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-semibold border transition-colors ${
-                    obs.status === "NO_CUMPLIDO" 
-                      ? "bg-red-500 text-white border-red-500" 
-                      : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                  }`}
-                >
-                  <X className="h-3.5 w-3.5" /> No Cumplido
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
-        ))}
+        
+        {/* Tabla de Demanda Hídrica */}
+        <div className="mt-8 border border-slate-300 rounded-md overflow-hidden shadow-sm">
+          <table className="w-full text-sm text-center border-collapse bg-white">
+            <thead className="bg-slate-50 text-slate-800">
+              <tr>
+                <th rowSpan={2} className="border border-slate-300 p-2 font-bold w-1/4 align-middle text-sm">Demanda Hídrica<br />(Uso)</th>
+                <th colSpan={3} className="border border-slate-300 p-2 font-bold uppercase tracking-wider text-sm">CAUDAL</th>
+              </tr>
+              <tr>
+                <th className="border border-slate-300 p-2 font-bold text-xs bg-slate-100">Lts/Seg</th>
+                <th className="border border-slate-300 p-2 font-bold text-xs bg-slate-100">m³ /día</th>
+                <th className="border border-slate-300 p-2 font-bold text-xs bg-slate-100">m³ /mes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {demands.map((d, index) => (
+                <tr key={d.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="border border-slate-300 p-0 font-medium text-slate-700">
+                    <input 
+                      type="text" 
+                      value={d.uso}
+                      onChange={(e) => updateDemand(d.id, 'uso', e.target.value)}
+                      className="w-full h-full p-2 text-center bg-transparent focus:outline-none focus:bg-blue-50"
+                      placeholder={index === 3 ? "..." : ""}
+                    />
+                  </td>
+                  <td className="border border-slate-300 p-0 text-slate-700">
+                    <input 
+                      type="text" 
+                      value={d.ltsSeg}
+                      onChange={(e) => updateDemand(d.id, 'ltsSeg', e.target.value)}
+                      className="w-full h-full p-2 text-center bg-transparent focus:outline-none focus:bg-blue-50"
+                    />
+                  </td>
+                  <td className="border border-slate-300 p-0 text-slate-700">
+                    <input 
+                      type="text" 
+                      value={d.m3Dia}
+                      onChange={(e) => updateDemand(d.id, 'm3Dia', e.target.value)}
+                      className="w-full h-full p-2 text-center bg-transparent focus:outline-none focus:bg-blue-50"
+                    />
+                  </td>
+                  <td className="border border-slate-300 p-0 text-slate-700">
+                    <input 
+                      type="text" 
+                      value={d.m3Mes}
+                      onChange={(e) => updateDemand(d.id, 'm3Mes', e.target.value)}
+                      className="w-full h-full p-2 text-center bg-transparent focus:outline-none focus:bg-blue-50"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="bg-slate-100 text-slate-800 font-bold">
+                <td className="border border-slate-300 p-2 uppercase text-sm">TOTAL</td>
+                <td className="border border-slate-300 p-2">{totals.ltsSeg}</td>
+                <td className="border border-slate-300 p-2">{totals.m3Dia}</td>
+                <td className="border border-slate-300 p-2">{totals.m3Mes}</td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
+      </div>
       )}
     </section>
   );

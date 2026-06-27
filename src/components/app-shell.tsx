@@ -65,7 +65,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { data: alertsData } = useSWR<any[]>(
     `/api/notifications${selectedClientId ? `?clientId=${selectedClientId}` : ''}`, 
     fetcher, 
-    { refreshInterval: 60000 }
+    { shouldRetryOnError: false }
   );
 
   const activeAlerts = (alertsData || []).filter(a => !hiddenAlerts.includes(a.id));

@@ -5,10 +5,13 @@ import useSWR, { mutate } from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { Dialog, Transition } from "@headlessui/react";
 import { AppShell } from "@/components/app-shell";
-import { Loader2, ArrowLeft, FolderKanban, FileBarChart, FileArchive, Leaf, Upload, FileCheck, FileCheck2, Calendar, X, Check } from "lucide-react";
+import { Loader2, ArrowLeft, FolderKanban, FileBarChart, FileArchive, Leaf, Upload, FileCheck, FileCheck2, Calendar, X, Check, Trash2 } from "lucide-react";
 import { ObligationsModule } from "@/components/obligations-module";
+import { ConsumptionReportsModule } from "@/components/consumption-reports-module";
+import { PueaaAdvancesModule } from "@/components/pueaa-advances-module";
 import { CalendarModule } from "@/components/calendar-module";
 import { PhotoGalleryModule } from "@/components/photo-gallery-module";
+import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal";
 import { NewTaskModal } from "@/components/new-task-modal";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -49,6 +52,28 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
       mutate(key => typeof key === 'string' && key.startsWith('/api/expedientes'));
       toast.success(`Estado actualizado a: ${pendingStatusChange}`);
       setPendingStatusChange(null);
+    }
+  };
+
+  const [documents, setDocuments] = useState([
+    { id: 1, name: "Escritura Pública", type: "PREDIAL", status: "VIGENTE", date: "2023-01-15" },
+    { id: 2, name: "Certificado de Libertad y Tradición", type: "PREDIAL", status: "ACTUALIZADO", date: "2024-02-10" },
+    { id: 3, name: "Estudio de Impacto Ambiental", type: "AMBIENTAL", status: "APROBADO", date: "2023-08-22" },
+    { id: 4, name: "Plan de Manejo Ambiental (PMA)", type: "AMBIENTAL", status: "EN SEGUIMIENTO", date: "2023-09-01" },
+    { id: 5, name: "Resolución de Concesión de Aguas", type: "RESOLUCIÓN", status: "VIGENTE", date: "2022-11-05" },
+    { id: 6, name: "Informe de Monitoreo de Vertimientos", type: "INFORME", status: "ENTREGADO", date: "2024-01-20" },
+    { id: 7, name: "Permiso de Emisiones Atmosféricas", type: "PERMISO", status: "POR VENCER", date: "2026-05-14" },
+    { id: 8, name: "Concepto Técnico CAR", type: "CAR", status: "RECIBIDO", date: "2024-03-12" },
+    { id: 9, name: "Registro Fotográfico Inspección", type: "ANEXO", status: "ARCHIVADO", date: "2023-12-05" },
+    { id: 10, name: "Comprobante de Pago Tasa Retributiva", type: "FINANCIERO", status: "PAGADO", date: "2024-04-01" },
+  ]);
+  const [docToDelete, setDocToDelete] = useState<any>(null);
+
+  const handleDeleteDocument = () => {
+    if (docToDelete) {
+      setDocuments(prev => prev.filter(d => d.id !== docToDelete.id));
+      toast.success("Documento eliminado correctamente");
+      setDocToDelete(null);
     }
   };
 
@@ -247,6 +272,8 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
             </section>
 
             <ObligationsModule fileId={resolvedParams.id} />
+            <ConsumptionReportsModule fileId={resolvedParams.id} />
+            <PueaaAdvancesModule fileId={resolvedParams.id} />
 
             {/* Documentos del Expediente */}
             <section className="mt-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -277,19 +304,8 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
               </div>
               <div className="flex flex-col border border-slate-100 rounded-md divide-y divide-slate-100">
-                {[
-                  { id: 1, name: "Escritura Pública", type: "PREDIAL", status: "VIGENTE", date: "2023-01-15" },
-                  { id: 2, name: "Certificado de Libertad y Tradición", type: "PREDIAL", status: "ACTUALIZADO", date: "2024-02-10" },
-                  { id: 3, name: "Estudio de Impacto Ambiental", type: "AMBIENTAL", status: "APROBADO", date: "2023-08-22" },
-                  { id: 4, name: "Plan de Manejo Ambiental (PMA)", type: "AMBIENTAL", status: "EN SEGUIMIENTO", date: "2023-09-01" },
-                  { id: 5, name: "Resolución de Concesión de Aguas", type: "RESOLUCIÓN", status: "VIGENTE", date: "2022-11-05" },
-                  { id: 6, name: "Informe de Monitoreo de Vertimientos", type: "INFORME", status: "ENTREGADO", date: "2024-01-20" },
-                  { id: 7, name: "Permiso de Emisiones Atmosféricas", type: "PERMISO", status: "POR VENCER", date: "2026-05-14" },
-                  { id: 8, name: "Concepto Técnico CAR", type: "CAR", status: "RECIBIDO", date: "2024-03-12" },
-                  { id: 9, name: "Registro Fotográfico Inspección", type: "ANEXO", status: "ARCHIVADO", date: "2023-12-05" },
-                  { id: 10, name: "Comprobante de Pago Tasa Retributiva", type: "FINANCIERO", status: "PAGADO", date: "2024-04-01" },
-                ].map((item: any) => (
-                  <div key={item.id} className="flex items-center justify-between p-3 transition hover:bg-slate-50 cursor-pointer">
+                {documents.map((item: any) => (
+                  <div key={item.id} className="flex items-center justify-between p-3 transition hover:bg-slate-50 cursor-pointer group">
                     <div className="flex items-center gap-3">
                       <div className="bg-slate-50 p-2 rounded-md border border-slate-100">
                         <DocumentIcon type={item.type} className="h-5 w-5 text-erfor-green" />
@@ -299,14 +315,23 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
                         <p className="text-xs text-slate-500">{item.type} • {item.date}</p>
                       </div>
                     </div>
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider shrink-0 ${
-                      item.status === 'VIGENTE' || item.status === 'APROBADO' || item.status === 'PAGADO' ? 'bg-green-100 text-green-700' :
-                      item.status === 'POR VENCER' ? 'bg-amber-100 text-amber-700' :
-                      item.status === 'ARCHIVADO' ? 'bg-slate-100 text-slate-600' :
-                      'bg-sky-100 text-sky-700'
-                    }`}>
-                      {item.status}
-                    </span>
+                    <div className="flex items-center gap-4">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider shrink-0 ${
+                        item.status === 'VIGENTE' || item.status === 'APROBADO' || item.status === 'PAGADO' ? 'bg-green-100 text-green-700' :
+                        item.status === 'POR VENCER' ? 'bg-amber-100 text-amber-700' :
+                        item.status === 'ARCHIVADO' ? 'bg-slate-100 text-slate-600' :
+                        'bg-sky-100 text-sky-700'
+                      }`}>
+                        {item.status}
+                      </span>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setDocToDelete(item); }} 
+                        className="text-slate-300 hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100"
+                        title="Eliminar documento"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -403,6 +428,13 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </Dialog>
       </Transition>
+
+      <DeleteConfirmationModal 
+        isOpen={!!docToDelete} 
+        onClose={() => setDocToDelete(null)}
+        onConfirm={handleDeleteDocument}
+        itemName={docToDelete?.name}
+      />
     </AppShell>
   );
 }
