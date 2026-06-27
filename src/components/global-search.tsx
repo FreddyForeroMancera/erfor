@@ -90,7 +90,7 @@ export function GlobalSearch() {
               </div>
             )}
 
-            {results?.clients.length > 0 && (
+            {(results?.clients?.length ?? 0) > 0 && (
               <div className="py-1">
                 <div className="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Clientes</div>
                 {results.clients.map((client: any) => (
@@ -106,7 +106,7 @@ export function GlobalSearch() {
               </div>
             )}
 
-            {results?.files.length > 0 && (
+            {(results?.files?.length ?? 0) > 0 && (
               <div className="py-1">
                 <div className="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Expedientes</div>
                 {results.files.map((file: any) => (
@@ -122,7 +122,7 @@ export function GlobalSearch() {
               </div>
             )}
 
-            {results?.properties.length > 0 && (
+            {(results?.properties?.length ?? 0) > 0 && (
               <div className="py-1">
                 <div className="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Predios</div>
                 {results.properties.map((prop: any) => (

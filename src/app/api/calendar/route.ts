@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     const { title, date, type, priority, clientId } = body;
 
     if (!title || !date || !type || !priority) {
-      return fail("Faltan datos requeridos", 400);
+      return Response.json({ error: "Faltan datos requeridos" }, { status: 400 });
     }
 
     const parsedDate = new Date(date);
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
       if (!actualClientId) {
         // Find any client if none provided (fallback for general calendar)
         const firstClient = await prisma.client.findFirst();
-        if (!firstClient) return fail("No hay clientes en el sistema para asociar la visita", 400);
+        if (!firstClient) return Response.json({ error: "No hay clientes en el sistema para asociar la visita" }, { status: 400 });
         actualClientId = firstClient.id;
       }
       
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
       return ok({ id: `visit-${visit.id}`, type: "VISITA", title: `Visita: ${visit.type}`, date: visit.scheduledAt, status: visit.status, priority: "MEDIUM" });
     }
 
-    return fail("Tipo de evento no soportado", 400);
+    return Response.json({ error: "Tipo de evento no soportado" }, { status: 400 });
   } catch (error) {
     return fail(error);
   }
