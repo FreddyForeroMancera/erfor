@@ -4,11 +4,6 @@ import { fail, ok } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@supabase/supabase-js";
 
-// Inicializar cliente Supabase solo si existen las variables de entorno
-const supabaseUrl = process.env.SUPABASE_URL || "";
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
-
 export async function POST(request: Request) {
   try {
     const user = await requireUser();
@@ -16,9 +11,13 @@ export async function POST(request: Request) {
     const file = form.get("file");
     if (!(file instanceof File)) return Response.json({ error: "Archivo requerido" }, { status: 400 });
 
-    if (!supabase) {
+    // Inicializar cliente Supabase dentro del handler para evitar errores en build time
+    const supabaseUrl = process.env.SUPABASE_URL || "";
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (!supabaseUrl || !supabaseKey) {
       return Response.json({ error: "Supabase no está configurado en las variables de entorno." }, { status: 500 });
     }
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const bytes = Buffer.from(await file.arrayBuffer());
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
