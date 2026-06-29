@@ -3,8 +3,9 @@
 import { useState } from "react";
 import useSWR, { mutate } from "swr";
 import { fetcher } from "@/lib/fetcher";
-import { Loader2, Search, Plus, Building2, UserX, UserCheck, Trash2 } from "lucide-react";
+import { Loader2, Search, Plus, Building2, UserX, Trash2, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
+import Link from "next/link";
 import { NewClientModal } from "./new-client-modal";
 
 export function ClientsModule() {
@@ -96,8 +97,10 @@ export function ClientsModule() {
                 ) : (
                   filteredClients.map((client: any) => (
                     <tr key={client.id} className="hover:bg-slate-50/50 transition">
-                      <td className="px-6 py-4 font-medium text-slate-800">
-                        {client.name}
+                      <td className="px-6 py-4">
+                        <Link href={`/clientes/${client.id}`} className="font-medium text-erfor-green hover:text-green-700 hover:underline">
+                          {client.name}
+                        </Link>
                       </td>
                       <td className="px-6 py-4">
                         {client.documentType || 'NIT'} {client.documentNumber || 'N/D'}
@@ -119,12 +122,19 @@ export function ClientsModule() {
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right flex justify-end gap-3 items-center">
+                        <Link 
+                          href={`/clientes/${client.id}`}
+                          className="inline-flex items-center gap-1 text-sm font-semibold text-slate-600 hover:text-erfor-green transition"
+                          title="Ver Hoja de Vida"
+                        >
+                          Ver Detalle <ArrowRight className="h-4 w-4" />
+                        </Link>
                         {client.status === 'ACTIVE' && (
                           <button
                             onClick={() => handleDeactivate(client.id)}
                             disabled={deactivatingId === client.id}
-                            className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                            className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50 border-l border-slate-200 pl-3"
                             title="Desactivar acceso"
                           >
                             {deactivatingId === client.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserX className="h-4 w-4" />}

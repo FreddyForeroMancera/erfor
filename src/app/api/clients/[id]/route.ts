@@ -41,3 +41,37 @@ export async function DELETE(
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
   }
 }
+
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const sessionUser = await getSessionUser();
+    if (!sessionUser || sessionUser.role === "CLIENTE_EXTERNO") {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const clientId = params.id;
+    const client = await prisma.client.findUnique({
+      where: { id: clientId },
+      include: {
+        _count: {
+          select: {
+            projects: true,
+            environmentalFiles: true
+          }
+        }
+      }
+    });
+
+    if (!client) {
+      return NextResponse.json({ error: "Cliente no encontrado" }, { status: 404 });
+    }
+
+    return NextResponse.json({ client });
+  } catch (error) {
+    console.error("Error obteniendo cliente:", error);
+    return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
+  }
+}

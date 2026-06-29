@@ -13,7 +13,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       include: {
         client: true,
         property: true,
-        procedures: true
+        procedures: true,
+        documents: {
+          orderBy: { createdAt: "desc" }
+        }
       }
     });
     

@@ -53,6 +53,11 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 - Flujo funcional para carga de imágenes en el Registro Fotográfico con actualización instantánea sin recarga.
 - Alineación del componente de Tarjetas de Estado dentro del detalle de cada Expediente para que coincida con el estándar de 5 fases (Cotizaciones, En Proceso, En Trámite, Otorgado, En Seguimiento).
 
+### I. Módulo de Clientes (Portal y Panel Consultor)
+- **Portal del Cliente:** Rediseño premium de la ruta `/portal` y `/portal/proyectos/[id]`. Los clientes externos tienen su propio dashboard aislado donde ven alertas, progreso de trámites, obligaciones y pueden descargar/subir documentos. Autenticación con "Magic Links".
+- **Hoja de Vida del Cliente:** El consultor tiene una vista 360° de cada cliente (`/clientes/[id]`) con contadores rápidos de predios y expedientes.
+- **Expediente Digital Operativo:** El consultor gestiona el día a día de un trámite en `/expedientes/[id]`, incluyendo una simulación UI de conexión a **OneDrive** para la gestión de documentos en la nube, y un módulo interactivo para administrar las Obligaciones Ambientales y la Demanda Hídrica.
+
 ## 4. Arquitectura de Infraestructura (Hosting)
 - **Frontend / Backend (Next.js):** Plataforma PaaS de Vercel (Capa Hobby para inicio a $0/mes, escalable a plan Pro por $20 USD/mes). Garantiza despliegues automáticos (CI/CD) desde GitHub y Edge Network.
 - **Base de Datos (PostgreSQL):** Supabase o Vercel Postgres (PostgreSQL relacional) aprovechando los planes gratuitos generosos (500MB) para mantener costos operativos en cero durante la etapa de MVP. Se descartaron opciones de VPS tradicional con cPanel/PHP por ser costosas e incompatibles arquitectónicamente con SSR y Server Actions de Next.js.
@@ -63,7 +68,8 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 - **Hosting:** Vercel.
 - **Nota técnica:** La base de datos PostgreSQL se sincroniza (db push) y semilla (seed) automáticamente con datos de prueba durante el proceso de compilación (*build*) en Vercel, garantizando persistencia.
 
-## 5. Próximos Pasos (Pendientes para Producción)
-1. ~~**Migrar Base de Datos:** Reemplazar SQLite por una base de datos escalable en la nube (ej. PostgreSQL en Supabase o Vercel Postgres) para permitir escritura de nuevos datos sin perderlos por el entorno *Serverless*.~~ *(¡COMPLETADO!)*
-2. **Implementar Motor IA Real:** Conectar el chat de IA Asistente con la API de OpenAI/Anthropic y conectar una base de datos vectorial para RAG (Recuperación Aumentada por Generación) de leyes colombianas.
-3. ~~**Gestor de Archivos S3:** Configurar AWS S3 o Vercel Blob para la subida de PDFs y resoluciones ambientales.~~ *(¡COMPLETADO con Supabase Storage!)*
+## 6. Próximos Pasos (Pendientes en Agenda)
+1. **Despliegue a Producción (Commit):** Empujar los cambios acumulados (Módulo Cliente y Expediente Digital) hacia Vercel mediante un commit controlado por el usuario.
+2. **Correos Reales (Resend):** Reemplazar la generación local de "Magic Links" por envíos reales de email usando la API de Resend, para que los clientes puedan activar sus cuentas en producción.
+3. **Módulo de Cotizaciones y Trámites:** Completar el flujo de creación de nuevos expedientes (Nuevo Trámite) desde el panel del consultor.
+4. **Implementar Motor IA Real:** Conectar el chat de IA Asistente con la API de OpenAI/Anthropic y conectar una base de datos vectorial para RAG (Recuperación Aumentada por Generación) de leyes colombianas.
