@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Leaf, LockKeyhole, Mail } from "lucide-react";
+import { LockKeyhole, Mail } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("erwin@erfor.co");
-  const [password, setPassword] = useState("Erfor2026!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -17,32 +18,30 @@ export default function LoginPage() {
     await login(email, password);
   }
 
-  async function demoLogin() {
-    const demoEmail = "erwin@erfor.co";
-    const demoPassword = "Erfor2026!";
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    await login(demoEmail, demoPassword);
-  }
-
   async function login(loginEmail: string, loginPassword: string) {
     setLoading(true);
     setError("");
     const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: loginEmail, password: loginPassword })
+      body: JSON.stringify({ email: loginEmail, password: loginPassword, source: "internal" })
     });
     setLoading(false);
+    
     if (!response.ok) {
-      setError("Credenciales inválidas o seed pendiente.");
+      if (response.status === 403) {
+        setError("Acceso no autorizado. Por favor usa el Portal de Clientes.");
+      } else {
+        setError("Credenciales inválidas.");
+      }
       return;
     }
     
     const data = await response.json();
     
     if (data?.user?.role === "CLIENTE_EXTERNO") {
-      router.push("/portal");
+      setError("Acceso denegado. Usa el Portal de Clientes.");
+      return;
     } else {
       router.push("/dashboard");
     }
@@ -60,10 +59,9 @@ export default function LoginPage() {
             <p className="mt-2 text-sm tracking-wide text-white/70 uppercase">Gestión – Cumplimiento – Sostenibilidad</p>
           </div>
           <div className="relative max-w-xl">
-
             <h1 className="text-4xl font-semibold leading-tight lg:text-6xl">Control Agroambiental Empresarial</h1>
             <p className="mt-5 text-lg leading-8 text-white/72">
-              Administración de Clientes
+              Acceso exclusivo del equipo interno ERFOR
             </p>
           </div>
           <div className="relative mt-8 text-sm text-white/60">
@@ -71,7 +69,6 @@ export default function LoginPage() {
             <p>Medico Veterinario Zootecnista</p>
             <p>Especialista en Gestión Ambiental.</p>
             <p>TP. 06670</p>
-
           </div>
         </section>
 
@@ -80,38 +77,36 @@ export default function LoginPage() {
             <div className="mb-8">
               <BrandLogo variant="dark" className="mb-6 w-max" />
               <p className="text-sm font-semibold text-erfor-green">Bienvenido</p>
-              <h2 className="mt-2 text-3xl font-semibold">Ingreso de Erwin Forero</h2>
+              <h2 className="mt-2 text-3xl font-semibold">Ingreso de Equipo</h2>
               <p className="mt-2 text-sm text-slate-500">Acceso seguro a la plataforma Agroambiental.</p>
             </div>
             <label className="mb-4 block">
               <span className="mb-2 block text-sm font-medium">Correo</span>
               <span className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2">
                 <Mail className="h-4 w-4 text-slate-400" />
-                <input className="w-full outline-none" value={email} onChange={(event) => setEmail(event.target.value)} />
+                <input className="w-full outline-none" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
               </span>
             </label>
             <label className="mb-6 block">
               <span className="mb-2 block text-sm font-medium">Contraseña</span>
               <span className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2">
                 <LockKeyhole className="h-4 w-4 text-slate-400" />
-                <input className="w-full outline-none" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+                <input className="w-full outline-none" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
               </span>
             </label>
-            {error ? <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+            {error ? (
+              <div className="mb-4 rounded-md bg-red-50 px-3 py-3 text-sm text-red-700">
+                {error}
+                {error.includes("Portal de Clientes") && (
+                  <Link href="/portal/login" className="block mt-2 font-semibold hover:underline">
+                    Ir al Portal de Clientes &rarr;
+                  </Link>
+                )}
+              </div>
+            ) : null}
             <button className="w-full rounded-md bg-erfor-green px-4 py-3 font-semibold text-white transition hover:bg-erfor-deep" disabled={loading}>
               {loading ? "Validando..." : "Iniciar sesión"}
             </button>
-            <button
-              type="button"
-              onClick={demoLogin}
-              className="mt-3 w-full rounded-md border border-erfor-green bg-erfor-mist px-4 py-3 font-semibold text-erfor-green transition hover:bg-white"
-              disabled={loading}
-            >
-              Acceso DEMO
-            </button>
-            <p className="mt-3 text-center text-xs text-slate-500">
-              Ingresa como Erwin Forero para presentar el flujo completo de la plataforma.
-            </p>
           </form>
         </section>
       </div>
