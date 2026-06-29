@@ -21,6 +21,7 @@ import {
   Leaf,
   Map,
   MessageSquareText,
+  PieChart,
   Plug,
   Search,
   Settings,
@@ -50,6 +51,7 @@ import { NewClientModal } from "./new-client-modal";
 
 const nav = [
   { label: "Panel Maestro", href: "/dashboard", icon: Gauge },
+  { label: "Reportes Analíticos", href: "/reportes", icon: PieChart },
   { label: "Clientes y Proyectos", href: "/clientes-y-proyectos", icon: UsersRound },
   { label: "Calendario y Alertas", href: "/calendario-y-alertas", icon: CalendarDays },
   { label: "IA Asistente Ambiental", href: "/ia-asistente-ambiental", icon: Bot },
