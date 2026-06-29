@@ -4,15 +4,16 @@ import { getSessionUser } from "@/lib/auth";
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const sessionUser = await getSessionUser();
     if (!sessionUser || sessionUser.role === "CLIENTE_EXTERNO") {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const clientId = params.id;
+    const clientId = resolvedParams.id;
     const client = await prisma.client.findUnique({ where: { id: clientId } });
 
     if (!client) {
@@ -44,15 +45,16 @@ export async function DELETE(
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const sessionUser = await getSessionUser();
     if (!sessionUser || sessionUser.role === "CLIENTE_EXTERNO") {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const clientId = params.id;
+    const clientId = resolvedParams.id;
     const client = await prisma.client.findUnique({
       where: { id: clientId },
       include: {

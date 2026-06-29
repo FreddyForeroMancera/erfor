@@ -5,9 +5,10 @@ import { fail } from "@/lib/http";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const user = await requireUser();
     
     if (user.role !== "CLIENTE_EXTERNO") {
@@ -22,7 +23,7 @@ export async function GET(
       return NextResponse.json({ error: "Cliente no encontrado" }, { status: 404 });
     }
 
-    const projectId = params.id;
+    const projectId = resolvedParams.id;
 
     const project = await prisma.project.findFirst({
       where: { 
