@@ -13,7 +13,7 @@ import { ProjectTimeline } from "@/components/project-timeline";
 
 export default function ProjectDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const { data, error, isLoading, mutate } = useSWR(`/api/portal/proyectos/${resolvedParams.id}`, fetcher);
+  const { data, error, isLoading, mutate } = useSWR<any>(`/api/portal/proyectos/${resolvedParams.id}`, fetcher);
   
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

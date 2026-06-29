@@ -7,7 +7,7 @@ import Link from "next/link";
 import { ProjectTimeline } from "@/components/project-timeline";
 
 export default function PortalDashboard() {
-  const { data, error, isLoading } = useSWR('/api/portal/dashboard', fetcher);
+  const { data, error, isLoading } = useSWR<any>('/api/portal/dashboard', fetcher);
 
   if (isLoading) return (
     <div className="flex h-[60vh] items-center justify-center">

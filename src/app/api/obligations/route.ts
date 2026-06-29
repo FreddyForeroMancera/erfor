@@ -12,36 +12,37 @@ export async function GET(request: Request) {
       return Response.json({ error: "fileId is required" }, { status: 400 });
     }
 
+    const file = await prisma.environmentalFile.findUnique({ where: { id: fileId } });
+    if (!file || !file.projectId) {
+      return Response.json({ error: "File not found or no project associated" }, { status: 404 });
+    }
+
     let obligations = await prisma.environmentalObligation.findMany({
-      where: { environmentalFileId: fileId },
+      where: { projectId: file.projectId },
       orderBy: { createdAt: "asc" }
     });
 
     if (obligations.length === 0) {
       // Default obligations
       const defaults = [
-        { title: "Compensación", category: "Compensación", status: "PENDIENTE", riskLevel: "MEDIUM" },
-        { title: "Sistema de Medición", category: "Sistema de Medición", status: "CUMPLIDO", riskLevel: "LOW" },
-        { title: "PUEAA", category: "PUEAA", status: "PENDIENTE", riskLevel: "HIGH" },
-        { title: "Consumos", category: "Consumos", status: "NO_CUMPLIDO", riskLevel: "HIGH" },
-        { title: "Cuadro de Costos", category: "Cuadro de Costos", status: "PENDIENTE", riskLevel: "MEDIUM" },
-        { title: "Obras de Captación", category: "Obras de Captación", status: "PENDIENTE", riskLevel: "MEDIUM" }
+        { title: "Compensación", category: "Compensación", status: "PENDIENTE" as const, riskLevel: "MEDIUM" as const },
+        { title: "Sistema de Medición", category: "Sistema de Medición", status: "CUMPLIDO" as const, riskLevel: "LOW" as const },
+        { title: "PUEAA", category: "PUEAA", status: "PENDIENTE" as const, riskLevel: "HIGH" as const },
+        { title: "Consumos", category: "Consumos", status: "NO_CUMPLIDO" as const, riskLevel: "HIGH" as const },
+        { title: "Cuadro de Costos", category: "Cuadro de Costos", status: "PENDIENTE" as const, riskLevel: "MEDIUM" as const },
+        { title: "Obras de Captación", category: "Obras de Captación", status: "PENDIENTE" as const, riskLevel: "MEDIUM" as const }
       ];
-      
-      const file = await prisma.environmentalFile.findUnique({ where: { id: fileId } });
-      if (!file) return Response.json({ error: "File not found" }, { status: 404 });
 
       await prisma.environmentalObligation.createMany({
         data: defaults.map(d => ({
           ...d,
-          environmentalFileId: fileId,
           clientId: file.clientId,
           projectId: file.projectId
         }))
       });
 
       obligations = await prisma.environmentalObligation.findMany({
-        where: { environmentalFileId: fileId },
+        where: { projectId: file.projectId },
         orderBy: { createdAt: "asc" }
       });
     }

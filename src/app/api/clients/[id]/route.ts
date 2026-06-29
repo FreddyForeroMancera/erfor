@@ -61,7 +61,7 @@ export async function GET(
         _count: {
           select: {
             projects: true,
-            environmentalFiles: true
+            files: true
           }
         }
       }

@@ -11,7 +11,7 @@ import { NewTramiteModal } from "@/components/new-tramite-modal";
 
 export default function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const { data, error, isLoading } = useSWR(`/api/clients/${resolvedParams.id}`, fetcher);
+  const { data, error, isLoading } = useSWR<any>(`/api/clients/${resolvedParams.id}`, fetcher);
   const [activeTab, setActiveTab] = useState<"info" | "expedientes" | "proyectos">("info");
   const [isNewTramiteOpen, setIsNewTramiteOpen] = useState(false);
 

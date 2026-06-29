@@ -11,7 +11,7 @@ import { ObligationsModule } from "@/components/obligations-module";
 
 export default function ExpedienteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const { data: file, error, isLoading } = useSWR(`/api/expedientes/${resolvedParams.id}`, fetcher);
+  const { data: file, error, isLoading } = useSWR<any>(`/api/expedientes/${resolvedParams.id}`, fetcher);
   const [activeTab, setActiveTab] = useState<"resumen" | "documentos" | "obligaciones">("resumen");
 
   if (isLoading) {
