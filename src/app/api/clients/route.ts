@@ -5,8 +5,10 @@ import { fail, readJson } from "@/lib/http";
 import { getSessionUser } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { Resend } from "resend";
 
 const JWT_SECRET = process.env.JWT_SECRET || "default_jwt_secret_for_development_only_12345";
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const createClientSchema = z.object({
   name: z.string().min(2),
@@ -94,11 +96,37 @@ export async function POST(request: Request) {
     const origin = request.headers.get("origin") || "http://localhost:5173";
     const activationLink = `${origin}/portal/activar?token=${token}`;
 
-    console.log("=========================================");
-    console.log(`[SIMULACIÓN CORREO] NUEVO CLIENTE CREADO`);
-    console.log(`Cliente: ${data.name}`);
-    console.log(`Enlace Mágico: ${activationLink}`);
-    console.log("=========================================");
+    if (process.env.RESEND_API_KEY) {
+      try {
+        await resend.emails.send({
+          from: 'ERFOR <onboarding@resend.dev>', // Usar dominio verificado en prod
+          to: data.email,
+          subject: 'Bienvenido a ERFOR - Activa tu cuenta',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+              <h2 style="color: #0f172a;">Bienvenido a ERFOR</h2>
+              <p style="color: #475569; font-size: 16px;">Hola ${data.contactPerson || data.name},</p>
+              <p style="color: #475569; font-size: 16px;">Se ha creado una cuenta para tu empresa en la plataforma ambiental de ERFOR.</p>
+              <p style="color: #475569; font-size: 16px;">Para establecer tu contraseña y acceder al portal, haz clic en el siguiente enlace (válido por 7 días):</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${activationLink}" style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">Activar mi cuenta</a>
+              </div>
+              <p style="color: #94a3b8; font-size: 14px;">Si no solicitaste esta cuenta, puedes ignorar este correo.</p>
+            </div>
+          `
+        });
+        console.log(`[RESEND] Correo enviado exitosamente a ${data.email}`);
+      } catch (err) {
+        console.error(`[RESEND] Error enviando correo:`, err);
+      }
+    } else {
+      console.log("=========================================");
+      console.log(`[AVISO] RESEND_API_KEY no configurada en .env`);
+      console.log(`[SIMULACIÓN CORREO] NUEVO CLIENTE CREADO`);
+      console.log(`Cliente: ${data.name}`);
+      console.log(`Enlace Mágico: ${activationLink}`);
+      console.log("=========================================");
+    }
 
     return NextResponse.json({ 
       success: true, 

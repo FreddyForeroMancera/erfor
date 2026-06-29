@@ -7,11 +7,13 @@ import { AppShell } from "@/components/app-shell";
 import { FilesModule } from "@/components/files-module";
 import { Building2, Map, FolderKanban, Loader2, ArrowLeft, Mail, Phone, MapPin, Calendar, Clock, AlertTriangle } from "lucide-react";
 import Link from "next/link";
+import { NewTramiteModal } from "@/components/new-tramite-modal";
 
 export default function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const { data, error, isLoading } = useSWR(`/api/clients/${resolvedParams.id}`, fetcher);
   const [activeTab, setActiveTab] = useState<"info" | "expedientes" | "proyectos">("info");
+  const [isNewTramiteOpen, setIsNewTramiteOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -80,7 +82,10 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
             <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
               Editar Cliente
             </button>
-            <button className="px-4 py-2 bg-erfor-green text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition shadow-sm">
+            <button 
+              onClick={() => setIsNewTramiteOpen(true)}
+              className="px-4 py-2 bg-erfor-green text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition shadow-sm"
+            >
               Nuevo Trámite
             </button>
           </div>
@@ -218,6 +223,12 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
           )}
         </div>
       </div>
+      
+      <NewTramiteModal 
+        isOpen={isNewTramiteOpen} 
+        onClose={() => setIsNewTramiteOpen(false)} 
+        clientId={resolvedParams.id}
+      />
     </AppShell>
   );
 }
