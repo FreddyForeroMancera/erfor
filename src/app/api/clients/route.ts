@@ -8,7 +8,6 @@ import jwt from "jsonwebtoken";
 import { Resend } from "resend";
 
 const JWT_SECRET = process.env.JWT_SECRET || "default_jwt_secret_for_development_only_12345";
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 const createClientSchema = z.object({
   name: z.string().min(2),
@@ -98,6 +97,7 @@ export async function POST(request: Request) {
 
     if (process.env.RESEND_API_KEY) {
       try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
         await resend.emails.send({
           from: 'ERFOR <onboarding@resend.dev>', // Usar dominio verificado en prod
           to: data.email,
