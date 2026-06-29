@@ -59,7 +59,7 @@ export default function PortalLoginPage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(47,168,79,.3),transparent_70%)]" />
           
           <div className="relative z-10">
-            <BrandLogo variant="light" size="lg" className="w-max" />
+            <BrandLogo variant="light" size="large" className="w-max" />
             <p className="mt-6 text-2xl font-semibold text-white/95">
               Todo bajo control.
             </p>
