@@ -71,7 +71,6 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 - **Nota técnica:** La base de datos PostgreSQL se sincroniza (db push) y semilla (seed) automáticamente con datos de prueba durante el proceso de compilación (*build*) en Vercel, garantizando persistencia.
 
 ## 6. Próximos Pasos (Pendientes en Agenda)
-1. **Despliegue a Producción (Commit):** Empujar los cambios acumulados (Módulo Cliente y Expediente Digital) hacia Vercel mediante un commit controlado por el usuario.
-2. **Correos Reales (Resend):** Reemplazar la generación local de "Magic Links" por envíos reales de email usando la API de Resend, para que los clientes puedan activar sus cuentas en producción.
-3. **Módulo de Cotizaciones y Trámites:** Completar el flujo de creación de nuevos expedientes (Nuevo Trámite) desde el panel del consultor.
-4. **Implementar Motor IA Real:** Conectar el chat de IA Asistente con la API de OpenAI/Anthropic y conectar una base de datos vectorial para RAG (Recuperación Aumentada por Generación) de leyes colombianas.
+1. ~~**Correos Reales (Resend):**~~ *(Pausado temporalmente por decisión de negocio, el portal de clientes no es prioridad en este momento).*
+2. **Módulo de Cotizaciones y Trámites:** Completar el flujo de creación de nuevos expedientes (Nuevo Trámite) desde el panel del consultor.
+3. **Implementar Motor IA Real:** Conectar el chat de IA Asistente con la API de OpenAI/Anthropic y conectar una base de datos vectorial para RAG (Recuperación Aumentada por Generación) de leyes colombianas.

@@ -63,6 +63,12 @@ export async function GET(
             projects: true,
             files: true
           }
+        },
+        projects: {
+          orderBy: { createdAt: "desc" }
+        },
+        properties: {
+          orderBy: { createdAt: "desc" }
         }
       }
     });

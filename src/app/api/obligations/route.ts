@@ -30,7 +30,8 @@ export async function GET(request: Request) {
         { title: "PUEAA", category: "PUEAA", status: "PENDIENTE" as const, riskLevel: "HIGH" as const },
         { title: "Consumos", category: "Consumos", status: "NO_CUMPLIDO" as const, riskLevel: "HIGH" as const },
         { title: "Cuadro de Costos", category: "Cuadro de Costos", status: "PENDIENTE" as const, riskLevel: "MEDIUM" as const },
-        { title: "Obras de Captación", category: "Obras de Captación", status: "PENDIENTE" as const, riskLevel: "MEDIUM" as const }
+        { title: "Obras de Captación en Obras", category: "Obras de Captación en Obras", status: "PENDIENTE" as const, riskLevel: "MEDIUM" as const },
+        { title: "Reporte de Consumos", category: "Reporte de Consumos", status: "PENDIENTE" as const, riskLevel: "MEDIUM" as const }
       ];
 
       await prisma.environmentalObligation.createMany({

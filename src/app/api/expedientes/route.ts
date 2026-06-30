@@ -53,6 +53,20 @@ export async function POST(request: Request) {
       clientId = client.id;
     }
 
+    let projectId = data.projectId;
+    if (!projectId && data.projectName) {
+      const project = await prisma.project.create({
+        data: {
+          clientId,
+          name: data.projectName,
+          type: "Asesoría Ambiental", // Valor por defecto general
+          status: "PREPARATION",
+          riskLevel: "MEDIUM"
+        }
+      });
+      projectId = project.id;
+    }
+
     let propertyId = data.propertyId;
     if (!propertyId && data.propertyName) {
       const property = await prisma.property.create({
@@ -74,6 +88,7 @@ export async function POST(request: Request) {
     const newItem = await prisma.environmentalFile.create({
       data: {
         clientId,
+        projectId,
         propertyId,
         internalCode: data.internalCode,
         authority: data.authority,
