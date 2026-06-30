@@ -33,7 +33,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         entityId: file.id,
         description: `El estado del expediente ha cambiado a ${status}.`,
         userId: session.id,
-        clientId: file.clientId,
       }
     });
 
