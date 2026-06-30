@@ -52,6 +52,8 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 - Generación y almacenamiento local de recursos fotográficos (imágenes de Colombia creadas por IA) para evitar bloqueos por hotlinking externos (`/public/seed-images`).
 - Flujo funcional para carga de imágenes en el Registro Fotográfico con actualización instantánea sin recarga.
 - Alineación del componente de Tarjetas de Estado dentro del detalle de cada Expediente para que coincida con el estándar de 5 fases (Cotizaciones, En Proceso, En Trámite, Otorgado, En Seguimiento).
+- **Steper Visual de Estados con Seguridad:** Implementación de un visualizador de 5 pasos horizontales en el expediente. Incluye un mecanismo de **doble aprobación** a través de un modal de confirmación segura (checkbox de advertencia) para cambiar el estado del trámite en la base de datos y generar registros de auditoría.
+- **Simulación Masiva de Datos:** Se generaron registros completos (Trámites, Requerimientos, Obligaciones, Alertas y Proyectos vinculados) para la totalidad de los clientes y predios de la plataforma, permitiendo probar toda la funcionalidad con datos realistas en todas las cuentas.
 
 ### I. Módulo de Clientes (Portal y Panel Consultor)
 - **Portal del Cliente:** Rediseño premium de la ruta `/portal` y `/portal/proyectos/[id]`. Los clientes externos tienen su propio dashboard aislado donde ven alertas, progreso de trámites, obligaciones y pueden descargar/subir documentos. Autenticación con "Magic Links".

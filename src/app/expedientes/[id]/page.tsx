@@ -8,10 +8,11 @@ import { ArrowLeft, Loader2, FileText, CheckCircle2, Clock, AlertTriangle, Cloud
 import Link from "next/link";
 import { DocumentsModule } from "@/components/documents-module";
 import { ObligationsModule } from "@/components/obligations-module";
+import { ExpedienteStatusTracker } from "@/components/expediente-status-tracker";
 
 export default function ExpedienteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const { data: file, error, isLoading } = useSWR<any>(`/api/expedientes/${resolvedParams.id}`, fetcher);
+  const { data: file, error, isLoading, mutate } = useSWR<any>(`/api/expedientes/${resolvedParams.id}`, fetcher);
   const [activeTab, setActiveTab] = useState<"resumen" | "documentos" | "obligaciones">("resumen");
 
   if (isLoading) {
@@ -50,12 +51,7 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
     { id: "obligaciones", label: "Obligaciones & Tareas", icon: CheckCircle2 },
   ] as const;
 
-  const statusColors: Record<string, string> = {
-    "PREPARATION": "bg-indigo-100 text-indigo-800",
-    "EVALUATION": "bg-sky-100 text-sky-800",
-    "APPROVED": "bg-green-100 text-green-800",
-    "DENIED": "bg-red-100 text-red-800"
-  };
+
 
   return (
     <AppShell>
@@ -69,9 +65,6 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">Expediente {file.internalCode}</h1>
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ${statusColors[file.status] || 'bg-slate-100 text-slate-700'}`}>
-                  {file.status}
-                </span>
               </div>
               <p className="text-sm text-slate-500 font-medium">
                 {file.type} • Autoridad: {file.authority}
@@ -85,6 +78,13 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
             </button>
           </div>
         </div>
+
+        {/* Status Tracker */}
+        <ExpedienteStatusTracker 
+          fileId={file.id} 
+          currentStatus={file.status} 
+          onStatusUpdated={() => mutate()} 
+        />
 
         {/* Tabs */}
         <div className="mb-8 flex gap-2 border-b border-slate-200 overflow-x-auto">

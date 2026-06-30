@@ -47,7 +47,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
 
   const { client } = data;
   const projectsCount = client._count?.projects || 0;
-  const filesCount = client._count?.environmentalFiles || 0;
+  const filesCount = client._count?.files || 0;
 
   const tabs = [
     { id: "info", label: "Información General", icon: Building2 },
