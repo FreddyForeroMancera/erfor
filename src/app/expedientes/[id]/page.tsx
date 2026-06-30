@@ -113,28 +113,28 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
           {activeTab === "resumen" && (
             <div className="grid lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
               <div className="lg:col-span-2 space-y-6">
+                {/* 1. Datos del Expediente */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <h3 className="font-bold text-slate-800 mb-6 text-lg">Información del Trámite</h3>
+                  <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-3">
+                    <FileText className="h-5 w-5 text-erfor-green" />
+                    <h3 className="font-bold text-slate-800 text-lg">1. Datos del Expediente</h3>
+                  </div>
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Cliente Asociado</p>
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-slate-400" />
-                        <Link href={`/clientes/${file.clientId}`} className="font-medium text-erfor-green hover:underline">
-                          {file.client?.name || "Desconocido"}
-                        </Link>
-                      </div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Código / Expediente</p>
+                      <p className="font-medium text-slate-800">{file.internalCode || "No definido"}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Predio / Ubicación</p>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-slate-400" />
-                        <p className="font-medium text-slate-800">{file.property?.name || "Sin predio asignado"}</p>
-                      </div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Autoridad Ambiental</p>
+                      <p className="font-medium text-slate-800">{file.authority || "No definida"}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Autoridad Competente</p>
-                      <p className="font-medium text-slate-800">{file.authority}</p>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Dirección Regional</p>
+                      <p className="font-medium text-slate-800">{file.carRegional || "No definida"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Tipo de Expediente</p>
+                      <p className="font-medium text-slate-800">{file.type || "No definido"}</p>
                     </div>
                     <div>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Nivel de Riesgo</p>
@@ -142,11 +142,55 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
                         {file.riskLevel || "MEDIUM"}
                       </span>
                     </div>
-                    <div className="col-span-2">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Descripción</p>
-                      <p className="text-sm text-slate-600 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                        {file.description || "No se ha proporcionado una descripción detallada para este expediente."}
-                      </p>
+                  </div>
+                </div>
+
+                {/* 2. Datos del Cliente */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm mt-6">
+                  <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-3">
+                    <Building2 className="h-5 w-5 text-erfor-green" />
+                    <h3 className="font-bold text-slate-800 text-lg">2. Datos del Cliente</h3>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Nombre Cliente</p>
+                      <Link href={`/clientes/${file.clientId}`} className="font-medium text-erfor-green hover:underline">
+                        {file.client?.name || "Desconocido"}
+                      </Link>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Identificación (NIT/CC)</p>
+                      <p className="font-medium text-slate-800">{file.client?.documentNumber || "No definida"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Dirección</p>
+                      <p className="font-medium text-slate-800">{file.client?.address || "No definida"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Teléfono</p>
+                      <p className="font-medium text-slate-800">{file.client?.phone || "No definido"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Datos de la Finca / Predio */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm mt-6">
+                  <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-3">
+                    <MapPin className="h-5 w-5 text-erfor-green" />
+                    <h3 className="font-bold text-slate-800 text-lg">3. Datos de la Finca / Predio</h3>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    <div className="sm:col-span-2">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Nombre de la Finca</p>
+                      <p className="font-medium text-slate-800">{file.property?.name || "Sin predio asignado"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Cédula Catastral</p>
+                      <p className="font-medium text-slate-800">{file.property?.cadastralCode || "No definida"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Matrícula Inmobiliaria</p>
+                      <p className="font-medium text-slate-800">{file.property?.realEstateRegistration || "No definida"}</p>
                     </div>
                   </div>
                 </div>

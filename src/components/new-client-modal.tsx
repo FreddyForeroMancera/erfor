@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { X, Building2, User, Mail, Hash, Phone, Loader2, Copy, Check } from "lucide-react";
+import { X, Loader2, Check, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface NewClientModalProps {
@@ -14,18 +14,27 @@ interface NewClientModalProps {
 export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalProps) {
   const [loading, setLoading] = useState(false);
   const [activationLink, setActivationLink] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data = {
-      name: formData.get("name"),
-      documentType: formData.get("documentType") || "NIT",
-      documentNumber: formData.get("documentNumber"),
-      contactPerson: formData.get("contactPerson"),
-      email: formData.get("email"),
+      // Expediente Data
+      expedienteCode: formData.get("expedienteCode"),
+      authority: formData.get("authority"),
+      regional: formData.get("regional"),
+      expedienteType: formData.get("expedienteType"),
+      
+      // Client Data
+      clientName: formData.get("clientName"),
+      identification: formData.get("identification"),
+      address: formData.get("address"),
       phone: formData.get("phone"),
+      
+      // Property Data
+      propertyName: formData.get("propertyName"),
+      cadastralCode: formData.get("cadastralCode"),
+      realEstateRegistration: formData.get("realEstateRegistration"),
     };
 
     setLoading(true);
@@ -36,9 +45,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
         body: JSON.stringify(data),
       });
       const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Error al crear cliente");
+      if (!res.ok) throw new Error(result.error || "Error al crear cliente y expediente");
       
-      toast.success("Cliente creado con éxito");
+      toast.success("Expediente creado con éxito");
       
       if (result.activationLink) {
         setActivationLink(result.activationLink);
@@ -50,15 +59,6 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
       toast.error(error.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const copyToClipboard = () => {
-    if (activationLink) {
-      navigator.clipboard.writeText(activationLink);
-      setCopied(true);
-      toast.success("Enlace copiado al portapapeles");
-      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -96,38 +96,23 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-lg transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white p-8 text-left align-middle shadow-xl transition-all">
                 
                 {activationLink ? (
-                  // Success State - Show Activation Link
-                  <div className="py-6">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 mb-4">
-                      <Check className="h-6 w-6 text-green-600" />
+                  // Success State
+                  <div className="py-8">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 mb-6">
+                      <Check className="h-8 w-8 text-green-600" />
                     </div>
-                    <Dialog.Title as="h3" className="text-xl font-bold leading-6 text-slate-800 text-center mb-2">
-                      ¡Cliente Creado Exitosamente!
+                    <Dialog.Title as="h3" className="text-2xl font-bold leading-6 text-slate-800 text-center mb-4">
+                      ¡Expediente Creado Exitosamente!
                     </Dialog.Title>
-                    <p className="text-sm text-slate-500 text-center mb-6">
-                      El sistema ha generado un enlace mágico de activación. Cópialo y envíaselo a tu cliente para que establezca su contraseña.
+                    <p className="text-base text-slate-500 text-center mb-8 max-w-lg mx-auto">
+                      Se ha configurado toda la estructura del proyecto en la base de datos (Cliente, Predio, Cotización y Expediente).
                     </p>
-                    
-                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6 flex flex-col items-center">
-                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Enlace de Activación</p>
-                      <code className="text-sm text-erfor-green font-mono break-all text-center mb-4 px-2">
-                        {activationLink}
-                      </code>
-                      <button
-                        onClick={copyToClipboard}
-                        className="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 px-4 py-2 rounded-md hover:bg-slate-50 transition text-sm font-medium"
-                      >
-                        {copied ? <Check className="h-4 w-4 text-erfor-green" /> : <Copy className="h-4 w-4" />}
-                        {copied ? "¡Copiado!" : "Copiar Enlace"}
-                      </button>
-                    </div>
-
                     <button
                       onClick={handleFinish}
-                      className="w-full bg-erfor-green text-white font-medium py-2.5 rounded-lg hover:bg-green-700 transition"
+                      className="w-full max-w-xs mx-auto block bg-erfor-green text-white font-medium py-3 rounded-lg hover:bg-green-700 transition"
                     >
                       Terminar y Cerrar
                     </button>
@@ -135,123 +120,168 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                 ) : (
                   // Form State
                   <>
-                    <div className="flex items-center justify-between mb-5">
-                      <Dialog.Title as="h3" className="text-lg font-bold leading-6 text-slate-800 flex items-center gap-2">
-                        <Building2 className="h-5 w-5 text-erfor-green" />
-                        Registrar Nuevo Cliente
+                    <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
+                      <Dialog.Title as="h3" className="text-xl font-bold leading-6 text-slate-800 flex items-center gap-2">
+                        <FileText className="h-6 w-6 text-erfor-green" />
+                        Nuevo Expediente Ambiental
                       </Dialog.Title>
                       <button
                         onClick={onClose}
                         disabled={loading}
-                        className="rounded-full p-1 hover:bg-slate-100 transition text-slate-400 hover:text-slate-600"
+                        className="rounded-full p-2 hover:bg-slate-100 transition text-slate-400 hover:text-slate-600"
                       >
-                        <X className="h-5 w-5" />
+                        <X className="h-6 w-6" />
                       </button>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-10">
                       
-                      {/* Empresa */}
+                      {/* 1. Datos del Expediente */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Nombre de la Empresa / Cliente</label>
-                        <div className="relative">
-                          <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                          <input
-                            type="text"
-                            name="name"
-                            required
-                            className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm"
-                            placeholder="Ej. Empresa Verde S.A.S"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="col-span-1">
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Tipo Doc.</label>
-                          <select 
-                            name="documentType" 
-                            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm"
-                          >
-                            <option value="NIT">NIT</option>
-                            <option value="CC">C.C.</option>
-                            <option value="CE">C.E.</option>
-                          </select>
-                        </div>
-                        <div className="col-span-2">
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Número de Documento</label>
-                          <div className="relative">
-                            <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <h4 className="font-bold text-slate-800 mb-4 pb-2 border-b border-slate-50">1. Datos del Expediente</h4>
+                        <div className="grid grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Código / Expediente <span className="text-red-500">*</span></label>
                             <input
                               type="text"
-                              name="documentNumber"
+                              name="expedienteCode"
                               required
-                              className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm"
-                              placeholder="Sin puntos ni guiones"
+                              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm"
+                              placeholder="Ej. EXP-2026-001"
                             />
                           </div>
-                        </div>
-                      </div>
-
-                      {/* Contacto */}
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Persona de Contacto</label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                          <input
-                            type="text"
-                            name="contactPerson"
-                            required
-                            className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm"
-                            placeholder="Nombre del representante"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Correo Electrónico</label>
-                          <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Autoridad Ambiental <span className="text-red-500">*</span></label>
                             <input
-                              type="email"
-                              name="email"
+                              type="text"
+                              name="authority"
                               required
-                              className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm"
-                              placeholder="contacto@empresa.com"
+                              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm"
+                              placeholder="Ej. CAR"
                             />
                           </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Dirección Regional</label>
+                            <select 
+                              name="regional" 
+                              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm bg-white"
+                            >
+                              <option value="">Seleccione una regional...</option>
+                              <option value="Bogotá">Bogotá</option>
+                              <option value="Cundinamarca">Cundinamarca</option>
+                              <option value="Boyacá">Boyacá</option>
+                              <option value="Antioquia">Antioquia</option>
+                              <option value="Valle del Cauca">Valle del Cauca</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Tipo de Expediente</label>
+                            <select 
+                              name="expedienteType" 
+                              className="w-full px-3 py-2 border-erfor-green border-2 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm bg-white text-slate-800"
+                            >
+                              <option value="Permisivo">Permisivo</option>
+                              <option value="Sancionatorio">Sancionatorio</option>
+                              <option value="Control y Seguimiento">Control y Seguimiento</option>
+                            </select>
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Teléfono Móvil</label>
-                          <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      </div>
+
+                      {/* 2. Datos del Cliente */}
+                      <div>
+                        <h4 className="font-bold text-slate-800 mb-4 pb-2 border-b border-slate-50">2. Datos del Cliente</h4>
+                        <div className="grid grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Nombre Cliente <span className="text-red-500">*</span></label>
+                            <input
+                              type="text"
+                              name="clientName"
+                              required
+                              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm"
+                              placeholder="Nombre de la empresa o persona"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Identificación (NIT/CC)</label>
+                            <input
+                              type="text"
+                              name="identification"
+                              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm"
+                              placeholder=""
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Dirección</label>
+                            <input
+                              type="text"
+                              name="address"
+                              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm"
+                              placeholder=""
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Teléfono</label>
                             <input
                               type="tel"
                               name="phone"
-                              className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm"
-                              placeholder="Opcional"
+                              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm"
+                              placeholder=""
                             />
                           </div>
                         </div>
                       </div>
 
-                      <div className="pt-4 mt-6 border-t border-slate-100 flex justify-end gap-3">
+                      {/* 3. Datos de la Finca / Predio */}
+                      <div>
+                        <h4 className="font-bold text-slate-800 mb-4 pb-2 border-b border-slate-50">3. Datos de la Finca / Predio</h4>
+                        <div className="grid grid-cols-3 gap-6">
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Nombre de la Finca</label>
+                            <input
+                              type="text"
+                              name="propertyName"
+                              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm"
+                              placeholder="Nombre del predio"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Cédula Catastral</label>
+                            <input
+                              type="text"
+                              name="cadastralCode"
+                              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm"
+                              placeholder=""
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Matrícula Inmobiliaria</label>
+                            <input
+                              type="text"
+                              name="realEstateRegistration"
+                              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-erfor-green focus:border-erfor-green text-sm"
+                              placeholder=""
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-6 mt-8 border-t border-slate-100 flex justify-end gap-3">
                         <button
                           type="button"
                           onClick={onClose}
                           disabled={loading}
-                          className="px-4 py-2 rounded-md text-slate-600 font-medium hover:bg-slate-100 transition disabled:opacity-50"
+                          className="px-6 py-2.5 rounded-md text-slate-600 font-semibold hover:bg-slate-100 transition disabled:opacity-50"
                         >
                           Cancelar
                         </button>
                         <button
                           type="submit"
                           disabled={loading}
-                          className="flex items-center gap-2 bg-erfor-green text-white px-5 py-2 rounded-md font-medium hover:bg-green-700 transition disabled:opacity-70 shadow-sm"
+                          className="flex items-center gap-2 bg-erfor-green text-white px-8 py-2.5 rounded-md font-semibold hover:bg-green-700 transition disabled:opacity-70 shadow-md"
                         >
-                          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                          {loading ? "Creando..." : "Crear Cliente"}
+                          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
+                          {loading ? "Guardando..." : "Crear Expediente"}
                         </button>
                       </div>
                     </form>
