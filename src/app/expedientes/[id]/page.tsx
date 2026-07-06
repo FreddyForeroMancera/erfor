@@ -8,6 +8,8 @@ import { ArrowLeft, Loader2, FileText, CheckCircle2, Clock, AlertTriangle, Cloud
 import Link from "next/link";
 import { DocumentsModule } from "@/components/documents-module";
 import { ObligationsModule } from "@/components/obligations-module";
+import { ConsumptionReportsModule } from "@/components/consumption-reports-module";
+import { PueaaModule } from "@/components/pueaa-module";
 import { ExpedienteStatusTracker } from "@/components/expediente-status-tracker";
 
 export default function ExpedienteDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -55,7 +57,7 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <AppShell>
-      <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+      <div className="p-4 lg:p-8 pb-24 lg:pb-28 max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -243,8 +245,10 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
           )}
 
           {activeTab === "obligaciones" && (
-            <div className="animate-in fade-in duration-300">
+            <div className="animate-in fade-in duration-300 space-y-6">
               <ObligationsModule fileId={file.id} />
+              <ConsumptionReportsModule fileId={file.id} />
+              <PueaaModule fileId={file.id} />
             </div>
           )}
         </div>

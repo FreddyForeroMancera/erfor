@@ -27,7 +27,7 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 ### C. Panel Maestro (Dashboard)
 - Indicadores clave (KPIs) apuntando directamente al núcleo de negocio: Conteo de "Predios Activos" en lugar de proyectos genéricos.
 - Tarjetas de resumen para Alertas Críticas y Trámites en Curso.
-- Reestructuración de tarjetas de Estado (KPIs) a un formato de 5 columnas que incluye: Cotizaciones, En Proceso, En Trámite, Otorgado y En Seguimiento.
+- Reestructuración de tarjetas de Estado (KPIs) a un formato de 5 columnas (Cotizaciones, En Proceso, En Trámite, Otorgado y En Seguimiento). **Estas tarjetas ahora se alimentan estrictamente del estado global del Expediente (`EnvironmentalFile.status`)**, garantizando coherencia 1 a 1 entre lo que el consultor activa dentro del detalle del expediente y lo que se suma en el panel principal. El clic en cada tarjeta enruta correctamente a sus respectivos módulos aislados.
 
 ### D. Módulo de Predios (Core)
 - Interfaz dividida: Listado de predios y visualización de mapa a la derecha.
@@ -62,6 +62,10 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 - **Hoja de Vida del Cliente:** El consultor tiene una vista 360° de cada cliente (`/clientes/[id]`) con contadores rápidos de predios y expedientes.
 - **Expediente Digital Operativo:** El consultor gestiona el día a día de un trámite en `/expedientes/[id]`, incluyendo una simulación UI de conexión a **OneDrive** para la gestión de documentos en la nube, y un módulo interactivo para administrar las Obligaciones Ambientales y la Demanda Hídrica.
 
+### J. Módulo de Cotizaciones Independiente
+- Se creó la ruta aislada `/cotizaciones` para gestionar la fase inicial (Presupuestos y Propuestas) sin mezclarla visualmente con los trámites en curso.
+- Incorpora un **Modal Global de Nuevo Trámite** (`GlobalNewTramiteModal`) que funciona como un súper-formulario flotante. Permite buscar clientes existentes con un autocompletado inteligente (`Combobox`) o registrar uno nuevo al vuelo, creando simultáneamente la Cotización (Proyecto), Predio y Expediente inicial en un solo paso.
+
 ## 4. Arquitectura de Infraestructura (Hosting)
 - **Frontend / Backend (Next.js):** Plataforma PaaS de Vercel (Capa Hobby para inicio a $0/mes, escalable a plan Pro por $20 USD/mes). Garantiza despliegues automáticos (CI/CD) desde GitHub y Edge Network.
 - **Base de Datos (PostgreSQL):** Supabase o Vercel Postgres (PostgreSQL relacional) aprovechando los planes gratuitos generosos (500MB) para mantener costos operativos en cero durante la etapa de MVP. Se descartaron opciones de VPS tradicional con cPanel/PHP por ser costosas e incompatibles arquitectónicamente con SSR y Server Actions de Next.js.
@@ -74,5 +78,5 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 
 ## 6. Próximos Pasos (Pendientes en Agenda)
 1. ~~**Correos Reales (Resend):**~~ *(Pausado temporalmente por decisión de negocio, el portal de clientes no es prioridad en este momento).*
-2. **Módulo de Cotizaciones y Trámites:** Completar el flujo de creación de nuevos expedientes (Nuevo Trámite) desde el panel del consultor.
+2. ~~**Módulo de Cotizaciones y Trámites:** Completar el flujo de creación de nuevos expedientes (Nuevo Trámite) desde el panel del consultor.~~ *(Completado y aislado)*
 3. **Implementar Motor IA Real:** Conectar el chat de IA Asistente con la API de OpenAI/Anthropic y conectar una base de datos vectorial para RAG (Recuperación Aumentada por Generación) de leyes colombianas.

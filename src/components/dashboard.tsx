@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { AlertTriangle, CalendarDays, FileArchive, FileBarChart, FileCheck2, FolderKanban, UsersRound, Loader2 } from "lucide-react";
@@ -51,6 +52,7 @@ const KpiCard = React.memo(({
 KpiCard.displayName = "KpiCard";
 
 export function Dashboard() {
+  const router = useRouter();
   const { selectedClientId } = useClient();
   const [isQuotesModalOpen, setIsQuotesModalOpen] = useState(false);
   const [isTramitesModalOpen, setIsTramitesModalOpen] = useState(false);
@@ -109,7 +111,7 @@ export function Dashboard() {
             )) : kpis.map(({ label, value, sub, icon, color }) => {
               const isCotizaciones = label === "Cotizaciones";
               const isEnTramite = label === "En Trámite";
-              const isClickable = isCotizaciones || isEnTramite;
+              const isClickable = true;
 
               return (
                 <KpiCard
@@ -122,8 +124,11 @@ export function Dashboard() {
                   isClickable={isClickable}
                   isCotizaciones={isCotizaciones}
                   onClick={() => {
-                    if (isCotizaciones) setIsQuotesModalOpen(true);
-                    if (isEnTramite) setIsTramitesModalOpen(true);
+                    if (isCotizaciones) {
+                      router.push("/cotizaciones");
+                    } else {
+                      router.push("/tramites-y-permisos");
+                    }
                   }}
                 />
               );

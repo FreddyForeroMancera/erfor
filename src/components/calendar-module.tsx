@@ -182,7 +182,7 @@ export function CalendarModule({ fileId, embedded }: { fileId?: string; embedded
                     <div 
                       key={evt.id} 
                       onClick={(e) => { e.stopPropagation(); setSelectedEvent(evt); }}
-                      className={`text-xs px-2 py-1 rounded truncate border cursor-pointer hover:opacity-80 transition-opacity ${getEventColor(evt.type, evt.priority)}`} 
+                      className={`shrink-0 text-xs px-2 py-1 rounded truncate border cursor-pointer hover:opacity-80 transition-opacity ${getEventColor(evt.type, evt.priority)}`} 
                       title={evt.title}
                     >
                       <span className="font-bold mr-1">{evt.type.substring(0,3)}:</span>
