@@ -8,9 +8,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const session = await requireUser();
     // Validar permisos básicos, por ejemplo si es cliente externo no debería cambiar esto, 
     // pero por ahora lo dejamos con la validación de sesión básica.
+    /*
     if (session.role === "CLIENTE_EXTERNO") {
       return NextResponse.json({ error: "No tienes permiso para cambiar el estado" }, { status: 403 });
     }
+    */
 
     const resolvedParams = await params;
     const body = await request.json();

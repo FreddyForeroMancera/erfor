@@ -47,11 +47,18 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
     );
   }
 
-  const tabs = [
+  const baseTabs = [
     { id: "resumen", label: "Resumen General", icon: FileText },
     { id: "documentos", label: `Documentos Soportes (${file.documents?.length || 0})`, icon: Cloud },
-    { id: "obligaciones", label: "Obligaciones & Tareas", icon: CheckCircle2 },
   ] as const;
+
+  const tabs = (file.status === "APPROVED" || file.status === "COMPLETED")
+    ? [...baseTabs, { id: "obligaciones", label: "Obligaciones & Tareas", icon: CheckCircle2 }]
+    : baseTabs;
+
+  if (activeTab === "obligaciones" && (file.status !== "APPROVED" && file.status !== "COMPLETED")) {
+    setActiveTab("resumen");
+  }
 
 
 
@@ -247,8 +254,13 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
           {activeTab === "obligaciones" && (
             <div className="animate-in fade-in duration-300 space-y-6">
               <ObligationsModule fileId={file.id} />
-              <ConsumptionReportsModule fileId={file.id} />
-              <PueaaModule fileId={file.id} />
+              
+              {file.status === "COMPLETED" && (
+                <>
+                  <ConsumptionReportsModule fileId={file.id} />
+                  <PueaaModule fileId={file.id} />
+                </>
+              )}
             </div>
           )}
         </div>
