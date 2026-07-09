@@ -68,6 +68,32 @@ export function FilesModule({ clientId }: { clientId?: string }) {
     }
   };
 
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null);
+
+  const extractPredio = async (id: string) => {
+    setAnalyzingId(id);
+    try {
+      const res = await fetch("/api/ai/extract-property", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ environmentalFileId: id })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error en el análisis IA");
+      
+      if (data.property) {
+        toast.success(`Predio encontrado: ${data.property.name}`);
+        mutate(key => typeof key === 'string' && key.startsWith('/api/expedientes'));
+      } else {
+        toast.error("La IA no encontró un predio. Sube el PDF físicamente si aún no lo has hecho.");
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setAnalyzingId(null);
+    }
+  };
+
   const mapStatus = (status: string) => {
     if (!status) return "En trámite";
     const s = status.toUpperCase();
@@ -142,8 +168,20 @@ export function FilesModule({ clientId }: { clientId?: string }) {
                     <span className="inline-block px-2 py-1 bg-erfor-mist text-erfor-green font-bold text-xs rounded-md mb-2">
                       {file.officialCode || file.internalCode}
                     </span>
-                    <h3 className="font-bold text-lg text-slate-800 leading-tight">
-                      {file.property?.name || file.project?.name || "Sin predio asociado"}
+                    <h3 className="font-bold text-lg text-slate-800 leading-tight flex items-center gap-2">
+                      {file.property?.name || file.project?.name || (
+                        <span className="flex items-center gap-2">
+                          <span className="text-slate-400 font-normal">Sin predio asociado</span>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); extractPredio(file.id); }}
+                            disabled={analyzingId === file.id}
+                            className="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-2 py-1 rounded-md border border-indigo-100 transition flex items-center gap-1 disabled:opacity-50"
+                          >
+                            {analyzingId === file.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <span className="text-[10px]">✨</span>}
+                            {analyzingId === file.id ? "Analizando..." : "Analizar IA"}
+                          </button>
+                        </span>
+                      )}
                     </h3>
                   </div>
                   <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${

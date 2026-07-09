@@ -24,7 +24,9 @@ export function BulkImportModule() {
   const [clients, setClients] = useState<ParsedClient[]>([]);
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  const [analyzingAI, setAnalyzingAI] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [aiResults, setAiResults] = useState<any>(null);
   const [uploadProgress, setUploadProgress] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -121,6 +123,21 @@ export function BulkImportModule() {
     }
   };
 
+  const handleAIAnalysis = async () => {
+    setAnalyzingAI(true);
+    try {
+      const res = await fetch("/api/ai/extract-property/batch", { method: "POST" });
+      if (!res.ok) throw new Error("Error ejecutando análisis IA");
+      const data = await res.json();
+      setAiResults(data.results);
+      toast.success(`Análisis IA completado: Se detectaron ${data.results.found} predios automáticamente.`);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setAnalyzingAI(false);
+    }
+  };
+
   const totalExpedientes = clients.reduce((acc, client) => acc + client.expedientes.length, 0);
   const totalDocuments = clients.reduce((acc, client) => acc + client.expedientes.reduce((acc2, exp) => acc2 + exp.documents.length, 0), 0);
 
@@ -134,8 +151,47 @@ export function BulkImportModule() {
         <p className="text-slate-600 mb-8 text-center max-w-md">
           Toda la estructura de expedientes y clientes ha sido creada en la base de datos con éxito.
         </p>
+
+        {!aiResults ? (
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 mb-8 max-w-md w-full text-center">
+            <h3 className="font-bold text-slate-800 mb-2 flex items-center justify-center gap-2">
+              <span className="text-xl">🧠</span> Análisis Inteligente de Predios
+            </h3>
+            <p className="text-sm text-slate-600 mb-4">
+              ¿Deseas que la Inteligencia Artificial analice los documentos recién subidos para intentar detectar y asociar los predios automáticamente a cada expediente?
+            </p>
+            <button 
+              onClick={handleAIAnalysis}
+              disabled={analyzingAI}
+              className="w-full bg-slate-800 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-slate-700 transition flex items-center justify-center gap-2 disabled:opacity-70"
+            >
+              {analyzingAI ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {analyzingAI ? "Analizando expedientes con IA..." : "Analizar Expedientes con IA"}
+            </button>
+          </div>
+        ) : (
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 mb-8 max-w-md w-full text-center">
+            <h3 className="font-bold text-blue-900 mb-2 flex items-center justify-center gap-2">
+              <span className="text-xl">✨</span> Resultados de la IA
+            </h3>
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className="bg-white p-3 rounded-lg shadow-sm border border-blue-50">
+                <p className="text-2xl font-bold text-slate-800">{aiResults.analyzed}</p>
+                <p className="text-xs text-slate-500 font-medium">Analizados</p>
+              </div>
+              <div className="bg-white p-3 rounded-lg shadow-sm border border-blue-50">
+                <p className="text-2xl font-bold text-erfor-green">{aiResults.found}</p>
+                <p className="text-xs text-slate-500 font-medium">Predios Encontrados</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-500 mt-4 text-center px-4">
+              La IA solo puede leer documentos que fueron subidos físicamente con anterioridad (o durante pruebas). Si la mayoría fallaron, asegúrate de subir el archivo real del documento desde la vista del expediente.
+            </p>
+          </div>
+        )}
+
         <button 
-          onClick={() => { setSuccess(false); setClients([]); }}
+          onClick={() => { setSuccess(false); setClients([]); setAiResults(null); }}
           className="bg-erfor-green text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition"
         >
           Realizar otra importación
