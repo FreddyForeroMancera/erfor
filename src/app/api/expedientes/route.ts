@@ -13,8 +13,9 @@ export async function GET(request: Request) {
     const items = await prisma.environmentalFile.findMany({
       where,
       include: {
-        client: { select: { name: true } },
-        property: { select: { name: true } }
+        client: { select: { name: true, createdAt: true } },
+        property: { select: { name: true } },
+        project: { select: { name: true } }
       },
       orderBy: { createdAt: "desc" }
     });

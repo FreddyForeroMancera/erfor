@@ -143,7 +143,7 @@ export function FilesModule({ clientId }: { clientId?: string }) {
                       {file.officialCode || file.internalCode}
                     </span>
                     <h3 className="font-bold text-lg text-slate-800 leading-tight">
-                      {file.property?.name || "Sin predio asociado"}
+                      {file.property?.name || file.project?.name || "Sin predio asociado"}
                     </h3>
                   </div>
                   <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
