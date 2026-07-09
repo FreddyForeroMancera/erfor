@@ -25,6 +25,7 @@ export function BulkImportModule() {
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFolderSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,15 +94,22 @@ export function BulkImportModule() {
   const handleUpload = async () => {
     if (clients.length === 0) return;
     setLoading(true);
+    setUploadProgress(`Iniciando importación...`);
 
     try {
-      const response = await fetch("/api/import/bulk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clients }),
-      });
+      // Subir en bloques: un cliente por petición para evitar Timeout o Payload Too Large
+      for (let i = 0; i < clients.length; i++) {
+        setUploadProgress(`Importando cliente ${i + 1} de ${clients.length}... (${clients[i].name})`);
+        const response = await fetch("/api/import/bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ clients: [clients[i]] }),
+        });
 
-      if (!response.ok) throw new Error("Error al subir los datos");
+        if (!response.ok) {
+          throw new Error(`Error al subir los datos del cliente: ${clients[i].name}`);
+        }
+      }
       
       setSuccess(true);
       toast.success("¡Importación masiva completada exitosamente!");
@@ -109,6 +117,7 @@ export function BulkImportModule() {
       toast.error(error.message || "Ocurrió un error en la carga masiva");
     } finally {
       setLoading(false);
+      setUploadProgress("");
     }
   };
 
@@ -227,7 +236,7 @@ export function BulkImportModule() {
                 className="flex items-center gap-2 bg-erfor-green text-white px-6 py-2.5 rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-70"
               >
                 {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <UploadCloud className="h-5 w-5" />}
-                {loading ? "Procesando e Importando..." : "Confirmar y Subir Archivos"}
+                {loading ? (uploadProgress || "Procesando e Importando...") : "Confirmar y Subir Archivos"}
               </button>
             </div>
           </div>
