@@ -3,6 +3,7 @@ import { createRequirementAutomation } from "@/lib/automations";
 import { fail, ok } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@supabase/supabase-js";
+const pdfParse = require("pdf-parse");
 
 export async function POST(request: Request) {
   try {
@@ -126,6 +127,27 @@ export async function POST(request: Request) {
 }
 
 async function extractTextLike(file: File, bytes: Buffer) {
-  if (/text|json|csv/i.test(file.type)) return bytes.toString("utf8").slice(0, 10000);
-  return `Archivo cargado: ${file.name}. OCR avanzado pendiente de configurar. Use IA ERFOR con metadatos y texto extraído disponible.`;
+  try {
+    if (/pdf/i.test(file.type) || file.name.toLowerCase().endsWith(".pdf")) {
+      const pdfData = await pdfParse(bytes);
+      // Extraemos máximo 15,000 caracteres para no desbordar el contexto de OpenAI
+      return pdfData.text.trim().slice(0, 15000) || `PDF escaneado: ${file.name}. (Requiere OCR de imágenes)`;
+    }
+    if (/wordprocessingml/i.test(file.type) || file.name.toLowerCase().endsWith(".docx")) {
+      // Extracción rápida de texto crudo de DOCX (XML)
+      const rawString = bytes.toString("utf8");
+      const textMatches = rawString.match(/<w:t[^>]*>(.*?)<\/w:t>/g);
+      if (textMatches) {
+        const text = textMatches.map(m => m.replace(/<[^>]+>/g, "")).join(" ");
+        return text.slice(0, 15000);
+      }
+      return `Documento Word: ${file.name}`;
+    }
+    if (/text|json|csv/i.test(file.type)) {
+      return bytes.toString("utf8").slice(0, 10000);
+    }
+  } catch (err) {
+    console.error("Error extrayendo texto del documento:", err);
+  }
+  return `Archivo cargado: ${file.name}.`;
 }

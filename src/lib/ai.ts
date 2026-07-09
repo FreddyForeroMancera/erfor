@@ -29,7 +29,28 @@ export async function answerWithAI(question: string, params: { clientId?: string
     ...context.obligations.map((item) => `Obligación ${item.title}`)
   ];
 
-  const prompt = `Eres Asistente IA ERFOR. Responde en español, como borrador sujeto a validación profesional. Pregunta: ${question}. Contexto: ${JSON.stringify(context).slice(0, 9000)}`;
+  const documentsContext = context.documents
+    .filter(doc => doc.extractedText)
+    .map(doc => `--- INICIO DOCUMENTO: ${doc.name} ---\n${doc.extractedText}\n--- FIN DOCUMENTO ---`)
+    .join("\n\n");
+
+  const metadataContext = JSON.stringify({
+    client: context.client,
+    project: context.project,
+    requirements: context.requirements,
+    obligations: context.obligations,
+    alerts: context.alerts
+  }).slice(0, 4000);
+
+  const prompt = `Eres el Asistente Legal y Ambiental de IA ERFOR. Responde en español de forma profesional, precisa y directa. Basate ÚNICAMENTE en la información proporcionada.
+  
+Pregunta del usuario: ${question}
+
+METADATOS DEL EXPEDIENTE:
+${metadataContext}
+
+CONTENIDO DE LOS DOCUMENTOS RECIENTES:
+${documentsContext.slice(0, 20000)}`;
 
   if (process.env.OPENAI_API_KEY) {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
