@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-
-const JWT_SECRET = process.env.JWT_SECRET || "default_jwt_secret_for_development_only_12345";
+import { verifyActivationToken } from "@/lib/auth";
 
 const activateSchema = z.object({
   token: z.string(),
@@ -16,21 +14,16 @@ export async function POST(request: Request) {
     const body = await request.json();
     const data = activateSchema.parse(body);
 
-    // Verify token
-    let decoded: any;
+    // Verify token (misma librería/secreto que la sesión: ver src/lib/auth.ts)
+    let userId: string;
     try {
-      decoded = jwt.verify(data.token, JWT_SECRET);
-    } catch (e) {
+      userId = await verifyActivationToken(data.token);
+    } catch {
       return NextResponse.json({ error: "El enlace es inválido o ha expirado." }, { status: 400 });
     }
 
-    if (decoded.type !== "activation") {
-      return NextResponse.json({ error: "Token inválido." }, { status: 400 });
-    }
+    const user = await prisma.user.findUnique({ where: { id: userId } });
 
-    // Verify user exists and is a client
-    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
-    
     if (!user) {
       return NextResponse.json({ error: "Usuario no encontrado." }, { status: 404 });
     }

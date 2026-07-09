@@ -1,4 +1,4 @@
-import { requireUser } from "@/lib/auth";
+import { canWrite, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fail, ok } from "@/lib/http";
 import { createClient } from "@supabase/supabase-js";
@@ -34,9 +34,12 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const user = await requireUser();
+    if (!canWrite(user.role)) {
+      return Response.json({ error: "No autorizado" }, { status: 403 });
+    }
     const form = await request.formData();
     const file = form.get("file");
-    
+
     if (!(file instanceof File)) {
       return Response.json({ error: "Archivo requerido" }, { status: 400 });
     }

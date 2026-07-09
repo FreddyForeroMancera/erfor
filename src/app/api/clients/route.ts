@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { fail, readJson } from "@/lib/http";
-import { getSessionUser } from "@/lib/auth";
+import { canWrite, getSessionUser } from "@/lib/auth";
 
 const createExpedienteSchema = z.object({
   // Expediente
@@ -43,8 +43,11 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const sessionUser = await getSessionUser();
-    if (!sessionUser || sessionUser.role === "CLIENTE_EXTERNO") {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    if (!sessionUser) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+    if (!canWrite(sessionUser.role)) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
     const body = await readJson(request);

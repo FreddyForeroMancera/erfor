@@ -3,9 +3,7 @@ import { jwtVerify, SignJWT } from "jose";
 import bcrypt from "bcryptjs";
 import { Role, type User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-
-const cookieName = "erfor_session";
-const secret = new TextEncoder().encode(process.env.JWT_SECRET || "dev-erfor-secret");
+import { cookieName, secret } from "@/lib/session";
 
 export type SessionUser = Pick<User, "id" | "name" | "email" | "role" | "avatar">;
 
@@ -40,6 +38,18 @@ export async function setSession(user: SessionUser) {
 
 export async function clearSession() {
   (await cookies()).delete(cookieName);
+}
+
+/**
+ * Verifica un token de activación de cuenta (mismo secreto/librería que la sesión).
+ * Devuelve el userId codificado en el token, o lanza si es inválido/expirado/de otro tipo.
+ */
+export async function verifyActivationToken(token: string): Promise<string> {
+  const { payload } = await jwtVerify(token, secret);
+  if (payload.type !== "activation" || typeof payload.sub !== "string") {
+    throw new Error("Token de activación inválido");
+  }
+  return payload.sub;
 }
 
 export async function getSessionUser(): Promise<SessionUser | null> {
@@ -81,4 +91,8 @@ export async function requireConsultant() {
 
 export function canWrite(role: Role) {
   return role !== Role.AUDITOR && role !== Role.CLIENTE_EXTERNO;
+}
+
+export function canDelete(role: Role) {
+  return role === Role.SUPER_ADMIN || role === Role.DIRECTOR_AMBIENTAL;
 }

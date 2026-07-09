@@ -1,4 +1,4 @@
-import { canWrite, requireUser } from "@/lib/auth";
+import { canDelete, canWrite, requireUser } from "@/lib/auth";
 import { getResource } from "@/lib/crud";
 import { fail, ok, readJson } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
@@ -37,7 +37,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ re
 export async function DELETE(_request: Request, { params }: { params: Promise<{ resource: string; id: string }> }) {
   try {
     const user = await requireUser();
-    if (!canWrite(user.role)) return Response.json({ error: "No autorizado" }, { status: 403 });
+    if (!canDelete(user.role)) return Response.json({ error: "No autorizado" }, { status: 403 });
     const { resource, id } = await params;
     const config = getResource(resource);
     const item = await config.delegate.delete({ where: { id } });

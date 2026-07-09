@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { requireUser } from "@/lib/auth";
+import { canWrite, requireUser } from "@/lib/auth";
 import { fail, ok, readJson } from "@/lib/http";
 import { generateExecutivePdf } from "@/lib/report";
 
@@ -13,6 +13,9 @@ const schema = z.object({
 export async function POST(request: Request) {
   try {
     const user = await requireUser();
+    if (!canWrite(user.role)) {
+      return Response.json({ error: "No autorizado" }, { status: 403 });
+    }
     const input = schema.parse(await readJson(request));
     const report = await generateExecutivePdf({ ...input, userId: user.id, userName: user.name || "Usuario" });
     return ok({ report }, { status: 201 });

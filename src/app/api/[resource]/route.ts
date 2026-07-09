@@ -11,7 +11,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ reso
     const url = new URL(request.url);
     const limit = Math.min(Number(url.searchParams.get("limit") || 50), 200);
     const page = Math.max(Number(url.searchParams.get("page") || 1), 1);
-    const where = buildWhere(url.searchParams, config.search);
+    const where = buildWhere(url.searchParams, config.search, config.schema);
     const [items, total] = await Promise.all([
       config.delegate.findMany({ where, take: limit, skip: (page - 1) * limit, orderBy: { createdAt: "desc" } }),
       config.delegate.count({ where })

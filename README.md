@@ -5,18 +5,22 @@ Aplicación full-stack para gestión empresarial de clientes, proyectos, predios
 ## Stack
 
 - Next.js 15 App Router, React, TypeScript y Tailwind CSS.
-- Prisma ORM con SQLite local por defecto y PostgreSQL/PostGIS listo vía Docker Compose.
+- Prisma ORM sobre PostgreSQL/PostGIS (único provider soportado por `prisma/schema.prisma`), levantable localmente vía Docker Compose.
 - API Routes REST, JWT, RBAC, carga de archivos, reportes PDF/Excel, automatizaciones y asistente IA contextual.
 
 ## Inicio rápido
 
 ```bash
 cp .env.example .env
+docker compose up -d postgres redis
 npm install
 npm run prisma:push
 npm run prisma:seed
 npm run dev
 ```
+
+Por defecto `.env.example` apunta a `postgresql://user:password@localhost:5432/erfor`; si usas el `docker-compose.yml` incluido, ajusta `DATABASE_URL` a
+`postgresql://erfor:erfor@localhost:5432/erfor?schema=public`.
 
 Abrir `http://localhost:5173`.
 
@@ -25,13 +29,10 @@ Credenciales iniciales:
 - Email: `erwin@erfor.co`
 - Password: `Erfor2026!`
 
-## Producción con PostgreSQL
+## Producción
 
-1. Ejecuta `docker compose up -d postgres redis`.
-2. Cambia `DATABASE_URL` en `.env` a una URL PostgreSQL, por ejemplo:
-   `postgresql://erfor:erfor@localhost:5432/erfor?schema=public`
-3. Cambia el provider de Prisma a `postgresql` si vas a migrar formalmente a Postgres.
-4. Ejecuta `npm run prisma:migrate && npm run build`.
+1. Configura `DATABASE_URL` apuntando a la instancia PostgreSQL de producción (Supabase/Vercel Postgres).
+2. Ejecuta `npm run prisma:migrate && npm run build`.
 
 ## Módulos incluidos
 

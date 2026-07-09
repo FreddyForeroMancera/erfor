@@ -1,7 +1,15 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { requireUser } from "@/lib/auth";
+import { fail } from "@/lib/http";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ path: string[] }> }) {
+  try {
+    await requireUser();
+  } catch (error) {
+    return fail(error);
+  }
+
   const { path: segments } = await params;
   const uploadRoot = path.resolve(process.cwd(), process.env.UPLOAD_DIR || "./uploads");
   const target = path.resolve(uploadRoot, ...segments);

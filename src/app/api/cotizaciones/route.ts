@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth";
+import { canWrite, requireUser } from "@/lib/auth";
 import { ok, fail } from "@/lib/http";
 
 export async function GET(request: Request) {
@@ -28,8 +28,11 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const user = await requireUser();
+    if (!canWrite(user.role)) {
+      return Response.json({ error: "No autorizado" }, { status: 403 });
+    }
     const data = await request.json();
-    
+
     if (!data.internalCode || !data.authority || !data.type) {
       throw new Error("Faltan campos obligatorios para el Expediente");
     }

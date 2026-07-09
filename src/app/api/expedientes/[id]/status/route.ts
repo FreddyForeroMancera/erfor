@@ -1,26 +1,15 @@
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth";
+import { requireConsultant } from "@/lib/auth";
 import { ok, fail } from "@/lib/http";
-import { NextResponse } from "next/server";
+import { statusSchema } from "@/lib/expediente-status";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await requireUser();
-    // Validar permisos básicos, por ejemplo si es cliente externo no debería cambiar esto, 
-    // pero por ahora lo dejamos con la validación de sesión básica.
-    /*
-    if (session.role === "CLIENTE_EXTERNO") {
-      return NextResponse.json({ error: "No tienes permiso para cambiar el estado" }, { status: 403 });
-    }
-    */
+    // Solo el equipo interno (no CLIENTE_EXTERNO, no AUDITOR) puede cambiar el estado de un expediente.
+    const session = await requireConsultant();
 
     const resolvedParams = await params;
-    const body = await request.json();
-    const { status } = body;
-
-    if (!status) {
-      return NextResponse.json({ error: "El estado es requerido" }, { status: 400 });
-    }
+    const { status } = statusSchema.parse(await request.json());
 
     const file = await prisma.environmentalFile.update({
       where: { id: resolvedParams.id },

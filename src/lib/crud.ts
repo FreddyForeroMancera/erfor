@@ -292,11 +292,13 @@ export function getResource(resource: string) {
   return config;
 }
 
-export function buildWhere(searchParams: URLSearchParams, searchFields: string[]) {
+export function buildWhere(searchParams: URLSearchParams, searchFields: string[], schema: z.ZodTypeAny) {
   const q = searchParams.get("q");
+  const allowedFields = new Set(Object.keys((schema as z.AnyZodObject).shape));
   const where: Record<string, unknown> = {};
   for (const [key, value] of searchParams.entries()) {
     if (!value || ["q", "page", "limit"].includes(key)) continue;
+    if (!allowedFields.has(key)) continue;
     where[key] = value;
   }
   if (q) {
