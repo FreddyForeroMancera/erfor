@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/app-shell";
 import { BulkImportModule } from "@/components/bulk-import-module";
+import { ReanalyzeAllModule } from "@/components/reanalyze-all-module";
 
 export const metadata = {
   title: "Importación Masiva - ERFOR",
@@ -15,6 +16,7 @@ export default function ImportPage() {
           <p className="text-slate-500 text-sm mt-1">Sube estructuras de carpetas para registrar automáticamente clientes, expedientes y documentos físicos.</p>
         </div>
         <BulkImportModule />
+        <ReanalyzeAllModule />
       </main>
     </AppShell>
   );
