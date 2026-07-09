@@ -331,9 +331,10 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
 
           {activeTab === "documentos" && (
             <div className="animate-in fade-in duration-300">
-              <DocumentsModule 
-                environmentalFileId={file.id} 
-                initialDocuments={file.documents || []} 
+              <DocumentsModule
+                environmentalFileId={file.id}
+                clientId={file.clientId}
+                initialDocuments={file.documents || []}
               />
             </div>
           )}

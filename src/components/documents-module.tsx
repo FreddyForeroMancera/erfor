@@ -1,11 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Cloud, File, Plus, MoreVertical, Search, CheckCircle2, AlertCircle, HardDrive } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { Cloud, File, Plus, Loader2, MoreVertical, Search, CheckCircle2, AlertCircle, HardDrive } from "lucide-react";
 
-export function DocumentsModule({ environmentalFileId, initialDocuments }: { environmentalFileId: string, initialDocuments: any[] }) {
+export function DocumentsModule({ environmentalFileId, clientId, initialDocuments }: { environmentalFileId: string, clientId?: string, initialDocuments: any[] }) {
   const [search, setSearch] = useState("");
   const [quota, setQuota] = useState<{ usedBytes: number, quotaBytes: number, percentage: number } | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/documents/quota")
@@ -15,6 +20,33 @@ export function DocumentsModule({ environmentalFileId, initialDocuments }: { env
       })
       .catch(() => {});
   }, []);
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const toastId = toast.loading(`Subiendo y analizando "${file.name}"...`);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("environmentalFileId", environmentalFileId);
+      if (clientId) formData.append("clientId", clientId);
+      formData.append("category", "Documento ambiental");
+
+      const res = await fetch("/api/documents/upload", { method: "POST", body: formData });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error || `Error ${res.status} al subir el documento`);
+      }
+      toast.success("Documento subido y analizado", { id: toastId });
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err?.message || "No se pudo subir el documento", { id: toastId, duration: 8000 });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const filteredDocs = initialDocuments.filter(doc => 
     doc.name.toLowerCase().includes(search.toLowerCase())
@@ -67,9 +99,20 @@ export function DocumentsModule({ environmentalFileId, initialDocuments }: { env
             className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green focus:ring-1 focus:ring-erfor-green transition"
           />
         </div>
-        <button className="flex items-center justify-center gap-2 px-4 py-2 bg-erfor-green text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition shadow-sm">
-          <Plus className="h-4 w-4" />
-          Subir Archivo Local
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,application/pdf"
+          className="hidden"
+          onChange={handleFileSelected}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-erfor-green text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition shadow-sm disabled:opacity-60"
+        >
+          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+          {uploading ? "Subiendo..." : "Subir Archivo Local"}
         </button>
       </div>
 
