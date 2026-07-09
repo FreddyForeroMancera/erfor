@@ -117,6 +117,10 @@ export function BulkImportModule() {
 
     try {
       let totalProcessedKeys = 0;
+      let totalAlreadyAnalyzedKeys = 0;
+      let totalClientsCreated = 0;
+      let totalExpedientesCreated = 0;
+
       // Subir en bloques: un cliente por petición para evitar Timeout o Payload Too Large
       for (let i = 0; i < clients.length; i++) {
         setUploadProgress(`Importando cliente ${i + 1} de ${clients.length}... (${clients[i].name})`);
@@ -129,17 +133,21 @@ export function BulkImportModule() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Error en la importación");
 
+        totalClientsCreated += data.results?.clientsCreated || 0;
+        totalExpedientesCreated += data.results?.expedientesCreated || 0;
+
         // Cargar documentos clave para OCR/IA automático
         setUploadProgress("Importación base completada. Procesando documentos clave con IA...");
         const keywords = ["auto", "resolucion", "resolución", "concepto", "requerimiento", "indagacion", "indagación"];
-        
+
         let processedKeys = 0;
+        let alreadyAnalyzedKeys = 0;
         if (data.tree) {
           for (const clientNode of data.tree) {
             for (const expNode of clientNode.expedientes) {
               const parsedClient = clients.find(c => c.name === clientNode.name);
               const parsedExp = parsedClient?.expedientes.find(e => e.internalCode === expNode.internalCode);
-              
+
               if (parsedExp) {
                 for (const doc of parsedExp.documents) {
                   if (doc.fileObj && keywords.some(k => doc.name.toLowerCase().includes(k))) {
@@ -148,13 +156,17 @@ export function BulkImportModule() {
                     formData.append("environmentalFileId", expNode.id);
                     formData.append("clientId", clientNode.id);
                     formData.append("category", "Documento ambiental");
-                    
+
                     try {
-                      await fetch("/api/documents/upload", {
+                      const uploadRes = await fetch("/api/documents/upload", {
                         method: "POST",
                         body: formData
                       });
-                      processedKeys++;
+                      if (uploadRes.ok) {
+                        processedKeys++;
+                      } else {
+                        alreadyAnalyzedKeys++;
+                      }
                     } catch (e) {
                       console.error("Error subiendo documento clave", e);
                     }
@@ -165,10 +177,30 @@ export function BulkImportModule() {
           }
         }
         totalProcessedKeys += processedKeys;
+        totalAlreadyAnalyzedKeys += alreadyAnalyzedKeys;
       }
-      
+
+      const totalClients = clients.length;
+      const totalExpedientesCount = totalExpedientes;
+      const existingClients = totalClients - totalClientsCreated;
+      const existingExpedientes = totalExpedientesCount - totalExpedientesCreated;
+
+      const parts: string[] = [];
+      if (totalClientsCreated > 0 || totalExpedientesCreated > 0) {
+        parts.push(`${totalClientsCreated} clientes y ${totalExpedientesCreated} expedientes nuevos.`);
+      }
+      if (existingClients > 0 || existingExpedientes > 0) {
+        parts.push(`${existingClients} clientes y ${existingExpedientes} expedientes ya existían y no se duplicaron.`);
+      }
+      if (totalProcessedKeys > 0) {
+        parts.push(`Se procesaron ${totalProcessedKeys} documentos con IA.`);
+      }
+      if (totalAlreadyAnalyzedKeys > 0) {
+        parts.push(`${totalAlreadyAnalyzedKeys} documentos clave ya habían sido subidos y analizados antes, se omitieron.`);
+      }
+
       setSuccess(true);
-      toast.success(`¡Éxito! Base de datos creada. ${totalProcessedKeys > 0 ? `Se procesaron ${totalProcessedKeys} documentos con IA automáticamente.` : ""}`);
+      toast.success(`¡Importación completada! ${parts.join(" ")}`, { duration: 8000 });
     } catch (error: any) {
       toast.error(error.message || "Ocurrió un error en la carga masiva");
     } finally {
