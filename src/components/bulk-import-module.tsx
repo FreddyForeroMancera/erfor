@@ -136,9 +136,12 @@ export function BulkImportModule() {
         totalClientsCreated += data.results?.clientsCreated || 0;
         totalExpedientesCreated += data.results?.expedientesCreated || 0;
 
-        // Cargar documentos clave para OCR/IA automático
+        // Cargar documentos clave para OCR/IA automático. Se suben (a) los PDF cuyo nombre
+        // trae palabra clave procedimental y (b) los Word/Excel, que suelen contener el
+        // formato de solicitud con el nombre del predio, propietario y representante legal.
         setUploadProgress("Importación base completada. Procesando documentos clave con IA...");
         const keywords = ["auto", "resolucion", "resolución", "concepto", "requerimiento", "indagacion", "indagación"];
+        const isOfficeDoc = (name: string) => /\.(docx?|xlsx?)$/i.test(name);
 
         let processedKeys = 0;
         let alreadyAnalyzedKeys = 0;
@@ -150,9 +153,14 @@ export function BulkImportModule() {
 
               if (parsedExp) {
                 for (const doc of parsedExp.documents) {
-                  if (doc.fileObj && keywords.some(k => doc.name.toLowerCase().includes(k))) {
+                  const nameLower = doc.name.toLowerCase();
+                  const shouldAnalyze = keywords.some(k => nameLower.includes(k)) || isOfficeDoc(doc.name);
+                  if (doc.fileObj && shouldAnalyze) {
                     const formData = new FormData();
-                    formData.append("file", doc.fileObj);
+                    // Tercer argumento = nombre base del archivo. Sin él, el navegador envía
+                    // el webkitRelativePath completo como filename y se guardaba la ruta
+                    // entera como nombre del documento (rompía el nombre y la deduplicación).
+                    formData.append("file", doc.fileObj, doc.name);
                     formData.append("environmentalFileId", expNode.id);
                     formData.append("clientId", clientNode.id);
                     formData.append("category", "Documento ambiental");

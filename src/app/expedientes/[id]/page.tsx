@@ -4,7 +4,7 @@ import { useState, use, Fragment } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { AppShell } from "@/components/app-shell";
-import { ArrowLeft, Loader2, FileText, CheckCircle2, Clock, AlertTriangle, Cloud, Settings, Building2, MapPin, Pencil, X } from "lucide-react";
+import { ArrowLeft, Loader2, FileText, CheckCircle2, Clock, AlertTriangle, Cloud, Settings, Building2, MapPin, Pencil, X, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Dialog, Transition } from "@headlessui/react";
 import toast from "react-hot-toast";
@@ -27,6 +27,29 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
   const [isEditClientModalOpen, setIsEditClientModalOpen] = useState(false);
   const [isSavingClient, setIsSavingClient] = useState(false);
   const [clientEditForm, setClientEditForm] = useState<any>({});
+  const [isReanalyzing, setIsReanalyzing] = useState(false);
+
+  const handleReanalyze = async () => {
+    setIsReanalyzing(true);
+    const toastId = toast.loading("Re-analizando documentos con IA...");
+    try {
+      const res = await fetch(`/api/expedientes/${resolvedParams.id}/reanalyze`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Error al re-analizar");
+      if (data.property) {
+        toast.success(`Predio detectado: ${data.property.name}`, { id: toastId, duration: 6000 });
+      } else if (data.analyzedDocuments === 0) {
+        toast.error(data.message || "No hay documentos con texto analizable todavía.", { id: toastId, duration: 8000 });
+      } else {
+        toast(`Se analizaron ${data.analyzedDocuments} documento(s) pero la IA no encontró un predio claro. Puedes cargarlo a mano.`, { id: toastId, duration: 8000 });
+      }
+      mutate();
+    } catch (err: any) {
+      toast.error(err?.message || "No se pudo re-analizar", { id: toastId, duration: 8000 });
+    } finally {
+      setIsReanalyzing(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -93,6 +116,15 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
           </div>
           
           <div className="flex gap-3 shrink-0">
+            <button
+              onClick={handleReanalyze}
+              disabled={isReanalyzing}
+              className="flex items-center gap-2 px-4 py-2 bg-erfor-green text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition shadow-sm disabled:opacity-60"
+              title="Vuelve a analizar con IA los documentos ya subidos para detectar predio, propietario y representante"
+            >
+              {isReanalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {isReanalyzing ? "Analizando..." : "Re-analizar con IA"}
+            </button>
             <button
               onClick={() => {
                 setFileEditForm({

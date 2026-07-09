@@ -135,10 +135,14 @@ export async function POST(request: Request) {
     }
 
     // Extracción automática de datos del predio/cliente (IA) para documentos clave
-    // (auto, resolución, concepto, requerimiento, indagación) de un expediente que aún
-    // no tiene predio asociado. Nunca bloquea la respuesta si falla.
+    // (auto, resolución, concepto, requerimiento, indagación) O documentos de Office
+    // (Word/Excel, que suelen traer formatos de solicitud con el nombre del predio) de un
+    // expediente que aún no tiene predio asociado. Nunca bloquea la respuesta si falla.
     let propertyExtraction = null;
-    if (document.environmentalFileId && KEY_DOCUMENT_KEYWORDS.some((k) => file.name.toLowerCase().includes(k))) {
+    const nameLower = file.name.toLowerCase();
+    const isKeyDocument = KEY_DOCUMENT_KEYWORDS.some((k) => nameLower.includes(k));
+    const isOfficeDocument = /\.(docx?|xlsx?)$/.test(nameLower);
+    if (document.environmentalFileId && (isKeyDocument || isOfficeDocument)) {
       try {
         const expediente = await prisma.environmentalFile.findUnique({
           where: { id: document.environmentalFileId }
