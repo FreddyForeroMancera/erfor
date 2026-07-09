@@ -70,7 +70,13 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
+    if (error && typeof error.status === "number") {
+      return new Response(error.body, {
+        status: error.status,
+        headers: error.headers
+      });
+    }
     console.error("Error en extract-property batch:", error);
-    return NextResponse.json({ error: error.message || "Error interno" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Error interno" }, { status: 400 });
   }
 }
