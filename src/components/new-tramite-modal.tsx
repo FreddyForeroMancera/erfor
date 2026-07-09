@@ -34,6 +34,8 @@ export function NewTramiteModal({ isOpen, onClose, clientId }: NewTramiteModalPr
     type: "Licencia Ambiental",
     authority: "ANLA",
     carRegional: "",
+    filedAt: "",
+    nextDeadline: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -90,6 +92,8 @@ export function NewTramiteModal({ isOpen, onClose, clientId }: NewTramiteModalPr
         type: "Licencia Ambiental",
         authority: "ANLA",
         carRegional: "",
+        filedAt: "",
+        nextDeadline: "",
       });
       onClose();
     } catch (error: any) {
@@ -316,6 +320,34 @@ export function NewTramiteModal({ isOpen, onClose, clientId }: NewTramiteModalPr
                             />
                           </div>
                         )}
+                      </div>
+
+                      {/* Fechas Clave */}
+                      <div className="grid grid-cols-2 gap-4 mt-2">
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-1">
+                            Fecha de Radicación (Autoridad)
+                          </label>
+                          <input
+                            type="date"
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green"
+                            value={formData.filedAt}
+                            onChange={(e) => setFormData({ ...formData, filedAt: e.target.value })}
+                            disabled={loading}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-1">
+                            Próximo Vencimiento
+                          </label>
+                          <input
+                            type="date"
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-erfor-green focus:outline-none focus:ring-1 focus:ring-erfor-green"
+                            value={formData.nextDeadline}
+                            onChange={(e) => setFormData({ ...formData, nextDeadline: e.target.value })}
+                            disabled={loading}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>

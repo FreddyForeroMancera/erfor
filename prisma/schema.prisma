@@ -384,6 +384,7 @@ model Document {
   name                String
   fileUrl             String
   fileType            String
+  fileSize            Int?
   category            String
   version             Int      @default(1)
   status              String   @default("ACTIVE")

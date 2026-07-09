@@ -59,7 +59,21 @@ export async function POST(request: Request) {
         data: {
           clientId,
           name: data.projectName,
-          type: "Asesoría Ambiental", // Valor por defecto general
+          type: "Asesoría Ambiental",
+          status: "PREPARATION",
+          riskLevel: "MEDIUM"
+        }
+      });
+      projectId = project.id;
+    }
+    // Si no se proporcionó projectId ni projectName, crear uno por defecto
+    // para garantizar que el módulo de Obligaciones siempre funcione
+    if (!projectId) {
+      const project = await prisma.project.create({
+        data: {
+          clientId,
+          name: `Proyecto - ${data.internalCode}`,
+          type: "Asesoría Ambiental",
           status: "PREPARATION",
           riskLevel: "MEDIUM"
         }
@@ -95,7 +109,9 @@ export async function POST(request: Request) {
         carRegional: data.carRegional,
         type: data.type,
         status: "PREPARATION",
-        responsibleUserId: user.id
+        responsibleUserId: user.id,
+        nextDeadline: data.nextDeadline ? new Date(data.nextDeadline) : undefined,
+        filedAt: data.filedAt ? new Date(data.filedAt) : undefined,
       }
     });
 

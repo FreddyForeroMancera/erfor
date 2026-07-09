@@ -2,6 +2,47 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
 
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const resolvedParams = await params;
+    const sessionUser = await getSessionUser();
+    if (!sessionUser || sessionUser.role === "CLIENTE_EXTERNO") {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const clientId = resolvedParams.id;
+    const body = await request.json();
+
+    const { name, documentType, documentNumber, email, phone, address, city, department, representative, notes, priority } = body;
+
+    const updated = await prisma.client.update({
+      where: { id: clientId },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(documentType !== undefined && { documentType }),
+        ...(documentNumber !== undefined && { documentNumber }),
+        ...(email !== undefined && { email }),
+        ...(phone !== undefined && { phone }),
+        ...(address !== undefined && { address }),
+        ...(city !== undefined && { city }),
+        ...(department !== undefined && { department }),
+        ...(representative !== undefined && { representative }),
+        ...(notes !== undefined && { notes }),
+        ...(priority !== undefined && { priority }),
+      }
+    });
+
+    return NextResponse.json({ client: updated });
+  } catch (error) {
+    console.error("Error actualizando cliente:", error);
+    return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
+  }
+}
+
+
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

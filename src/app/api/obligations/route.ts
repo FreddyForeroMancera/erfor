@@ -13,17 +13,22 @@ export async function GET(request: Request) {
     }
 
     const file = await prisma.environmentalFile.findUnique({ where: { id: fileId } });
-    if (!file || !file.projectId) {
-      return Response.json({ error: "File not found or no project associated" }, { status: 404 });
+    if (!file) {
+      return Response.json({ error: "Expediente no encontrado" }, { status: 404 });
     }
 
+    // Buscar por projectId si existe, de lo contrario por clientId
+    const whereClause = file.projectId
+      ? { projectId: file.projectId }
+      : { clientId: file.clientId, projectId: null };
+
     let obligations = await prisma.environmentalObligation.findMany({
-      where: { projectId: file.projectId },
+      where: whereClause,
       orderBy: { createdAt: "asc" }
     });
 
     if (obligations.length === 0) {
-      // Default obligations
+      // Crear obligaciones por defecto
       const defaults = [
         { title: "Compensación", category: "Compensación", status: "PENDIENTE" as const, riskLevel: "MEDIUM" as const },
         { title: "Sistema de Medición", category: "Sistema de Medición", status: "CUMPLIDO" as const, riskLevel: "LOW" as const },
@@ -38,12 +43,12 @@ export async function GET(request: Request) {
         data: defaults.map(d => ({
           ...d,
           clientId: file.clientId,
-          projectId: file.projectId
+          projectId: file.projectId ?? undefined
         }))
       });
 
       obligations = await prisma.environmentalObligation.findMany({
-        where: { projectId: file.projectId },
+        where: whereClause,
         orderBy: { createdAt: "asc" }
       });
     }

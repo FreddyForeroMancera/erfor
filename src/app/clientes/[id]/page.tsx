@@ -1,19 +1,24 @@
 "use client";
 
-import { useState, use } from "react";
-import useSWR from "swr";
+import { useState, use, Fragment } from "react";
+import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { AppShell } from "@/components/app-shell";
 import { FilesModule } from "@/components/files-module";
-import { Building2, Map, FolderKanban, Loader2, ArrowLeft, Mail, Phone, MapPin, Calendar, Clock, AlertTriangle } from "lucide-react";
+import { Building2, Map, FolderKanban, Loader2, ArrowLeft, Mail, Phone, MapPin, Calendar, Clock, AlertTriangle, X } from "lucide-react";
 import Link from "next/link";
 import { NewTramiteModal } from "@/components/new-tramite-modal";
+import { Dialog, Transition } from "@headlessui/react";
+import toast from "react-hot-toast";
 
 export default function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const { data, error, isLoading } = useSWR<any>(`/api/clients/${resolvedParams.id}`, fetcher);
+  const { data, error, isLoading, mutate } = useSWR<any>(`/api/clients/${resolvedParams.id}`, fetcher);
   const [activeTab, setActiveTab] = useState<"info" | "expedientes" | "proyectos">("info");
   const [isNewTramiteOpen, setIsNewTramiteOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editForm, setEditForm] = useState<any>({});
 
   if (isLoading) {
     return (
@@ -79,7 +84,24 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
           </div>
           
           <div className="flex gap-3">
-            <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
+            <button 
+              onClick={() => {
+                setEditForm({
+                  name: client.name || "",
+                  documentType: client.documentType || "NIT",
+                  documentNumber: client.documentNumber || "",
+                  email: client.email || "",
+                  phone: client.phone || "",
+                  address: client.address || "",
+                  city: client.city || "",
+                  department: client.department || "",
+                  representative: client.representative || "",
+                  notes: client.notes || "",
+                });
+                setIsEditModalOpen(true);
+              }}
+              className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm"
+            >
               Editar Cliente
             </button>
             <button 
@@ -229,6 +251,117 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
         onClose={() => setIsNewTramiteOpen(false)} 
         clientId={resolvedParams.id}
       />
+
+      {/* Modal Editar Cliente */}
+      <Transition appear show={isEditModalOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={() => !isSaving && setIsEditModalOpen(false)}>
+          <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
+            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" />
+          </Transition.Child>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+                <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-xl transition-all">
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-erfor-mist flex items-center justify-center">
+                        <Building2 className="h-5 w-5 text-erfor-green" />
+                      </div>
+                      <div>
+                        <Dialog.Title className="font-bold text-slate-800 text-lg">Editar Cliente</Dialog.Title>
+                        <p className="text-xs text-slate-500">{client.name}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setIsEditModalOpen(false)} disabled={isSaving} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  {/* Form */}
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    setIsSaving(true);
+                    try {
+                      const res = await fetch(`/api/clients/${resolvedParams.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(editForm),
+                      });
+                      if (!res.ok) throw new Error("Error al guardar");
+                      toast.success("Cliente actualizado correctamente");
+                      mutate();
+                      setIsEditModalOpen(false);
+                    } catch {
+                      toast.error("No se pudo guardar el cliente");
+                    } finally {
+                      setIsSaving(false);
+                    }
+                  }} className="p-6 space-y-5">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nombre / Razón Social *</label>
+                        <input required value={editForm.name || ""} onChange={e => setEditForm((f: any) => ({ ...f, name: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green focus:ring-1 focus:ring-erfor-green" placeholder="Nombre completo o razón social" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tipo de Documento</label>
+                        <select value={editForm.documentType || "NIT"} onChange={e => setEditForm((f: any) => ({ ...f, documentType: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green bg-white">
+                          <option value="NIT">NIT</option>
+                          <option value="CC">Cédula de Ciudadanía</option>
+                          <option value="CE">Cédula de Extranjería</option>
+                          <option value="PAS">Pasaporte</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Número de Identificación</label>
+                        <input value={editForm.documentNumber || ""} onChange={e => setEditForm((f: any) => ({ ...f, documentNumber: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" placeholder="Ej. 900.123.456-1" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Representante Legal</label>
+                        <input value={editForm.representative || ""} onChange={e => setEditForm((f: any) => ({ ...f, representative: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" placeholder="Nombre del representante" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Correo Electrónico</label>
+                        <input type="email" value={editForm.email || ""} onChange={e => setEditForm((f: any) => ({ ...f, email: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" placeholder="correo@empresa.com" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Teléfono</label>
+                        <input value={editForm.phone || ""} onChange={e => setEditForm((f: any) => ({ ...f, phone: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" placeholder="+57 300 123 4567" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Dirección</label>
+                        <input value={editForm.address || ""} onChange={e => setEditForm((f: any) => ({ ...f, address: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" placeholder="Calle, Carrera, etc." />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Ciudad</label>
+                        <input value={editForm.city || ""} onChange={e => setEditForm((f: any) => ({ ...f, city: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" placeholder="Bogotá" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Departamento</label>
+                        <input value={editForm.department || ""} onChange={e => setEditForm((f: any) => ({ ...f, department: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" placeholder="Cundinamarca" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Notas Internas</label>
+                        <textarea rows={3} value={editForm.notes || ""} onChange={e => setEditForm((f: any) => ({ ...f, notes: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green resize-none" placeholder="Observaciones internas del consultor..." />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+                      <button type="button" onClick={() => setIsEditModalOpen(false)} disabled={isSaving} className="px-4 py-2.5 text-sm font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+                        Cancelar
+                      </button>
+                      <button type="submit" disabled={isSaving} className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-erfor-green text-white rounded-lg hover:bg-green-700 transition disabled:opacity-60">
+                        {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                        Guardar Cambios
+                      </button>
+                    </div>
+                  </form>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
     </AppShell>
   );
 }

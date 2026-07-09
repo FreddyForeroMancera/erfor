@@ -11,6 +11,21 @@ export async function POST(request: Request) {
     const file = form.get("file");
     if (!(file instanceof File)) return Response.json({ error: "Archivo requerido" }, { status: 400 });
 
+    // 1. Evitar duplicados: Verificar si ya existe un documento con ese nombre en ese expediente
+    const environmentalFileId = String(form.get("environmentalFileId") || "");
+    if (environmentalFileId) {
+      const existingDoc = await prisma.document.findFirst({
+        where: {
+          name: file.name,
+          environmentalFileId: environmentalFileId
+        }
+      });
+      
+      if (existingDoc) {
+        return Response.json({ error: "Este documento ya fue subido y analizado previamente." }, { status: 400 });
+      }
+    }
+
     // Inicializar cliente Supabase dentro del handler para evitar errores en build time
     const supabaseUrl = process.env.SUPABASE_URL || "";
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
@@ -36,22 +51,51 @@ export async function POST(request: Request) {
       return Response.json({ error: "Error subiendo archivo a Supabase Storage" }, { status: 500 });
     }
 
-    // Obtener URL pública
+    // Obtener URL pública (Opcional si vamos a borrar, pero mantenemos por si se requiere logs)
     const { data: publicUrlData } = supabase.storage
       .from("erfor-uploads")
       .getPublicUrl(`documents/${storedName}`);
 
+    // Extraer texto (Análisis con IA u OCR)
     const extractedText = await extractTextLike(file, bytes);
+    
+    // Calcular cuota de almacenamiento actual (Límite sugerido: 900 MB)
+    const quotaThresholdBytes = 900 * 1024 * 1024; // 900 MB
+    const fileSizeBytes = file.size;
+    
+    const usageResult = await prisma.document.aggregate({
+      _sum: { fileSize: true },
+      where: { fileUrl: { not: "PURGED" } }
+    });
+    const currentUsageBytes = usageResult._sum.fileSize || 0;
+    const willExceedQuota = (currentUsageBytes + fileSizeBytes) > quotaThresholdBytes;
+
+    let finalFileUrl = publicUrlData.publicUrl;
+
+    if (willExceedQuota) {
+      // BORRAR EL ARCHIVO FÍSICO DE SUPABASE PARA AHORRAR ESPACIO
+      const { error: deleteError } = await supabase.storage
+        .from("erfor-uploads")
+        .remove([`documents/${storedName}`]);
+
+      if (deleteError) {
+        console.error("No se pudo purgar el archivo físico de Supabase:", deleteError);
+      }
+      finalFileUrl = "PURGED"; // Marcamos que el archivo físico fue eliminado
+    }
+
+    // Guardar metadata en la base de datos
     const document = await prisma.document.create({
       data: {
         clientId: String(form.get("clientId") || "") || undefined,
         projectId: String(form.get("projectId") || "") || undefined,
-        environmentalFileId: String(form.get("environmentalFileId") || "") || undefined,
+        environmentalFileId: environmentalFileId || undefined,
         requirementId: String(form.get("requirementId") || "") || undefined,
         visitId: String(form.get("visitId") || "") || undefined,
         name: file.name,
-        fileUrl: publicUrlData.publicUrl,
+        fileUrl: finalFileUrl,
         fileType: file.type || "application/octet-stream",
+        fileSize: fileSizeBytes,
         category: String(form.get("category") || "Documento ambiental"),
         extractedText,
         tags: String(form.get("tags") || ""),

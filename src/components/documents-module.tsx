@@ -1,13 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { Cloud, File, ExternalLink, Plus, MoreVertical, Search, CheckCircle2, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Cloud, File, Plus, MoreVertical, Search, CheckCircle2, AlertCircle, HardDrive } from "lucide-react";
 
 export function DocumentsModule({ environmentalFileId, initialDocuments }: { environmentalFileId: string, initialDocuments: any[] }) {
   const [search, setSearch] = useState("");
-  
-  // Enfoque A: Simulamos el enlace a una carpeta compartida (OneDrive)
-  const [oneDriveLink, setOneDriveLink] = useState("https://onedrive.live.com/erfor-client-folder");
+  const [quota, setQuota] = useState<{ usedBytes: number, quotaBytes: number, percentage: number } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/documents/quota")
+      .then(r => r.json())
+      .then(data => {
+        if (!data.error) setQuota(data);
+      })
+      .catch(() => {});
+  }, []);
 
   const filteredDocs = initialDocuments.filter(doc => 
     doc.name.toLowerCase().includes(search.toLowerCase())
@@ -15,26 +22,36 @@ export function DocumentsModule({ environmentalFileId, initialDocuments }: { env
 
   return (
     <div className="space-y-6">
-      {/* OneDrive Banner */}
-      <div className="rounded-2xl border border-blue-200 bg-blue-50 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+      {/* Integración Cloud — Próximamente */}
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
-            <Cloud className="h-6 w-6" />
+          <div className="h-11 w-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 shrink-0 shadow-sm">
+            <Cloud className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-bold text-blue-900 text-lg">Sincronización con OneDrive</h3>
-            <p className="text-sm text-blue-700 mt-0.5">Los archivos de este expediente están vinculados a tu nube corporativa.</p>
+            <h3 className="font-semibold text-slate-700 text-sm">Almacenamiento Físico (ERFOR)</h3>
+            {quota ? (
+              <p className="text-xs text-slate-500 mt-0.5">
+                Has usado {(quota.usedBytes / 1024 / 1024).toFixed(1)} MB de {(quota.quotaBytes / 1024 / 1024).toFixed(0)} MB gratuitos.
+              </p>
+            ) : (
+              <p className="text-xs text-slate-500 mt-0.5">Calculando espacio disponible...</p>
+            )}
           </div>
         </div>
-        <div className="flex gap-3 shrink-0">
-          <a 
-            href={oneDriveLink} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition shadow-sm"
-          >
-            Abrir Carpeta <ExternalLink className="h-4 w-4" />
-          </a>
+        <div className="flex items-center gap-3">
+          {quota && (
+            <div className="w-32 bg-slate-200 rounded-full h-2.5">
+              <div 
+                className={`h-2.5 rounded-full ${quota.percentage > 85 ? 'bg-red-500' : quota.percentage > 70 ? 'bg-amber-400' : 'bg-erfor-green'}`} 
+                style={{ width: `${quota.percentage}%` }}
+              ></div>
+            </div>
+          )}
+          <span className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs font-semibold text-slate-500 shadow-sm">
+            <HardDrive className="h-3.5 w-3.5 text-slate-400" />
+            Supabase Storage
+          </span>
         </div>
       </div>
 
@@ -85,7 +102,13 @@ export function DocumentsModule({ environmentalFileId, initialDocuments }: { env
                       <div className="h-8 w-8 rounded bg-slate-100 flex items-center justify-center text-slate-400">
                         <File className="h-4 w-4" />
                       </div>
-                      <span className="font-medium text-slate-700 group-hover:text-erfor-green transition">{doc.name}</span>
+                      {doc.fileUrl && doc.fileUrl !== 'PURGED' ? (
+                        <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="font-medium text-erfor-green hover:underline transition">
+                          {doc.name}
+                        </a>
+                      ) : (
+                        <span className="font-medium text-slate-700">{doc.name}</span>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -97,13 +120,17 @@ export function DocumentsModule({ environmentalFileId, initialDocuments }: { env
                     {new Date(doc.createdAt).toLocaleDateString('es-CO')}
                   </td>
                   <td className="px-6 py-4 text-center">
-                    {doc.oneDriveSyncStatus === 'SYNCED' ? (
-                      <span className="inline-flex items-center gap-1.5 text-green-600 text-xs font-bold bg-green-50 px-2 py-1 rounded-md" title="Sincronizado con OneDrive">
-                        <CheckCircle2 className="h-4 w-4" /> Sincronizado
+                    {doc.fileUrl === 'PURGED' ? (
+                      <span className="inline-flex items-center gap-1.5 text-erfor-green text-xs font-bold bg-green-50 px-2 py-1 rounded-md" title="El archivo físico fue eliminado para ahorrar espacio, pero sus metadatos están analizados">
+                        <CheckCircle2 className="h-4 w-4" /> Analizado y Purgado
+                      </span>
+                    ) : doc.oneDriveSyncStatus === 'SYNCED' ? (
+                      <span className="inline-flex items-center gap-1.5 text-blue-600 text-xs font-bold bg-blue-50 px-2 py-1 rounded-md" title="Sincronizado con OneDrive">
+                        <Cloud className="h-4 w-4" /> Sincronizado
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-slate-400 text-xs font-bold bg-slate-50 px-2 py-1 rounded-md" title="Solo Local">
-                        <AlertCircle className="h-4 w-4" /> Local
+                      <span className="inline-flex items-center gap-1.5 text-slate-400 text-xs font-bold bg-slate-50 px-2 py-1 rounded-md" title="Archivo físico guardado en Supabase">
+                        <AlertCircle className="h-4 w-4" /> En Supabase
                       </span>
                     )}
                   </td>
