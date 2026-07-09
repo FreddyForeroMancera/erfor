@@ -156,6 +156,17 @@ export async function POST(request: Request) {
 
     return ok({ document, automation, propertyExtraction }, { status: 201 });
   } catch (error) {
+    // Log explícito: fail() mete el mensaje en el body pero NO lo escribe al log, así
+    // que en Vercel el 500 aparecía como "(no message)" y era indiagnosticable.
+    const err = error as Error;
+    console.error(
+      "[documents/upload] FALLO:",
+      err?.name,
+      "|",
+      err?.message,
+      "\nSTACK:",
+      err?.stack
+    );
     return fail(error);
   }
 }
