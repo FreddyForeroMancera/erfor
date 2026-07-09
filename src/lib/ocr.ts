@@ -1,20 +1,31 @@
 import os from "node:os";
-import { DOMMatrix, ImageData, Path2D } from "@napi-rs/canvas";
 import { PDFParse } from "pdf-parse";
 import { createWorker } from "tesseract.js";
 
-// pdf-parse (vía pdfjs-dist) intenta auto-polyfillear estos globals con un
-// `require("@napi-rs/canvas")` dinámico construido en tiempo de ejecución
-// (createRequire). El file tracer de Vercel no detecta ese require dinámico como
-// dependencia real, así que el binario nativo de @napi-rs/canvas nunca llega al
-// bundle de la función serverless y el polyfill interno de pdf-parse falla en
-// silencio (solo loggea una advertencia) -> "ReferenceError: DOMMatrix is not
-// defined" en cuanto getScreenshot() intenta renderizar. Al importar el paquete
-// nosotros mismos de forma estática, queda como dependencia explícita y rastreable,
-// y dejamos los globals listos antes de que pdf-parse los necesite.
-if (!(globalThis as any).DOMMatrix) (globalThis as any).DOMMatrix = DOMMatrix;
-if (!(globalThis as any).ImageData) (globalThis as any).ImageData = ImageData;
-if (!(globalThis as any).Path2D) (globalThis as any).Path2D = Path2D;
+/**
+ * Carga perezosa y tolerante a fallos del polyfill de canvas.
+ *
+ * pdf-parse (vía pdfjs-dist) necesita los globals DOMMatrix/ImageData/Path2D para
+ * *rasterizar* páginas (getScreenshot, la ruta de OCR); su auto-polyfill interno usa
+ * un `require("@napi-rs/canvas")` construido dinámicamente que el file tracer de Vercel
+ * no sigue, así que el binario nativo no llega a la función serverless y el render
+ * revienta con "DOMMatrix is not defined".
+ *
+ * Importante: NO se importa @napi-rs/canvas en el top-level. Un import estático del
+ * binario nativo hace que TODO el módulo (y por ende la ruta /api/documents/upload)
+ * falle a la carga con 500 si el binario de la plataforma no está — matando incluso la
+ * extracción de PDFs con capa de texto que ni siquiera necesitan canvas. Por eso se
+ * carga aquí, de forma perezosa, solo cuando se va a hacer OCR, y si falla se degrada
+ * (el llamador ya cae a un texto de respaldo en vez de tumbar la subida).
+ */
+async function ensureCanvasGlobals(): Promise<void> {
+  const g = globalThis as any;
+  if (g.DOMMatrix && g.ImageData && g.Path2D) return;
+  const canvas = await import("@napi-rs/canvas");
+  if (!g.DOMMatrix) g.DOMMatrix = canvas.DOMMatrix;
+  if (!g.ImageData) g.ImageData = canvas.ImageData;
+  if (!g.Path2D) g.Path2D = canvas.Path2D;
+}
 
 const MAX_PAGES = 5;
 const MAX_CHARS = 15000;
@@ -29,6 +40,9 @@ const RENDER_SCALE = 2.0;
  * Rasteriza hasta MAX_PAGES páginas y corre Tesseract en español sobre cada una.
  */
 export async function extractTextWithOcr(bytes: Buffer): Promise<string> {
+  // Debe correr antes de getScreenshot: deja DOMMatrix/ImageData/Path2D en globalThis.
+  await ensureCanvasGlobals();
+
   const parser = new PDFParse({ data: bytes });
   const worker = await createWorker("spa", undefined, {
     cachePath: os.tmpdir()
