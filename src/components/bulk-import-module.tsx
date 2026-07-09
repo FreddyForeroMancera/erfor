@@ -19,7 +19,13 @@ type ParsedExpediente = {
 type ParsedClient = {
   name: string;
   expedientes: ParsedExpediente[];
+  datosCsv?: string;
 };
+
+// Archivo de datos preestablecidos (representante legal, predio, dirección, etc. ya
+// conocidos) ubicado directamente en la carpeta del cliente: RootFolder/ClienteX/datos.csv.
+// Tiene prioridad sobre lo que la IA intente extraer de los documentos después.
+const CSV_DATA_FILENAME = "datos.csv";
 
 export function BulkImportModule() {
   const [clients, setClients] = useState<ParsedClient[]>([]);
@@ -43,7 +49,18 @@ export function BulkImportModule() {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const pathParts = file.webkitRelativePath.split("/");
-      
+
+      // Archivo de datos preestablecidos directamente en la carpeta del cliente:
+      // RootFolder / ClientName / datos.csv
+      if (pathParts.length === 3 && pathParts[2].toLowerCase() === CSV_DATA_FILENAME) {
+        const clientName = pathParts[1];
+        if (!clientMap.has(clientName)) {
+          clientMap.set(clientName, { name: clientName, expedientes: [] });
+        }
+        clientMap.get(clientName)!.datosCsv = await file.text();
+        continue;
+      }
+
       // Expected structure: RootFolder / ClientName / ExpedienteName / StatusFolder / Filename
       // Minimum required parts to be a valid file in an expediente: Root/Client/Expediente/File
       if (pathParts.length < 4) continue; // Ignore files in root or client folder directly

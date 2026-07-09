@@ -1,9 +1,16 @@
 import { requireUser } from "@/lib/auth";
 import { createRequirementAutomation } from "@/lib/automations";
+import { applyExtractedProperty, extractPropertyFromText } from "@/lib/ai-extract-property";
+import { extractText } from "@/lib/document-text";
 import { fail, ok } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@supabase/supabase-js";
-const pdfParse = require("pdf-parse");
+
+// El OCR de documentos escaneados (Tesseract + rasterizado con @napi-rs/canvas) puede
+// tardar varios segundos; el límite por defecto de Vercel (10s Hobby / 15s Pro) no alcanza.
+export const maxDuration = 60;
+
+const KEY_DOCUMENT_KEYWORDS = ["auto", "resolucion", "resolución", "concepto", "requerimiento", "indagacion", "indagación"];
 
 export async function POST(request: Request) {
   try {
@@ -65,7 +72,7 @@ export async function POST(request: Request) {
       .getPublicUrl(`documents/${storedName}`);
 
     // Extraer texto (Análisis con IA u OCR)
-    const extractedText = await extractTextLike(file, bytes);
+    const extractedText = await extractText(file, bytes);
     
     // Calcular cuota de almacenamiento actual (Límite sugerido: 900 MB)
     const quotaThresholdBytes = 900 * 1024 * 1024; // 900 MB
@@ -127,34 +134,28 @@ export async function POST(request: Request) {
       }
     }
 
-    return ok({ document, automation }, { status: 201 });
+    // Extracción automática de datos del predio/cliente (IA) para documentos clave
+    // (auto, resolución, concepto, requerimiento, indagación) de un expediente que aún
+    // no tiene predio asociado. Nunca bloquea la respuesta si falla.
+    let propertyExtraction = null;
+    if (document.environmentalFileId && KEY_DOCUMENT_KEYWORDS.some((k) => file.name.toLowerCase().includes(k))) {
+      try {
+        const expediente = await prisma.environmentalFile.findUnique({
+          where: { id: document.environmentalFileId }
+        });
+        if (expediente && !expediente.propertyId) {
+          const extracted = await extractPropertyFromText(extractedText);
+          if (extracted?.name) {
+            propertyExtraction = await applyExtractedProperty(expediente, extracted);
+          }
+        }
+      } catch (err) {
+        console.error("Error en extracción automática de predio:", err);
+      }
+    }
+
+    return ok({ document, automation, propertyExtraction }, { status: 201 });
   } catch (error) {
     return fail(error);
   }
-}
-
-async function extractTextLike(file: File, bytes: Buffer) {
-  try {
-    if (/pdf/i.test(file.type) || file.name.toLowerCase().endsWith(".pdf")) {
-      const pdfData = await pdfParse(bytes);
-      // Extraemos máximo 15,000 caracteres para no desbordar el contexto de OpenAI
-      return pdfData.text.trim().slice(0, 15000) || `PDF escaneado: ${file.name}. (Requiere OCR de imágenes)`;
-    }
-    if (/wordprocessingml/i.test(file.type) || file.name.toLowerCase().endsWith(".docx")) {
-      // Extracción rápida de texto crudo de DOCX (XML)
-      const rawString = bytes.toString("utf8");
-      const textMatches = rawString.match(/<w:t[^>]*>(.*?)<\/w:t>/g);
-      if (textMatches) {
-        const text = textMatches.map(m => m.replace(/<[^>]+>/g, "")).join(" ");
-        return text.slice(0, 15000);
-      }
-      return `Documento Word: ${file.name}`;
-    }
-    if (/text|json|csv/i.test(file.type)) {
-      return bytes.toString("utf8").slice(0, 10000);
-    }
-  } catch (err) {
-    console.error("Error extrayendo texto del documento:", err);
-  }
-  return `Archivo cargado: ${file.name}.`;
 }

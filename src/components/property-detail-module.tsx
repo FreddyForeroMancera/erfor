@@ -190,6 +190,14 @@ export function PropertyDetailModule({ propertyId }: { propertyId: string }) {
                 <p className="text-sm text-slate-800">{property.realEstateRegistration || "No registrada"}</p>
               </div>
               <div>
+                <p className="text-xs text-slate-500 uppercase font-bold mb-1">Propietario</p>
+                <p className="text-sm text-slate-800">{property.owner || "No registrado"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 uppercase font-bold mb-1">Dirección</p>
+                <p className="text-sm text-slate-800">{property.address || "No registrada"}</p>
+              </div>
+              <div>
                 <p className="text-xs text-slate-500 uppercase font-bold mb-1">Uso Actual vs Propuesto</p>
                 <p className="text-sm text-slate-800 flex items-center gap-2">
                   <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-700">{property.useCurrent || "N/A"}</span>

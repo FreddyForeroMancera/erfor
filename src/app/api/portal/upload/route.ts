@@ -1,7 +1,13 @@
 import { requireUser } from "@/lib/auth";
+import { applyExtractedProperty, extractPropertyFromText } from "@/lib/ai-extract-property";
+import { extractText } from "@/lib/document-text";
 import { fail, ok } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@supabase/supabase-js";
+
+// Igual que en documents/upload: el OCR de documentos escaneados puede tardar varios
+// segundos, por encima del límite por defecto de Vercel.
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   try {
@@ -44,6 +50,8 @@ export async function POST(request: Request) {
       .from("erfor-uploads")
       .getPublicUrl(`documents/${storedName}`);
 
+    const extractedText = await extractText(file, bytes);
+
     const document = await prisma.document.create({
       data: {
         clientId: client.id,
@@ -52,12 +60,33 @@ export async function POST(request: Request) {
         fileUrl: publicUrlData.publicUrl,
         fileType: file.type || "application/octet-stream",
         category: "Cargado por el Cliente",
+        extractedText,
         uploadedBy: user.id,
         source: "PORTAL"
       }
     });
 
-    return ok({ document }, { status: 201 });
+    // A diferencia de la carga interna, aquí se intenta la extracción con IA en
+    // CUALQUIER documento que suba el cliente (sin filtro de palabras clave en el
+    // nombre): el volumen por cliente es bajo y la idea es que la plataforma defina
+    // los datos automáticamente sin que el cliente tenga que nombrar el archivo de
+    // una forma particular. Nunca bloquea la respuesta si falla.
+    let propertyExtraction = null;
+    try {
+      const expediente = await prisma.environmentalFile.findFirst({
+        where: { projectId: project.id, propertyId: null }
+      });
+      if (expediente) {
+        const extracted = await extractPropertyFromText(extractedText);
+        if (extracted?.name) {
+          propertyExtraction = await applyExtractedProperty(expediente, extracted);
+        }
+      }
+    } catch (err) {
+      console.error("Error en extracción automática de predio (portal):", err);
+    }
+
+    return ok({ document, propertyExtraction }, { status: 201 });
   } catch (error) {
     return fail(error);
   }

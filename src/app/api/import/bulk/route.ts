@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
+import { applyExtractedProperty, parseClientDataCsv } from "@/lib/ai-extract-property";
 
 export async function POST(req: Request) {
   try {
@@ -40,10 +41,16 @@ export async function POST(req: Request) {
         expedientes: []
       };
 
+      // 1b. Datos preestablecidos (datos.csv en la carpeta del cliente) - tienen
+      // prioridad sobre lo que la IA extraiga después de los documentos: se aplican
+      // aquí mismo, antes de procesar ningún documento, y applyExtractedProperty ya
+      // respeta la regla de "solo llenar campos vacíos" para lo que venga más tarde.
+      const csvRowsByExpediente = parseClientDataCsv(parsedClient.datosCsv);
+
       // 2. Process Expedientes
       for (const parsedExp of parsedClient.expedientes) {
         let expediente = await prisma.environmentalFile.findFirst({
-          where: { 
+          where: {
             internalCode: parsedExp.internalCode,
             clientId: client.id
           }
@@ -60,6 +67,15 @@ export async function POST(req: Request) {
             }
           });
           results.expedientesCreated++;
+        }
+
+        const csvRow = csvRowsByExpediente.get(parsedExp.internalCode);
+        if (csvRow) {
+          try {
+            await applyExtractedProperty(expediente, csvRow);
+          } catch (err) {
+            console.error(`Error aplicando datos.csv al expediente ${parsedExp.internalCode}:`, err);
+          }
         }
 
         // 3. Process Documents

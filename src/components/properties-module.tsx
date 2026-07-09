@@ -113,6 +113,14 @@ export function PropertiesModule({ clientId }: { clientId?: string }) {
                     <p className="text-xs text-slate-500 uppercase font-semibold">Uso</p>
                     <p className="text-sm font-medium text-slate-800">{prop.useCurrent || "N/D"}</p>
                   </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase font-semibold">Propietario</p>
+                    <p className="text-sm font-medium text-slate-800">{prop.owner || "N/D"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase font-semibold">Dirección</p>
+                    <p className="text-sm font-medium text-slate-800 line-clamp-1" title={prop.address}>{prop.address || "N/D"}</p>
+                  </div>
                   <div className="col-span-2">
                     <p className="text-xs text-slate-500 uppercase font-semibold">Autoridad / Restricción</p>
                     <p className="text-sm font-medium text-slate-800">{prop.environmentalAuthority || "N/D"}</p>

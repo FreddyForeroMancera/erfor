@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { selectKeyDocument, extractPropertyFromText } from "@/lib/ai-extract-property";
+import { applyExtractedProperty, selectKeyDocument, extractPropertyFromText } from "@/lib/ai-extract-property";
 
 export async function POST(req: Request) {
   try {
@@ -46,8 +46,10 @@ export async function POST(req: Request) {
         const fileRes = await fetch(keyDoc.fileUrl);
         if (fileRes.ok) {
           const buffer = Buffer.from(await fileRes.arrayBuffer());
-          const pdfParse = require("pdf-parse");
-          const pdfData = await pdfParse(buffer);
+          const { PDFParse } = await import("pdf-parse");
+          const parser = new PDFParse({ data: buffer });
+          const pdfData = await parser.getText({ pageJoiner: "" });
+          await parser.destroy();
           textToAnalyze = pdfData.text;
           
           // Guardar el texto extraído para futuras consultas
@@ -71,47 +73,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "La IA no encontró información de un predio en el documento." }, { status: 200 });
     }
 
-    // 1. Buscar si ya existe un predio con ese nombre para este cliente
-    let property = await prisma.property.findFirst({
-      where: {
-        clientId: expediente.clientId,
-        name: extractedData.name
-      }
-    });
-
-    // 2. Si no existe, crearlo
-    if (!property) {
-      property = await prisma.property.create({
-        data: {
-          clientId: expediente.clientId,
-          name: extractedData.name,
-          cadastralCode: extractedData.cadastralCode || null,
-          realEstateRegistration: extractedData.realEstateRegistration || null,
-          city: extractedData.city || null,
-          village: extractedData.village || null,
-          owner: extractedData.owner || null,
-        }
-      });
+    const result = await applyExtractedProperty(expediente, extractedData);
+    if (!result) {
+      return NextResponse.json({ message: "El expediente ya tiene un predio asociado", property: expediente.property });
     }
 
-    // 3. Enlazar el expediente al predio y actualizar tipo
-    const updateData: any = {
-      propertyId: property.id
-    };
-
-    if (extractedData.type && expediente.type === "Desconocido") {
-      updateData.type = extractedData.type;
-    }
-
-    await prisma.environmentalFile.update({
-      where: { id: expediente.id },
-      data: updateData
-    });
-
-    return NextResponse.json({ 
-      success: true, 
-      property,
-      updatedType: updateData.type || null
+    return NextResponse.json({
+      success: true,
+      property: result.property,
+      updatedType: result.updatedType
     });
 
   } catch (error: any) {
