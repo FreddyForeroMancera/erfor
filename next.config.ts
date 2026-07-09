@@ -10,8 +10,18 @@ const nextConfig: NextConfig = {
   // de PDFs escaneados revienta con "DOMMatrix is not defined". Forzamos su inclusión
   // en las rutas que hacen OCR. El binario de Windows (dev local) se ignora en Vercel.
   outputFileTracingIncludes: {
-    "/api/documents/upload": ["./node_modules/@napi-rs/canvas-linux-*/**/*"],
-    "/api/portal/upload": ["./node_modules/@napi-rs/canvas-linux-*/**/*"]
+    // Además del binario Linux de canvas (OCR), pdf-parse usa un pdfjs-dist ANIDADO que
+    // carga su worker (pdf.worker.mjs) con una ruta dinámica que el tracer no sigue; sin
+    // forzar su inclusión, getText() falla con "Setting up fake worker failed: Cannot
+    // find module .../pdf.worker.mjs" y la extracción cae al fallback.
+    "/api/documents/upload": [
+      "./node_modules/@napi-rs/canvas-linux-*/**/*",
+      "./node_modules/pdf-parse/node_modules/pdfjs-dist/legacy/build/**/*"
+    ],
+    "/api/portal/upload": [
+      "./node_modules/@napi-rs/canvas-linux-*/**/*",
+      "./node_modules/pdf-parse/node_modules/pdfjs-dist/legacy/build/**/*"
+    ]
   },
   // Paquetes con binarios nativos / workers propios: se cargan desde node_modules en
   // tiempo de ejecución en vez de que el bundler de Next los empaquete (necesario para
