@@ -24,6 +24,9 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
   const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
   const [isSavingProperty, setIsSavingProperty] = useState(false);
   const [propertyForm, setPropertyForm] = useState<any>({});
+  const [isEditClientModalOpen, setIsEditClientModalOpen] = useState(false);
+  const [isSavingClient, setIsSavingClient] = useState(false);
+  const [clientEditForm, setClientEditForm] = useState<any>({});
 
   if (isLoading) {
     return (
@@ -98,8 +101,13 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
                   authority: file.authority || "",
                   carRegional: file.carRegional || "",
                   type: file.type || "",
+                  priority: file.priority || "MEDIUM",
                   riskLevel: file.riskLevel || "MEDIUM",
+                  openedAt: file.openedAt ? file.openedAt.slice(0, 10) : "",
+                  filedAt: file.filedAt ? file.filedAt.slice(0, 10) : "",
+                  nextDeadline: file.nextDeadline ? file.nextDeadline.slice(0, 10) : "",
                   description: file.description || "",
+                  timeline: file.timeline || "",
                 });
                 setIsEditFileModalOpen(true);
               }}
@@ -173,14 +181,42 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
                         {file.riskLevel || "MEDIUM"}
                       </span>
                     </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Prioridad</p>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${file.priority === 'HIGH' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                        {file.priority || "MEDIUM"}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 {/* 2. Datos del Cliente */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm mt-6">
-                  <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-3">
-                    <Building2 className="h-5 w-5 text-erfor-green" />
-                    <h3 className="font-bold text-slate-800 text-lg">2. Datos del Cliente</h3>
+                  <div className="flex items-center justify-between gap-2 mb-6 border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-5 w-5 text-erfor-green" />
+                      <h3 className="font-bold text-slate-800 text-lg">2. Datos del Cliente</h3>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setClientEditForm({
+                          name: file.client?.name || "",
+                          documentType: file.client?.documentType || "NIT",
+                          documentNumber: file.client?.documentNumber || "",
+                          email: file.client?.email || "",
+                          phone: file.client?.phone || "",
+                          address: file.client?.address || "",
+                          city: file.client?.city || "",
+                          department: file.client?.department || "",
+                          representative: file.client?.representative || "",
+                        });
+                        setIsEditClientModalOpen(true);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-erfor-green border border-erfor-green/30 rounded-lg hover:bg-erfor-mist transition"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Editar Cliente
+                    </button>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div>
@@ -390,9 +426,33 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
                           <option value="HIGH">Alto</option>
                         </select>
                       </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Prioridad</label>
+                        <select value={fileEditForm.priority || "MEDIUM"} onChange={e => setFileEditForm((f: any) => ({ ...f, priority: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green bg-white">
+                          <option value="LOW">Baja</option>
+                          <option value="MEDIUM">Media</option>
+                          <option value="HIGH">Alta</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Fecha de Apertura</label>
+                        <input type="date" value={fileEditForm.openedAt || ""} onChange={e => setFileEditForm((f: any) => ({ ...f, openedAt: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Fecha de Radicación (Autoridad)</label>
+                        <input type="date" value={fileEditForm.filedAt || ""} onChange={e => setFileEditForm((f: any) => ({ ...f, filedAt: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Próximo Vencimiento</label>
+                        <input type="date" value={fileEditForm.nextDeadline || ""} onChange={e => setFileEditForm((f: any) => ({ ...f, nextDeadline: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
                       <div className="sm:col-span-2">
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Descripción</label>
                         <textarea rows={3} value={fileEditForm.description || ""} onChange={e => setFileEditForm((f: any) => ({ ...f, description: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green resize-none" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Línea de Tiempo / Notas de Seguimiento</label>
+                        <textarea rows={3} value={fileEditForm.timeline || ""} onChange={e => setFileEditForm((f: any) => ({ ...f, timeline: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green resize-none" />
                       </div>
                     </div>
 
@@ -515,6 +575,111 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
                       <button type="submit" disabled={isSavingProperty} className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-erfor-green text-white rounded-lg hover:bg-green-700 transition disabled:opacity-60">
                         {isSavingProperty && <Loader2 className="h-4 w-4 animate-spin" />}
                         Guardar
+                      </button>
+                    </div>
+                  </form>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* Modal Editar Cliente */}
+      <Transition appear show={isEditClientModalOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={() => !isSavingClient && setIsEditClientModalOpen(false)}>
+          <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
+            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" />
+          </Transition.Child>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+                <Dialog.Panel className="w-full max-w-xl transform overflow-hidden rounded-2xl bg-white shadow-xl transition-all">
+                  <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-erfor-mist flex items-center justify-center">
+                        <Building2 className="h-5 w-5 text-erfor-green" />
+                      </div>
+                      <div>
+                        <Dialog.Title className="font-bold text-slate-800 text-lg">Editar Cliente</Dialog.Title>
+                        <p className="text-xs text-slate-500">{file.client?.name}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setIsEditClientModalOpen(false)} disabled={isSavingClient} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    setIsSavingClient(true);
+                    try {
+                      const res = await fetch(`/api/clients/${file.clientId}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(clientEditForm),
+                      });
+                      if (!res.ok) throw new Error("Error al guardar");
+                      toast.success("Cliente actualizado correctamente");
+                      mutate();
+                      setIsEditClientModalOpen(false);
+                    } catch {
+                      toast.error("No se pudo guardar el cliente");
+                    } finally {
+                      setIsSavingClient(false);
+                    }
+                  }} className="p-6 space-y-5">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nombre / Razón Social *</label>
+                        <input required value={clientEditForm.name || ""} onChange={e => setClientEditForm((f: any) => ({ ...f, name: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green focus:ring-1 focus:ring-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tipo de Documento</label>
+                        <select value={clientEditForm.documentType || "NIT"} onChange={e => setClientEditForm((f: any) => ({ ...f, documentType: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green bg-white">
+                          <option value="NIT">NIT</option>
+                          <option value="CC">Cédula de Ciudadanía</option>
+                          <option value="CE">Cédula de Extranjería</option>
+                          <option value="PAS">Pasaporte</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Número de Identificación</label>
+                        <input value={clientEditForm.documentNumber || ""} onChange={e => setClientEditForm((f: any) => ({ ...f, documentNumber: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" placeholder="Ej. 900.123.456-1" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Representante Legal</label>
+                        <input value={clientEditForm.representative || ""} onChange={e => setClientEditForm((f: any) => ({ ...f, representative: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Correo Electrónico</label>
+                        <input type="email" value={clientEditForm.email || ""} onChange={e => setClientEditForm((f: any) => ({ ...f, email: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Teléfono</label>
+                        <input value={clientEditForm.phone || ""} onChange={e => setClientEditForm((f: any) => ({ ...f, phone: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Dirección</label>
+                        <input value={clientEditForm.address || ""} onChange={e => setClientEditForm((f: any) => ({ ...f, address: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Ciudad</label>
+                        <input value={clientEditForm.city || ""} onChange={e => setClientEditForm((f: any) => ({ ...f, city: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Departamento</label>
+                        <input value={clientEditForm.department || ""} onChange={e => setClientEditForm((f: any) => ({ ...f, department: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+                      <button type="button" onClick={() => setIsEditClientModalOpen(false)} disabled={isSavingClient} className="px-4 py-2.5 text-sm font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+                        Cancelar
+                      </button>
+                      <button type="submit" disabled={isSavingClient} className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-erfor-green text-white rounded-lg hover:bg-green-700 transition disabled:opacity-60">
+                        {isSavingClient && <Loader2 className="h-4 w-4 animate-spin" />}
+                        Guardar Cambios
                       </button>
                     </div>
                   </form>
