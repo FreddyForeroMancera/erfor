@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { selectKeyDocument, extractPropertyFromText } from "@/lib/ai-extract-property";
-const pdfParse = require("pdf-parse");
 
 export async function POST(req: Request) {
   try {
@@ -47,6 +46,7 @@ export async function POST(req: Request) {
         const fileRes = await fetch(keyDoc.fileUrl);
         if (fileRes.ok) {
           const buffer = Buffer.from(await fileRes.arrayBuffer());
+          const pdfParse = require("pdf-parse");
           const pdfData = await pdfParse(buffer);
           textToAnalyze = pdfData.text;
           
@@ -116,11 +116,7 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     if (error && typeof error.status === "number") {
-      // Es muy probable que sea una instancia de Response lanzada por requireUser
-      return new Response(error.body, {
-        status: error.status,
-        headers: error.headers
-      });
+      return NextResponse.json({ error: "No autenticado o permiso denegado" }, { status: error.status });
     }
     console.error("Error en extract-property:", error);
     return NextResponse.json({ error: error?.message || "Error interno" }, { status: 400 });

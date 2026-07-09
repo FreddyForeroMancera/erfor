@@ -71,10 +71,7 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     if (error && typeof error.status === "number") {
-      return new Response(error.body, {
-        status: error.status,
-        headers: error.headers
-      });
+      return NextResponse.json({ error: "No autenticado o permiso denegado" }, { status: error.status });
     }
     console.error("Error en extract-property batch:", error);
     return NextResponse.json({ error: error?.message || "Error interno" }, { status: 400 });

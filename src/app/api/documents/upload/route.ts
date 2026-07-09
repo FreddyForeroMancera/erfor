@@ -23,7 +23,14 @@ export async function POST(request: Request) {
       });
       
       if (existingDoc) {
-        return Response.json({ error: "Este documento ya fue subido y analizado previamente." }, { status: 400 });
+        // Permitir sobreescribir si es un documento "mock" subido en carga masiva (sin texto y url falsa)
+        const isMock = existingDoc.fileUrl.startsWith("/uploads/") && !existingDoc.extractedText;
+        if (!isMock) {
+          return Response.json({ error: "Este documento ya fue subido y analizado previamente." }, { status: 400 });
+        } else {
+          // Si es mock, lo eliminaremos para reemplazarlo
+          await prisma.document.delete({ where: { id: existingDoc.id } });
+        }
       }
     }
 

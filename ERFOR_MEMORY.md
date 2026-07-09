@@ -81,3 +81,17 @@ ERFOR es un sistema B2B (SaaS) diseñado para la gestión integral de asesoría 
 1. ~~**Correos Reales (Resend):**~~ *(Pausado temporalmente por decisión de negocio, el portal de clientes no es prioridad en este momento).*
 2. ~~**Módulo de Cotizaciones y Trámites:** Completar el flujo de creación de nuevos expedientes (Nuevo Trámite) desde el panel del consultor.~~ *(Completado y aislado)*
 3. **Implementar Motor IA Real:** Conectar el chat de IA Asistente con la API de OpenAI/Anthropic y conectar una base de datos vectorial para RAG (Recuperación Aumentada por Generación) de leyes colombianas.
+
+## [08-Jul-2026] Extracción Inteligente de Predios con IA y Carga Masiva Automática
+
+### 1. Extracción de Datos de Documentos mediante IA (pdf-parse + OpenAI)
+- **Módulo Core (src/lib/ai-extract-property.ts)**: Se implementó una función extractPropertyFromText que envía el texto extraído de documentos legales (Autos, Resoluciones, Requerimientos) a OpenAI estructurando un prompt estricto con esponse_format para devolver JSON (nombre de predio, matrícula, cédula catastral, ciudad, vereda, propietario).
+- **Manejo de Errores de API en Next.js (Duck Typing)**: Se resolvió un bug crítico donde el servidor de desarrollo de Next.js (App Router) interceptaba los errores lanzados por el middleware de autenticación (equireUser) que devolvía un objeto Response puro con un ReadableStream cerrado. El error causaba un 500 HTML dev overlay (causando un error Unexpected token '<' en el frontend). La solución fue usar \	ypeof error.status === 'number'\ para detectar la respuesta HTTP lanzada, ignorando \instanceof Response\, y retornar un \NextResponse.json\ limpio sin reenviar el stream.
+
+### 2. Automatización Total (Sin botones IA manuales)
+- **Modificación en Carga Individual (\pi/documents/upload/route.ts\)**: Ahora, justo después de subir y guardar un documento en la BD, si el nombre del archivo contiene palabras clave (\uto, resolución, concepto, indagación\), invoca asíncronamente el extractor de IA. Si la IA detecta datos, crea/actualiza el Predio y lo enlaza automáticamente al \environmentalFile\ correspondiente.
+- **Modificación en Carga Masiva (\ulk-import-module.tsx\)**:
+  - Anteriormente, la carga masiva solo leía la estructura de carpetas local y creaba los expedientes y clientes sin subir archivos reales (por rendimiento).
+  - Se optimizó para que el backend devuelva el árbol de IDs de los expedientes creados.
+  - El frontend ahora itera sobre los archivos locales seleccionados en memoria (\ileObj\) e identifica los "documentos clave". Estos pocos archivos *sí* se envían al servidor mediante \FormData\ hacia \/api/documents/upload\ de fondo.
+  - Esto detona la automatización del punto anterior, permitiendo a la IA leer los documentos físicos masivamente subidos sin bloquear la interfaz.

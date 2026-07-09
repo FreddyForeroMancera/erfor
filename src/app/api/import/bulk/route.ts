@@ -15,6 +15,7 @@ export async function POST(req: Request) {
     // To avoid transaction timeout on large uploads, we iterate sequentially.
     
     const results = { clientsCreated: 0, expedientesCreated: 0, documentsCreated: 0 };
+    const tree: any[] = [];
 
     for (const parsedClient of clients) {
       // 1. Upsert Client
@@ -32,6 +33,12 @@ export async function POST(req: Request) {
         });
         results.clientsCreated++;
       }
+      
+      const clientNode: any = {
+        id: client.id,
+        name: client.name,
+        expedientes: []
+      };
 
       // 2. Process Expedientes
       for (const parsedExp of parsedClient.expedientes) {
@@ -95,15 +102,23 @@ export async function POST(req: Request) {
             results.documentsCreated++;
           }
         }
+        
+        // Add to tree
+        clientNode.expedientes.push({
+          id: expediente.id,
+          internalCode: expediente.internalCode,
+          documents: parsedExp.documents.map((d: any) => ({ name: d.name }))
+        });
       }
+      
+      tree.push(clientNode);
     }
 
     return NextResponse.json({ 
-      success: true, 
-      message: "Importación masiva completada",
-      results 
+      message: "Importación completada", 
+      results,
+      tree 
     });
-
   } catch (error: any) {
     console.error("Bulk import error:", error);
     return NextResponse.json({ error: "Error interno del servidor", details: error.message }, { status: 500 });
