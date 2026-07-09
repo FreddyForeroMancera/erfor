@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  # Valores de compilación únicamente (no se conecta a una base de datos real).
+  # prisma generate y el fail-fast de JWT_SECRET en build de producción necesitan que existan.
+  DATABASE_URL: "postgresql://ci:ci@localhost:5432/erfor_ci?schema=public"
+  JWT_SECRET: "ci-build-placeholder-secret-not-for-runtime-use"
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint (informativo — no bloquea el pipeline, ver deuda de tipado en README)
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
