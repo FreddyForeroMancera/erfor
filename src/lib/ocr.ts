@@ -1,6 +1,20 @@
 import os from "node:os";
+import { DOMMatrix, ImageData, Path2D } from "@napi-rs/canvas";
 import { PDFParse } from "pdf-parse";
 import { createWorker } from "tesseract.js";
+
+// pdf-parse (vía pdfjs-dist) intenta auto-polyfillear estos globals con un
+// `require("@napi-rs/canvas")` dinámico construido en tiempo de ejecución
+// (createRequire). El file tracer de Vercel no detecta ese require dinámico como
+// dependencia real, así que el binario nativo de @napi-rs/canvas nunca llega al
+// bundle de la función serverless y el polyfill interno de pdf-parse falla en
+// silencio (solo loggea una advertencia) -> "ReferenceError: DOMMatrix is not
+// defined" en cuanto getScreenshot() intenta renderizar. Al importar el paquete
+// nosotros mismos de forma estática, queda como dependencia explícita y rastreable,
+// y dejamos los globals listos antes de que pdf-parse los necesite.
+if (!(globalThis as any).DOMMatrix) (globalThis as any).DOMMatrix = DOMMatrix;
+if (!(globalThis as any).ImageData) (globalThis as any).ImageData = ImageData;
+if (!(globalThis as any).Path2D) (globalThis as any).Path2D = Path2D;
 
 const MAX_PAGES = 5;
 const MAX_CHARS = 15000;
