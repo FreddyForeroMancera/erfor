@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, use, Fragment } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { AppShell } from "@/components/app-shell";
-import { ArrowLeft, Loader2, FileText, CheckCircle2, Clock, AlertTriangle, Cloud, Settings, Building2, MapPin } from "lucide-react";
+import { ArrowLeft, Loader2, FileText, CheckCircle2, Clock, AlertTriangle, Cloud, Settings, Building2, MapPin, Pencil, X } from "lucide-react";
 import Link from "next/link";
+import { Dialog, Transition } from "@headlessui/react";
+import toast from "react-hot-toast";
 import { DocumentsModule } from "@/components/documents-module";
 import { ObligationsModule } from "@/components/obligations-module";
 import { ConsumptionReportsModule } from "@/components/consumption-reports-module";
@@ -16,6 +18,12 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
   const resolvedParams = use(params);
   const { data: file, error, isLoading, mutate } = useSWR<any>(`/api/expedientes/${resolvedParams.id}`, fetcher);
   const [activeTab, setActiveTab] = useState<"resumen" | "documentos" | "obligaciones">("resumen");
+  const [isEditFileModalOpen, setIsEditFileModalOpen] = useState(false);
+  const [isSavingFile, setIsSavingFile] = useState(false);
+  const [fileEditForm, setFileEditForm] = useState<any>({});
+  const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
+  const [isSavingProperty, setIsSavingProperty] = useState(false);
+  const [propertyForm, setPropertyForm] = useState<any>({});
 
   if (isLoading) {
     return (
@@ -82,7 +90,21 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
           </div>
           
           <div className="flex gap-3 shrink-0">
-            <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
+            <button
+              onClick={() => {
+                setFileEditForm({
+                  internalCode: file.internalCode || "",
+                  officialCode: file.officialCode || "",
+                  authority: file.authority || "",
+                  carRegional: file.carRegional || "",
+                  type: file.type || "",
+                  riskLevel: file.riskLevel || "MEDIUM",
+                  description: file.description || "",
+                });
+                setIsEditFileModalOpen(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm"
+            >
               <Settings className="h-4 w-4" /> Configuración
             </button>
           </div>
@@ -184,9 +206,30 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
 
                 {/* 3. Datos de la Finca / Predio */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm mt-6">
-                  <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-3">
-                    <MapPin className="h-5 w-5 text-erfor-green" />
-                    <h3 className="font-bold text-slate-800 text-lg">3. Datos de la Finca / Predio</h3>
+                  <div className="flex items-center justify-between gap-2 mb-6 border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-erfor-green" />
+                      <h3 className="font-bold text-slate-800 text-lg">3. Datos de la Finca / Predio</h3>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setPropertyForm({
+                          name: file.property?.name || "",
+                          cadastralCode: file.property?.cadastralCode || "",
+                          realEstateRegistration: file.property?.realEstateRegistration || "",
+                          owner: file.property?.owner || "",
+                          address: file.property?.address || "",
+                          city: file.property?.city || "",
+                          department: file.property?.department || "",
+                          village: file.property?.village || "",
+                        });
+                        setIsPropertyModalOpen(true);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-erfor-green border border-erfor-green/30 rounded-lg hover:bg-erfor-mist transition"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      {file.property ? "Editar Predio" : "Asignar Predio"}
+                    </button>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div className="sm:col-span-2">
@@ -200,6 +243,14 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
                     <div>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Matrícula Inmobiliaria</p>
                       <p className="font-medium text-slate-800">{file.property?.realEstateRegistration || "No definida"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Propietario</p>
+                      <p className="font-medium text-slate-800">{file.property?.owner || "No definido"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Dirección</p>
+                      <p className="font-medium text-slate-800">{file.property?.address || "No definida"}</p>
                     </div>
                   </div>
                 </div>
@@ -265,6 +316,214 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
           )}
         </div>
       </div>
+
+      {/* Modal Editar Expediente */}
+      <Transition appear show={isEditFileModalOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={() => !isSavingFile && setIsEditFileModalOpen(false)}>
+          <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
+            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" />
+          </Transition.Child>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+                <Dialog.Panel className="w-full max-w-xl transform overflow-hidden rounded-2xl bg-white shadow-xl transition-all">
+                  <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-erfor-mist flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-erfor-green" />
+                      </div>
+                      <div>
+                        <Dialog.Title className="font-bold text-slate-800 text-lg">Editar Expediente</Dialog.Title>
+                        <p className="text-xs text-slate-500">{file.internalCode}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setIsEditFileModalOpen(false)} disabled={isSavingFile} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    setIsSavingFile(true);
+                    try {
+                      const res = await fetch(`/api/environmentalFiles/${file.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(fileEditForm),
+                      });
+                      if (!res.ok) throw new Error("Error al guardar");
+                      toast.success("Expediente actualizado correctamente");
+                      mutate();
+                      setIsEditFileModalOpen(false);
+                    } catch {
+                      toast.error("No se pudo guardar el expediente");
+                    } finally {
+                      setIsSavingFile(false);
+                    }
+                  }} className="p-6 space-y-5">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Código Interno *</label>
+                        <input required value={fileEditForm.internalCode || ""} onChange={e => setFileEditForm((f: any) => ({ ...f, internalCode: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green focus:ring-1 focus:ring-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Código Oficial (Autoridad)</label>
+                        <input value={fileEditForm.officialCode || ""} onChange={e => setFileEditForm((f: any) => ({ ...f, officialCode: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Autoridad Ambiental</label>
+                        <input value={fileEditForm.authority || ""} onChange={e => setFileEditForm((f: any) => ({ ...f, authority: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" placeholder="Ej. CAR Cundinamarca" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Dirección Regional</label>
+                        <input value={fileEditForm.carRegional || ""} onChange={e => setFileEditForm((f: any) => ({ ...f, carRegional: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tipo de Expediente</label>
+                        <input value={fileEditForm.type || ""} onChange={e => setFileEditForm((f: any) => ({ ...f, type: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" placeholder="Ej. Concesión de aguas" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nivel de Riesgo</label>
+                        <select value={fileEditForm.riskLevel || "MEDIUM"} onChange={e => setFileEditForm((f: any) => ({ ...f, riskLevel: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green bg-white">
+                          <option value="LOW">Bajo</option>
+                          <option value="MEDIUM">Medio</option>
+                          <option value="HIGH">Alto</option>
+                        </select>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Descripción</label>
+                        <textarea rows={3} value={fileEditForm.description || ""} onChange={e => setFileEditForm((f: any) => ({ ...f, description: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green resize-none" />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+                      <button type="button" onClick={() => setIsEditFileModalOpen(false)} disabled={isSavingFile} className="px-4 py-2.5 text-sm font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+                        Cancelar
+                      </button>
+                      <button type="submit" disabled={isSavingFile} className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-erfor-green text-white rounded-lg hover:bg-green-700 transition disabled:opacity-60">
+                        {isSavingFile && <Loader2 className="h-4 w-4 animate-spin" />}
+                        Guardar Cambios
+                      </button>
+                    </div>
+                  </form>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* Modal Editar / Asignar Predio */}
+      <Transition appear show={isPropertyModalOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={() => !isSavingProperty && setIsPropertyModalOpen(false)}>
+          <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
+            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" />
+          </Transition.Child>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+                <Dialog.Panel className="w-full max-w-xl transform overflow-hidden rounded-2xl bg-white shadow-xl transition-all">
+                  <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-erfor-mist flex items-center justify-center">
+                        <MapPin className="h-5 w-5 text-erfor-green" />
+                      </div>
+                      <div>
+                        <Dialog.Title className="font-bold text-slate-800 text-lg">{file.property ? "Editar Predio" : "Asignar Predio"}</Dialog.Title>
+                        <p className="text-xs text-slate-500">Expediente {file.internalCode}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setIsPropertyModalOpen(false)} disabled={isSavingProperty} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    setIsSavingProperty(true);
+                    try {
+                      if (file.property) {
+                        const res = await fetch(`/api/properties/${file.property.id}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify(propertyForm),
+                        });
+                        if (!res.ok) throw new Error("Error al guardar");
+                      } else {
+                        const createRes = await fetch(`/api/properties`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ ...propertyForm, clientId: file.clientId }),
+                        });
+                        if (!createRes.ok) throw new Error("Error al crear el predio");
+                        const created = await createRes.json();
+                        const linkRes = await fetch(`/api/environmentalFiles/${file.id}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ propertyId: created.item.id }),
+                        });
+                        if (!linkRes.ok) throw new Error("Error al vincular el predio al expediente");
+                      }
+                      toast.success("Predio guardado correctamente");
+                      mutate();
+                      setIsPropertyModalOpen(false);
+                    } catch {
+                      toast.error("No se pudo guardar el predio");
+                    } finally {
+                      setIsSavingProperty(false);
+                    }
+                  }} className="p-6 space-y-5">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nombre de la Finca / Predio *</label>
+                        <input required value={propertyForm.name || ""} onChange={e => setPropertyForm((f: any) => ({ ...f, name: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green focus:ring-1 focus:ring-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Cédula Catastral</label>
+                        <input value={propertyForm.cadastralCode || ""} onChange={e => setPropertyForm((f: any) => ({ ...f, cadastralCode: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Matrícula Inmobiliaria</label>
+                        <input value={propertyForm.realEstateRegistration || ""} onChange={e => setPropertyForm((f: any) => ({ ...f, realEstateRegistration: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Propietario</label>
+                        <input value={propertyForm.owner || ""} onChange={e => setPropertyForm((f: any) => ({ ...f, owner: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Vereda</label>
+                        <input value={propertyForm.village || ""} onChange={e => setPropertyForm((f: any) => ({ ...f, village: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Dirección</label>
+                        <input value={propertyForm.address || ""} onChange={e => setPropertyForm((f: any) => ({ ...f, address: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Municipio</label>
+                        <input value={propertyForm.city || ""} onChange={e => setPropertyForm((f: any) => ({ ...f, city: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Departamento</label>
+                        <input value={propertyForm.department || ""} onChange={e => setPropertyForm((f: any) => ({ ...f, department: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green" />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+                      <button type="button" onClick={() => setIsPropertyModalOpen(false)} disabled={isSavingProperty} className="px-4 py-2.5 text-sm font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+                        Cancelar
+                      </button>
+                      <button type="submit" disabled={isSavingProperty} className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-erfor-green text-white rounded-lg hover:bg-green-700 transition disabled:opacity-60">
+                        {isSavingProperty && <Loader2 className="h-4 w-4 animate-spin" />}
+                        Guardar
+                      </button>
+                    </div>
+                  </form>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
     </AppShell>
   );
 }
