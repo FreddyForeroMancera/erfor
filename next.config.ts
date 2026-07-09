@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   // Paquetes con binarios nativos / workers propios: se cargan desde node_modules en
   // tiempo de ejecución en vez de que el bundler de Next los empaquete (necesario para
   // que el OCR funcione en la función serverless de Vercel).
-  serverExternalPackages: ["pdf-parse", "tesseract.js"],
+  serverExternalPackages: ["pdf-parse", "tesseract.js", "@napi-rs/canvas", "pdfjs-dist"],
   experimental: {
     serverActions: {
       bodySizeLimit: "12mb"
