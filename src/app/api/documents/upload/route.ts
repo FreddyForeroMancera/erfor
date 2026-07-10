@@ -1,7 +1,7 @@
 import { requireUser } from "@/lib/auth";
 import { createRequirementAutomation } from "@/lib/automations";
 import { applyExtractedProperty, extractPropertyFromText } from "@/lib/ai-extract-property";
-import { extractText } from "@/lib/document-text";
+import { extractText, extractKmlGeoData } from "@/lib/document-text";
 import { fail, ok } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@supabase/supabase-js";
@@ -142,6 +142,7 @@ export async function POST(request: Request) {
     const nameLower = file.name.toLowerCase();
     const isKeyDocument = KEY_DOCUMENT_KEYWORDS.some((k) => nameLower.includes(k));
     const isOfficeDocument = /\.(docx?|xlsx?)$/.test(nameLower);
+    const isGeoDocument = /\.(kml|kmz)$/.test(nameLower);
     if (document.environmentalFileId && (isKeyDocument || isOfficeDocument)) {
       try {
         const expediente = await prisma.environmentalFile.findUnique({
@@ -155,6 +156,25 @@ export async function POST(request: Request) {
         }
       } catch (err) {
         console.error("Error en extracción automática de predio:", err);
+      }
+    }
+
+    // KML/KMZ: nombre + coordenadas se extraen por parseo directo del XML, sin pasar por
+    // la IA (no dependen de la cuota gratuita de Gemini/OpenAI, y son datos estructurados
+    // que no conviene dejar a interpretación de un modelo de lenguaje).
+    if (document.environmentalFileId && isGeoDocument) {
+      try {
+        const expediente = await prisma.environmentalFile.findUnique({
+          where: { id: document.environmentalFileId }
+        });
+        if (expediente && !expediente.propertyId) {
+          const geoData = await extractKmlGeoData(file, bytes);
+          if (geoData.name) {
+            propertyExtraction = await applyExtractedProperty(expediente, geoData);
+          }
+        }
+      } catch (err) {
+        console.error("Error extrayendo geodatos de KML/KMZ:", err);
       }
     }
 

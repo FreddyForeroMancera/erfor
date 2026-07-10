@@ -1,6 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import { applyExtractedProperty, extractPropertyFromText } from "@/lib/ai-extract-property";
-import { extractText } from "@/lib/document-text";
+import { extractText, extractKmlGeoData } from "@/lib/document-text";
 import { fail, ok } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@supabase/supabase-js";
@@ -72,14 +72,23 @@ export async function POST(request: Request) {
     // los datos automáticamente sin que el cliente tenga que nombrar el archivo de
     // una forma particular. Nunca bloquea la respuesta si falla.
     let propertyExtraction = null;
+    const isGeoDocument = /\.(kml|kmz)$/i.test(file.name);
     try {
       const expediente = await prisma.environmentalFile.findFirst({
         where: { projectId: project.id, propertyId: null }
       });
       if (expediente) {
-        const extracted = await extractPropertyFromText(extractedText);
-        if (extracted?.name) {
-          propertyExtraction = await applyExtractedProperty(expediente, extracted);
+        if (isGeoDocument) {
+          // Determinístico: no depende de la cuota gratuita de Gemini/OpenAI.
+          const geoData = await extractKmlGeoData(file, bytes);
+          if (geoData.name) {
+            propertyExtraction = await applyExtractedProperty(expediente, geoData);
+          }
+        } else {
+          const extracted = await extractPropertyFromText(extractedText);
+          if (extracted?.name) {
+            propertyExtraction = await applyExtractedProperty(expediente, extracted);
+          }
         }
       }
     } catch (err) {

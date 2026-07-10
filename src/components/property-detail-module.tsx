@@ -198,6 +198,35 @@ export function PropertyDetailModule({ propertyId }: { propertyId: string }) {
                 <p className="text-sm text-slate-800">{property.address || "No registrada"}</p>
               </div>
               <div>
+                <p className="text-xs text-slate-500 uppercase font-bold mb-1">Coordenadas</p>
+                {property.coordinates ? (
+                  <div className="text-sm text-slate-800">
+                    <p className="font-mono text-xs truncate" title={property.coordinates}>{property.coordinates}</p>
+                    {(() => {
+                      const first = property.coordinates.trim().split(/\s+/)[0];
+                      const parts = first.split(",");
+                      const lon = parseFloat(parts[0]);
+                      const lat = parseFloat(parts[1]);
+                      if (!isNaN(lon) && !isNaN(lat)) {
+                        return (
+                          <a
+                            href={`https://www.google.com/maps?q=${lat},${lon}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-erfor-green hover:underline text-xs font-medium"
+                          >
+                            Ver en Google Maps
+                          </a>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-800">No registradas</p>
+                )}
+              </div>
+              <div>
                 <p className="text-xs text-slate-500 uppercase font-bold mb-1">Uso Actual vs Propuesto</p>
                 <p className="text-sm text-slate-800 flex items-center gap-2">
                   <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-700">{property.useCurrent || "N/A"}</span>

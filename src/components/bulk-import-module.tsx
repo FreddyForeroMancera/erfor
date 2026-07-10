@@ -165,6 +165,7 @@ export function BulkImportModule() {
         setUploadProgress("Importación base completada. Procesando documentos clave con IA...");
         const keywords = ["auto", "resolucion", "resolución", "concepto", "requerimiento", "indagacion", "indagación"];
         const isOfficeDoc = (name: string) => /\.(docx?|xlsx?)$/i.test(name);
+        const isGeoDoc = (name: string) => /\.(kml|kmz)$/i.test(name);
 
         let processedKeys = 0;
         let alreadyAnalyzedKeys = 0;
@@ -177,7 +178,7 @@ export function BulkImportModule() {
               if (parsedExp) {
                 for (const doc of parsedExp.documents) {
                   const nameLower = doc.name.toLowerCase();
-                  const shouldAnalyze = keywords.some(k => nameLower.includes(k)) || isOfficeDoc(doc.name);
+                  const shouldAnalyze = keywords.some(k => nameLower.includes(k)) || isOfficeDoc(doc.name) || isGeoDoc(doc.name);
                   if (doc.fileObj && shouldAnalyze) {
                     const formData = new FormData();
                     // Tercer argumento = nombre base del archivo. Sin él, el navegador envía

@@ -102,7 +102,7 @@ export function DocumentsModule({ environmentalFileId, clientId, initialDocument
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,application/pdf"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.kml,.kmz,application/pdf"
           className="hidden"
           onChange={handleFileSelected}
         />

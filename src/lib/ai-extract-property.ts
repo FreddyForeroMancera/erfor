@@ -12,6 +12,7 @@ export type ExtractedPropertyData = {
   address?: string | null;
   representative?: string | null;
   type?: string | null;
+  coordinates?: string | null;
 };
 
 export function selectKeyDocument(documents: any[]) {
@@ -47,7 +48,8 @@ Responde SOLO con un objeto JSON válido con esta estructura exacta, sin texto a
   "owner": "Propietario si aparece, sino null.",
   "address": "Dirección física del predio (calle, carrera, vereda con nomenclatura) si aparece, sino null.",
   "representative": "Nombre completo de quien actúa como representante legal del cliente/solicitante (persona jurídica) si aparece, sino null.",
-  "type": "Infiere el TIPO DE PERMISO o TRÁMITE del documento (ej. 'Concesión de aguas', 'Vertimiento', 'Ocupación de cauce', 'Sancionatorio', 'Aprovechamiento forestal'). Si no es claro, devuelve null."
+  "type": "Infiere el TIPO DE PERMISO o TRÁMITE del documento (ej. 'Concesión de aguas', 'Vertimiento', 'Ocupación de cauce', 'Sancionatorio', 'Aprovechamiento forestal'). Si no es claro, devuelve null.",
+  "coordinates": "Coordenadas geográficas del predio (latitud/longitud) si aparecen explícitamente en el texto, sino null."
 }
 
 TEXTO DEL DOCUMENTO:
@@ -206,7 +208,8 @@ export async function applyExtractedProperty(
         city: extractedData.city || null,
         village: extractedData.village || null,
         owner: extractedData.owner || null,
-        address: extractedData.address || null
+        address: extractedData.address || null,
+        coordinates: extractedData.coordinates || null
       }
     });
   } else {
@@ -215,6 +218,7 @@ export async function applyExtractedProperty(
     if (!property.realEstateRegistration && extractedData.realEstateRegistration) propertyUpdate.realEstateRegistration = extractedData.realEstateRegistration;
     if (!property.city && extractedData.city) propertyUpdate.city = extractedData.city;
     if (!property.village && extractedData.village) propertyUpdate.village = extractedData.village;
+    if (!property.coordinates && extractedData.coordinates) propertyUpdate.coordinates = extractedData.coordinates;
     if (!property.owner && extractedData.owner) propertyUpdate.owner = extractedData.owner;
     if (!property.address && extractedData.address) propertyUpdate.address = extractedData.address;
     if (Object.keys(propertyUpdate).length > 0) {
