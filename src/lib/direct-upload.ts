@@ -38,9 +38,18 @@ export async function uploadFileDirect(
   }
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+  // supabase-js sube un File dentro de un FormData; el navegador arma un header
+  // Content-Disposition con file.name para esa parte del multipart, y revienta con
+  // "String contains non ISO-8859-1 code point" si el nombre real trae tildes/ñ (común en
+  // documentos legales en español). El path de Storage ya va sanitizado por el servidor;
+  // aquí se envuelve el mismo archivo con un nombre ASCII-only solo para esta llamada — el
+  // nombre real y original se preserva aparte, en el JSON del paso de finalización.
+  const safeUploadName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const fileForUpload = new File([file], safeUploadName, { type: file.type });
+
   const { error: uploadError } = await supabase.storage
     .from("erfor-uploads")
-    .uploadToSignedUrl(urlData.path, urlData.token, file);
+    .uploadToSignedUrl(urlData.path, urlData.token, fileForUpload);
   if (uploadError) throw new Error(`Error subiendo el archivo: ${uploadError.message}`);
 
   const finalizeRes = await fetch("/api/documents/upload", {
