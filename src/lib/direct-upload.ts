@@ -41,7 +41,28 @@ export async function uploadFileDirect(
   // segundo plano (evita además el warning "Multiple GoTrueClient instances detected" al
   // crear un cliente nuevo en cada subida).
   const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    global: {
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (init?.headers) {
+          const sanitizedHeaders: Record<string, string> = {};
+          const headersObj = init.headers as Record<string, string>;
+          console.log("[Supabase Fetch Headers Original]:", { ...headersObj });
+          for (const [key, value] of Object.entries(headersObj)) {
+            const safeKey = key.replace(/[^\x00-\xFF]/g, "");
+            const safeValue = typeof value === "string" ? value.replace(/[^\x00-\xFF]/g, "") : value;
+            if (key !== safeKey || value !== safeValue) {
+              console.warn(
+                `Sanitizando cabecera no-ISO-8859-1 detectada en Supabase Fetch: "${key}" -> "${safeKey}", valor modificado.`
+              );
+            }
+            sanitizedHeaders[safeKey] = safeValue;
+          }
+          init.headers = sanitizedHeaders;
+        }
+        return fetch(input, init);
+      }
+    }
   });
 
   let uploadResult;
