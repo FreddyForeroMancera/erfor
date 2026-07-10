@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { UploadCloud, FolderKanban, Users, FileText, Loader2, CheckCircle2, AlertCircle, AlertOctagon } from "lucide-react";
 import toast from "react-hot-toast";
+import { uploadFileDirect } from "@/lib/direct-upload";
 
 type ParsedDocument = {
   name: string;
@@ -194,27 +195,24 @@ export function BulkImportModule() {
                   const nameLower = doc.name.toLowerCase();
                   const shouldAnalyze = keywords.some(k => nameLower.includes(k)) || isOfficeDoc(doc.name) || isGeoDoc(doc.name);
                   if (doc.fileObj && shouldAnalyze) {
-                    const formData = new FormData();
-                    // Tercer argumento = nombre base del archivo. Sin él, el navegador envía
-                    // el webkitRelativePath completo como filename y se guardaba la ruta
-                    // entera como nombre del documento (rompía el nombre y la deduplicación).
-                    formData.append("file", doc.fileObj, doc.name);
-                    formData.append("environmentalFileId", expNode.id);
-                    formData.append("clientId", clientNode.id);
-                    formData.append("category", "Documento ambiental");
-
                     try {
-                      const uploadRes = await fetch("/api/documents/upload", {
-                        method: "POST",
-                        body: formData
-                      });
-                      if (uploadRes.ok) {
-                        processedKeys++;
-                      } else {
-                        alreadyAnalyzedKeys++;
-                      }
+                      // Sube directo del navegador a Supabase Storage (sin pasar por el body
+                      // de la función serverless), así los PDF escaneados grandes no chocan
+                      // con el límite de 4.5 MB de Vercel. doc.name = nombre base ya aislado
+                      // (doc.fileObj.name trae la ruta relativa completa, no solo el archivo).
+                      await uploadFileDirect(
+                        doc.fileObj,
+                        {
+                          environmentalFileId: expNode.id,
+                          clientId: clientNode.id,
+                          category: "Documento ambiental"
+                        },
+                        doc.name
+                      );
+                      processedKeys++;
                     } catch (e) {
                       console.error("Error subiendo documento clave", e);
+                      alreadyAnalyzedKeys++;
                     }
                   }
                 }

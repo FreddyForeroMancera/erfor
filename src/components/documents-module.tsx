@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Cloud, File, Plus, Loader2, MoreVertical, Search, CheckCircle2, AlertCircle, HardDrive } from "lucide-react";
+import { uploadFileDirect } from "@/lib/direct-upload";
 
 export function DocumentsModule({ environmentalFileId, clientId, initialDocuments }: { environmentalFileId: string, clientId?: string, initialDocuments: any[] }) {
   const [search, setSearch] = useState("");
@@ -27,17 +28,13 @@ export function DocumentsModule({ environmentalFileId, clientId, initialDocument
     setUploading(true);
     const toastId = toast.loading(`Subiendo y analizando "${file.name}"...`);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("environmentalFileId", environmentalFileId);
-      if (clientId) formData.append("clientId", clientId);
-      formData.append("category", "Documento ambiental");
-
-      const res = await fetch("/api/documents/upload", { method: "POST", body: formData });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data?.error || `Error ${res.status} al subir el documento`);
-      }
+      // Sube directo del navegador a Supabase Storage (sin pasar por el body de la función
+      // serverless), así los PDF escaneados grandes no chocan con el límite de 4.5 MB de Vercel.
+      await uploadFileDirect(file, {
+        environmentalFileId,
+        clientId,
+        category: "Documento ambiental"
+      });
       toast.success("Documento subido y analizado", { id: toastId });
       router.refresh();
     } catch (err: any) {
