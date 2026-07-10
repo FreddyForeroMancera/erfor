@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { UploadCloud, FolderKanban, Users, FileText, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { UploadCloud, FolderKanban, Users, FileText, Loader2, CheckCircle2, AlertCircle, AlertOctagon } from "lucide-react";
 import toast from "react-hot-toast";
 
 type ParsedDocument = {
@@ -27,8 +27,14 @@ type ParsedClient = {
 // Tiene prioridad sobre lo que la IA intente extraer de los documentos después.
 const CSV_DATA_FILENAME = "datos.csv";
 
+// Archivos de sistema que los navegadores/SO incluyen en la selección de carpeta y que
+// nunca son documentos reales del cliente; se descartan en silencio, sin reportarlos como
+// "ignorados" (evita ruido en la advertencia de estructura).
+const SYSTEM_JUNK_FILES = [".ds_store", "thumbs.db", "desktop.ini"];
+
 export function BulkImportModule() {
   const [clients, setClients] = useState<ParsedClient[]>([]);
+  const [skippedFiles, setSkippedFiles] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -40,11 +46,12 @@ export function BulkImportModule() {
     if (!files || files.length === 0) return;
 
     setAnalyzing(true);
-    
+
     // Simulate a small delay for UI purposes if it's too fast
     await new Promise(r => setTimeout(r, 500));
 
     const clientMap = new Map<string, ParsedClient>();
+    const skipped: string[] = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -61,9 +68,18 @@ export function BulkImportModule() {
         continue;
       }
 
-      // Expected structure: RootFolder / ClientName / ExpedienteName / StatusFolder / Filename
-      // Minimum required parts to be a valid file in an expediente: Root/Client/Expediente/File
-      if (pathParts.length < 4) continue; // Ignore files in root or client folder directly
+      // Estructura esperada: CarpetaRaiz / Cliente / Expediente / [Estado] / Archivo.
+      // Un archivo que no llega a ese nivel (ej. suelto directo en la carpeta del cliente,
+      // sin subcarpeta de expediente) antes se descartaba en total silencio -> el consultor
+      // veía "Estructura analizada" como si todo hubiera entrado, sin saber que faltaba
+      // algo. Ahora se reporta explícitamente para que decida si reorganiza esa carpeta.
+      if (pathParts.length < 4) {
+        const fileName = pathParts[pathParts.length - 1];
+        if (!SYSTEM_JUNK_FILES.includes(fileName.toLowerCase())) {
+          skipped.push(file.webkitRelativePath);
+        }
+        continue;
+      }
 
       const rootFolder = pathParts[0];
       const clientName = pathParts[1];
@@ -101,12 +117,19 @@ export function BulkImportModule() {
     }
 
     setClients(Array.from(clientMap.values()));
+    setSkippedFiles(skipped);
     setAnalyzing(false);
-    
+
     if (clientMap.size === 0) {
       toast.error("No se encontraron clientes ni expedientes en la estructura de la carpeta.");
     } else {
       toast.success(`Estructura analizada: ${clientMap.size} clientes encontrados.`);
+    }
+    if (skipped.length > 0) {
+      toast.error(
+        `${skipped.length} archivo(s) no encajan en la estructura Cliente/Expediente/Archivo y NO se van a subir. Revisa el detalle abajo.`,
+        { duration: 10000 }
+      );
     }
   };
 
@@ -230,8 +253,8 @@ export function BulkImportModule() {
         <p className="text-slate-600 mb-8 text-center max-w-md">
           Toda la estructura de expedientes y clientes ha sido creada en la base de datos con éxito.
         </p>
-        <button 
-          onClick={() => { setSuccess(false); setClients([]); }}
+        <button
+          onClick={() => { setSuccess(false); setClients([]); setSkippedFiles([]); }}
           className="bg-erfor-green text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition"
         >
           Realizar otra importación
@@ -278,6 +301,30 @@ export function BulkImportModule() {
           </div>
         )}
 
+        {!analyzing && clients.length === 0 && skippedFiles.length > 0 && (
+          <div className="p-8">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-start gap-3">
+                <AlertOctagon className="h-6 w-6 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-semibold text-red-900">
+                    No se detectó ningún cliente/expediente — {skippedFiles.length} archivo(s) fuera de estructura
+                  </h4>
+                  <p className="text-sm text-red-700 mt-1">
+                    La carpeta seleccionada debe ser la raíz que contiene <span className="font-mono">Cliente / Expediente / Archivo</span>.
+                    Si seleccionaste directamente una carpeta de cliente o de expediente, sube un nivel y vuelve a intentar.
+                  </p>
+                  <ul className="mt-3 max-h-40 overflow-y-auto text-xs text-red-800 font-mono space-y-1 bg-white/60 rounded p-2 border border-red-100">
+                    {skippedFiles.slice(0, 50).map((path, i) => (
+                      <li key={i} className="truncate" title={path}>{path}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {!analyzing && clients.length > 0 && (
           <div className="p-8">
             <div className="flex items-center gap-4 mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
@@ -318,9 +365,33 @@ export function BulkImportModule() {
               </div>
             </div>
 
+            {skippedFiles.length > 0 && (
+              <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertOctagon className="h-6 w-6 text-red-500 flex-shrink-0 mt-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-semibold text-red-900">
+                      {skippedFiles.length} archivo(s) NO se van a subir
+                    </h4>
+                    <p className="text-sm text-red-700 mt-1">
+                      La estructura esperada es <span className="font-mono">Cliente / Expediente / Archivo</span> (con una
+                      carpeta de estado opcional entre expediente y archivo). Estos archivos están un nivel más arriba o más
+                      abajo de lo esperado y no se pudieron asociar a un cliente/expediente. Muévelos dentro de la carpeta
+                      de un expediente, o súbelos manualmente después desde la ficha del expediente correspondiente.
+                    </p>
+                    <ul className="mt-3 max-h-40 overflow-y-auto text-xs text-red-800 font-mono space-y-1 bg-white/60 rounded p-2 border border-red-100">
+                      {skippedFiles.map((path, i) => (
+                        <li key={i} className="truncate" title={path}>{path}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-end pt-6 border-t border-slate-200">
-              <button 
-                onClick={() => setClients([])}
+              <button
+                onClick={() => { setClients([]); setSkippedFiles([]); }}
                 className="px-6 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition mr-3"
                 disabled={loading}
               >
