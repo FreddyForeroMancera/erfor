@@ -14,13 +14,17 @@ const nextConfig: NextConfig = {
     // carga su worker (pdf.worker.mjs) con una ruta dinámica que el tracer no sigue; sin
     // forzar su inclusión, getText() falla con "Setting up fake worker failed: Cannot
     // find module .../pdf.worker.mjs" y la extracción cae al fallback.
+    // También agregamos tesseract.js-core para incluir las dependencias de WASM requeridas
+    // por Tesseract durante el OCR.
     "/api/documents/upload": [
       "./node_modules/@napi-rs/canvas-linux-*/**/*",
-      "./node_modules/pdf-parse/node_modules/pdfjs-dist/legacy/build/**/*"
+      "./node_modules/pdf-parse/node_modules/pdfjs-dist/legacy/build/**/*",
+      "./node_modules/tesseract.js-core/**/*"
     ],
     "/api/portal/upload": [
       "./node_modules/@napi-rs/canvas-linux-*/**/*",
-      "./node_modules/pdf-parse/node_modules/pdfjs-dist/legacy/build/**/*"
+      "./node_modules/pdf-parse/node_modules/pdfjs-dist/legacy/build/**/*",
+      "./node_modules/tesseract.js-core/**/*"
     ]
   },
   // Paquetes con binarios nativos / workers propios: se cargan desde node_modules en

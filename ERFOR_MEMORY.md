@@ -387,11 +387,12 @@ String contains non ISO-8859-1 code point.` Archivos más chicos (varios ya subi
   1. Se modificó `direct-upload.ts` para convertir el archivo en un `ArrayBuffer` en memoria (`await file.arrayBuffer()`). Esto evita el uso de `FormData` y envía la petición HTTP `PUT` directamente como un body binario limpio.
   2. Se reemplazó el uso de la API de `fetch` del navegador por un canal de bajo nivel mediante **`XMLHttpRequest` (XHR)** directo. Esto permite configurar cabeceras manualmente una a una mediante `xhr.setRequestHeader`, saltándose por completo las validaciones de `RequestInit.headers` de la API de `fetch` y esquivando cualquier interceptor/monkeypatch que las extensiones o softwares corporativos apliquen sobre `window.fetch`.
   3. Se incluyó una sanitización proactiva de todos los valores de cabeceras en el cliente para garantizar que no contengan caracteres fuera de `\x00-\xFF` (ISO-8859-1).
+  4. Se corrigió un error fatal en el procesamiento serverless de Vercel (`504 Gateway Timeout` por crash de Tesseract WASM). El PDF de 33MB, al ser escaneado (sin capa de texto), dispara el fallback de OCR con Tesseract.js. Vercel no incluía el binario `.wasm` de `tesseract.js-core` en el empaquetado final de la función debido al tree-shaking dinámico de Next.js, lo que hacía que fallara con `ENOENT: no such file or directory, open tesseract-core-relaxedsimd.wasm`. Se agregó `"./node_modules/tesseract.js-core/**/*"` al bloque `outputFileTracingIncludes` en `next.config.ts` para forzar su inclusión en las rutas de subida.
 - **Verificación**: `npm run typecheck` pasó con éxito localmente.
 - **Despliegue**: El usuario realiza el commit y push manual desde su terminal para detonar el despliegue automático en Vercel.
 
 ### Siguientes pasos concretos (Actualizado 10-Jul-2026)
-1. Hacer git commit y git push del cambio que migra a `XMLHttpRequest`, y reintentar la subida del archivo real de 33MB.
+1. Hacer git commit y git push de los cambios en `next.config.ts` y `ERFOR_MEMORY.md`, y reintentar la subida del archivo real de 33MB.
 2. Si es exitoso, verificar que el flujo de procesamiento posterior (OCR/extracción) se complete en el servidor.
 3. Probar KML/KMZ con archivos geoespaciales reales del cliente.
 4. Confirmar `GEMINI_API_KEY` en el entorno Preview de Vercel.
