@@ -30,35 +30,69 @@ export async function uploadFileDirect(
   const urlData = await urlRes.json();
   if (!urlRes.ok) throw new Error(urlData?.error || "No se pudo preparar la subida");
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || "").trim().replace(/[^\x00-\xFF]/g, "");
+  const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "").trim().replace(/[^\x00-\xFF]/g, "");
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error("Supabase no está configurado en el navegador (NEXT_PUBLIC_SUPABASE_URL/ANON_KEY).");
   }
 
   try {
-    // Para archivos grandes en producción, el cliente de Supabase (storage-js) puede fallar
-    // internamente al manipular cabeceras nativas (Headers Constructor) arrojando:
-    // "Failed to execute 'set' on 'Headers': String contains non ISO-8859-1 code point."
-    // Para evitarlo por completo, hacemos la subida mediante un fetch PUT directo/nativo
-    // a la URL firmada.
+    // Para archivos grandes en producción, el cliente de Supabase (storage-js) o incluso el propio
+    // fetch nativo del navegador puede verse afectado por extensiones o filtros de red (antivirus, DLP)
+    // que interceptan la llamada y fallan internamente al manipular cabeceras, arrojando:
+    // "Failed to execute 'fetch' on 'Window': Failed to read the 'headers' property from 'RequestInit': String contains non ISO-8859-1 code point."
+    // Para evitarlo y saltarnos cualquier monkeypatch o interceptor de 'fetch', usamos XMLHttpRequest directo
+    // que es un API más de bajo nivel y no pasa por el mismo flujo de RequestInit de 'fetch'.
     const fileArrayBuffer = await file.arrayBuffer();
-    const uploadRes = await fetch(urlData.signedUrl, {
-      method: "PUT",
-      headers: {
-        "apikey": supabaseAnonKey,
-        "Authorization": `Bearer ${supabaseAnonKey}`,
-        "Content-Type": file.type || "application/octet-stream",
-        "cache-control": "max-age=3600",
-        "x-upsert": "false"
-      },
-      body: fileArrayBuffer
+    const cleanContentType = (file.type || "application/octet-stream").trim().replace(/[^\x00-\xFF]/g, "");
+
+    const headersConfig: Record<string, string> = {
+      "apikey": supabaseAnonKey,
+      "Authorization": `Bearer ${supabaseAnonKey}`,
+      "Content-Type": cleanContentType,
+      "cache-control": "max-age=3600",
+      "x-upsert": "false"
+    };
+
+    console.log("[Diagnostic] Attempting upload via XMLHttpRequest PUT to:", urlData.signedUrl);
+    console.log("[Diagnostic] Headers being passed:", { ...headersConfig });
+    
+    // Verificación proactiva por consola
+    for (const [key, value] of Object.entries(headersConfig)) {
+      for (let i = 0; i < key.length; i++) {
+        if (key.charCodeAt(i) > 255) {
+          console.error(`[Diagnostic] Key "${key}" has non-ISO-8859-1 character at index ${i}: code=${key.charCodeAt(i)}`);
+        }
+      }
+      for (let i = 0; i < value.length; i++) {
+        if (value.charCodeAt(i) > 255) {
+          console.error(`[Diagnostic] Value for key "${key}" has non-ISO-8859-1 character at index ${i}: code=${value.charCodeAt(i)}`);
+        }
+      }
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", urlData.signedUrl, true);
+    
+    // Configurar cabeceras una a una
+    for (const [key, value] of Object.entries(headersConfig)) {
+      xhr.setRequestHeader(key, value);
+    }
+
+    const uploadPromise = new Promise<void>((resolve, reject) => {
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          reject(new Error(`Código de estado HTTP ${xhr.status}: ${xhr.responseText || xhr.statusText}`));
+        }
+      };
+      xhr.onerror = () => reject(new Error("Error de red en XMLHttpRequest"));
+      xhr.onabort = () => reject(new Error("Subida abortada"));
     });
 
-    if (!uploadRes.ok) {
-      const responseText = await uploadRes.text().catch(() => "");
-      throw new Error(`Código de estado HTTP ${uploadRes.status}: ${responseText || uploadRes.statusText}`);
-    }
+    xhr.send(fileArrayBuffer);
+    await uploadPromise;
   } catch (thrown: any) {
     const detail = [thrown?.name, thrown?.message, thrown?.cause?.message]
       .filter(Boolean)
