@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
 import { Bot, Send, User, Upload, Search, FileText, Zap, ChevronRight, Loader2 } from "lucide-react";
 
 type Message = {
@@ -11,6 +12,7 @@ type Message = {
 
 export function IaAssistantModule() {
   const [query, setQuery] = useState("");
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -26,25 +28,34 @@ export function IaAssistantModule() {
     { title: "Generar reporte", icon: Zap, text: "Crear borrador del reporte mensual de vertimientos" }
   ];
 
-  const handleSend = (text: string) => {
+  const handleSend = async (text: string) => {
     if (!text.trim()) return;
     const newMsg: Message = { id: Date.now().toString(), role: "user", content: text };
     setMessages(prev => [...prev, newMsg]);
     setQuery("");
     setLoading(true);
 
-    // Simulador de respuesta
-    setTimeout(() => {
-      setMessages(prev => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: "Entendido. Estoy analizando tu solicitud en la base de datos de expedientes y la matriz normativa...\n\n(Esta es una respuesta simulada para demostración. En producción, la IA procesará la orden, consultará RAG de documentos y entregará la información estructurada)."
-        }
-      ]);
+    try {
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, conversationId })
+      });
+      const json = await response.json();
+
+      if (response.ok) {
+        setConversationId(json.conversationId);
+        const fuentes = (json.sources || []).length > 0 ? `\n\nFuentes: ${json.sources.join(", ")}` : "";
+        setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: "assistant", content: `${json.message}${fuentes}` }]);
+      } else {
+        toast.error(json.error || "No fue posible consultar el asistente.");
+        setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: "assistant", content: json.error || "No fue posible consultar el asistente." }]);
+      }
+    } catch (err) {
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: "assistant", content: "Error de conexión con el asistente." }]);
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (

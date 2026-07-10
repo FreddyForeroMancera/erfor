@@ -1,12 +1,30 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Bot, SendHorizonal, X, Loader2, Sparkles } from "lucide-react";
 
 type Message = {
   role: "user" | "ai";
   content: string;
 };
+
+/**
+ * Detecta si la página actual es la ficha de un cliente o de un expediente a partir de la
+ * URL (/clientes/[id], /expedientes/[id]), para que el asistente pueda acotar el contexto
+ * a "este" cliente/expediente en vez de traer siempre datos genéricos de toda la
+ * plataforma. Sin esto, /api/ai/chat recibía siempre los mismos params vacíos sin
+ * importar en qué pantalla estuviera el usuario.
+ */
+function useCurrentEntityFromPath() {
+  const pathname = usePathname();
+  const clientMatch = pathname.match(/^\/clientes\/([^/]+)/);
+  const expedienteMatch = pathname.match(/^\/expedientes\/([^/]+)/);
+  return {
+    clientId: clientMatch ? clientMatch[1] : null,
+    environmentalFileId: expedienteMatch ? expedienteMatch[1] : null
+  };
+}
 
 export function AiPanel() {
   const [open, setOpen] = useState(false);
@@ -17,12 +35,20 @@ export function AiPanel() {
   ]);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { clientId, environmentalFileId } = useCurrentEntityFromPath();
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, loading]);
+
+  // El conversationId queda fijo al cliente/expediente con el que se creó (el backend
+  // nunca lo reasigna). Si el usuario navega a otro cliente sin cerrar el panel, hay que
+  // arrancar una conversación nueva o seguiría acotada al cliente anterior.
+  useEffect(() => {
+    setConversationId(null);
+  }, [clientId, environmentalFileId]);
 
   async function ask(event?: React.FormEvent, promptOverride?: string) {
     event?.preventDefault();
@@ -37,7 +63,7 @@ export function AiPanel() {
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: textToUse, conversationId })
+        body: JSON.stringify({ message: textToUse, conversationId, clientId, environmentalFileId })
       });
       const json = await response.json();
       
@@ -73,7 +99,9 @@ export function AiPanel() {
               </span>
               <div>
                 <h2 className="font-semibold">Asistente IA</h2>
-                <p className="text-sm text-white/68">Especialista en cumplimiento</p>
+                <p className="text-sm text-white/68">
+                  {environmentalFileId ? "Enfocado en este expediente" : clientId ? "Enfocado en este cliente" : "Contexto general de la plataforma"}
+                </p>
               </div>
             </div>
             <button onClick={() => setOpen(false)} aria-label="Cerrar asistente" className="rounded-md p-1 hover:bg-white/10 transition">
