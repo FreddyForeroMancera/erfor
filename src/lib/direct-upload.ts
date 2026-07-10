@@ -36,7 +36,13 @@ export async function uploadFileDirect(
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error("Supabase no está configurado en el navegador (NEXT_PUBLIC_SUPABASE_URL/ANON_KEY).");
   }
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  // Solo se usa Storage, nunca Auth: se desactiva la persistencia/renovación de sesión para
+  // que GoTrueClient no intente leer/escribir localStorage ni haga llamadas de red en
+  // segundo plano (evita además el warning "Multiple GoTrueClient instances detected" al
+  // crear un cliente nuevo en cada subida).
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+  });
 
   // supabase-js sube un File dentro de un FormData; el navegador arma un header
   // Content-Disposition con file.name para esa parte del multipart, y revienta con
@@ -47,10 +53,34 @@ export async function uploadFileDirect(
   const safeUploadName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
   const fileForUpload = new File([file], safeUploadName, { type: file.type });
 
-  const { error: uploadError } = await supabase.storage
-    .from("erfor-uploads")
-    .uploadToSignedUrl(urlData.path, urlData.token, fileForUpload);
-  if (uploadError) throw new Error(`Error subiendo el archivo: ${uploadError.message}`);
+  let uploadResult;
+  try {
+    uploadResult = await supabase.storage
+      .from("erfor-uploads")
+      .uploadToSignedUrl(urlData.path, urlData.token, fileForUpload);
+  } catch (thrown: any) {
+    // Diagnóstico: el error "Headers.set / non ISO-8859-1" que se vio en producción no se
+    // pudo reproducir ni con el nombre real del archivo (sin tildes/ñ) ni con la clave anon
+    // (limpia o con comillas/espacios simulados) en un Chrome real. Se agrega el máximo
+    // detalle posible al mensaje (nombre de error, causa anidada, JSON completo) para que
+    // el próximo fallo real se pueda diagnosticar sin depender de que el usuario abra DevTools.
+    const detail = [thrown?.name, thrown?.message, thrown?.cause?.message]
+      .filter(Boolean)
+      .join(" | ");
+    throw new Error(
+      `Error subiendo el archivo (excepción): ${detail || String(thrown)} | fileName="${fileName}" (${file.size} bytes, tipo="${file.type}")`
+    );
+  }
+  const { error: uploadError } = uploadResult;
+  if (uploadError) {
+    const anyErr = uploadError as any;
+    const detail = [anyErr?.name, anyErr?.message, anyErr?.cause?.message, anyErr?.originalError?.message]
+      .filter(Boolean)
+      .join(" | ");
+    throw new Error(
+      `Error subiendo el archivo: ${detail} | fileName="${fileName}" (${file.size} bytes, tipo="${file.type}")`
+    );
+  }
 
   const finalizeRes = await fetch("/api/documents/upload", {
     method: "POST",
