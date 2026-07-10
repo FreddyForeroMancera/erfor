@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Building, Bell, Bot, Plug, Shield, Save, User, Mail, Smartphone, Globe, Lock, UploadCloud } from "lucide-react";
 import toast from "react-hot-toast";
 import { BulkImportModule } from "@/components/bulk-import-module";
+import { ReanalyzeAllModule } from "@/components/reanalyze-all-module";
 
 export function SettingsModule() {
   const [activeTab, setActiveTab] = useState("perfil");
@@ -244,6 +245,7 @@ export function SettingsModule() {
           {activeTab === "importacion" && (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
               <BulkImportModule />
+              <ReanalyzeAllModule />
             </div>
           )}
 
