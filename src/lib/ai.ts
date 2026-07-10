@@ -5,20 +5,47 @@ export async function buildContext(params: {
   projectId?: string | null;
   environmentalFileId?: string | null;
 }) {
-  const [client, project, file, requirements, documents, obligations, alerts] = await Promise.all([
+  const [client, project, file] = await Promise.all([
     params.clientId ? prisma.client.findUnique({ where: { id: params.clientId } }) : null,
     params.projectId ? prisma.project.findUnique({ where: { id: params.projectId } }) : null,
-    params.environmentalFileId ? prisma.environmentalFile.findUnique({ where: { id: params.environmentalFileId } }) : null,
-    prisma.requirement.findMany({ where: compactWhere(params), orderBy: { createdAt: "desc" }, take: 5 }),
-    prisma.document.findMany({ where: compactWhere(params), orderBy: { createdAt: "desc" }, take: 5 }),
-    prisma.environmentalObligation.findMany({ where: compactWhere(params), orderBy: { dueDate: "asc" }, take: 8 }),
-    prisma.alert.findMany({ where: compactWhere(params), orderBy: { dueDate: "asc" }, take: 8 })
+    params.environmentalFileId ? prisma.environmentalFile.findUnique({ where: { id: params.environmentalFileId } }) : null
+  ]);
+
+  // Requirement/Document/Alert sí tienen environmentalFileId; EnvironmentalObligation NO
+  // (solo clientId/projectId en el schema) -> no puede compartir el mismo `where` que las
+  // otras tres o Prisma rechaza la columna. Si solo tenemos el expediente (caso típico: el
+  // asistente abierto desde la ficha de un expediente), usamos el clientId del expediente
+  // ya cargado para igual acotar las obligaciones a "este" cliente en vez de traer las de
+  // toda la plataforma.
+  const scopedWhere = compactWhere(
+    { clientId: params.clientId, projectId: params.projectId, environmentalFileId: params.environmentalFileId },
+    ["clientId", "projectId", "environmentalFileId"]
+  );
+  const obligationWhere = compactWhere(
+    { clientId: params.clientId || file?.clientId || null, projectId: params.projectId },
+    ["clientId", "projectId"]
+  );
+
+  const [requirements, documents, obligations, alerts] = await Promise.all([
+    prisma.requirement.findMany({ where: scopedWhere, orderBy: { createdAt: "desc" }, take: 5 }),
+    prisma.document.findMany({ where: scopedWhere, orderBy: { createdAt: "desc" }, take: 5 }),
+    prisma.environmentalObligation.findMany({ where: obligationWhere, orderBy: { dueDate: "asc" }, take: 8 }),
+    prisma.alert.findMany({ where: scopedWhere, orderBy: { dueDate: "asc" }, take: 8 })
   ]);
   return { client, project, file, requirements, documents, obligations, alerts };
 }
 
-function compactWhere(params: Record<string, string | null | undefined>) {
-  return Object.fromEntries(Object.entries(params).filter(([, value]) => Boolean(value)));
+// Lista blanca explícita por consulta: si alguien vuelve a pasar campos que no son
+// contexto de filtrado (message/conversationId, ej.), o un campo que no existe en ese
+// modelo puntual (como environmentalFileId en EnvironmentalObligation), se descartan aquí
+// en vez de colarse a un `where` de Prisma como columna inexistente.
+function compactWhere(
+  params: Record<string, unknown>,
+  allowedKeys: readonly string[]
+) {
+  return Object.fromEntries(
+    allowedKeys.filter((key) => Boolean(params[key])).map((key) => [key, params[key]])
+  );
 }
 
 export async function answerWithAI(question: string, params: { clientId?: string | null; projectId?: string | null; environmentalFileId?: string | null }) {

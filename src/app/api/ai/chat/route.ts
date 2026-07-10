@@ -45,7 +45,15 @@ export async function POST(request: Request) {
     }
 
     await prisma.aIMessage.create({ data: { conversationId: conversation.id, role: "user", content: input.message } });
-    const answer = await answerWithAI(input.message, input);
+    // Solo estos 3 campos son contexto de filtrado válido para buildContext/compactWhere.
+    // Pasar `input` completo (como se hacía antes) filtraba también por `message` y
+    // `conversationId` -> Prisma los rechazaba como columnas inexistentes en cada
+    // findMany, y el chat crasheaba en TODA consulta antes de siquiera intentar la IA.
+    const answer = await answerWithAI(input.message, {
+      clientId: input.clientId,
+      projectId: input.projectId,
+      environmentalFileId: input.environmentalFileId
+    });
     await prisma.aIMessage.create({
       data: { conversationId: conversation.id, role: "assistant", content: answer.content, sources: JSON.stringify(answer.sources) }
     });
