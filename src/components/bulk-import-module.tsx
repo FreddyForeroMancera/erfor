@@ -27,10 +27,20 @@ type ParsedClient = {
 // Tiene prioridad sobre lo que la IA intente extraer de los documentos después.
 const CSV_DATA_FILENAME = "datos.csv";
 
-// Archivos de sistema que los navegadores/SO incluyen en la selección de carpeta y que
-// nunca son documentos reales del cliente; se descartan en silencio, sin reportarlos como
+// Archivos de sistema / temporales de Office que el SO o Word/Excel crean automáticamente
+// y que nunca son documentos reales del cliente (el archivo real, con el mismo nombre sin
+// el prefijo, es el que sí importa). Se descartan en silencio, sin reportarlos como
 // "ignorados" (evita ruido en la advertencia de estructura).
-const SYSTEM_JUNK_FILES = [".ds_store", "thumbs.db", "desktop.ini"];
+const SYSTEM_JUNK_EXACT = [".ds_store", "thumbs.db", "desktop.ini"];
+function isJunkFile(fileName: string): boolean {
+  const lower = fileName.toLowerCase();
+  if (SYSTEM_JUNK_EXACT.includes(lower)) return true;
+  // Archivo de bloqueo de Word/Excel: "~$Nombre real.docx" mientras alguien lo tiene abierto.
+  if (fileName.startsWith("~$")) return true;
+  // Archivo temporal de recuperación/autoguardado de Word: "~WRL0001.tmp".
+  if (/^~wrl\d+\.tmp$/i.test(fileName)) return true;
+  return false;
+}
 
 export function BulkImportModule() {
   const [clients, setClients] = useState<ParsedClient[]>([]);
@@ -56,6 +66,13 @@ export function BulkImportModule() {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const pathParts = file.webkitRelativePath.split("/");
+      const currentFileName = pathParts[pathParts.length - 1];
+
+      // Filtro universal: un archivo de bloqueo/temporal de Office (ej. "~$Auto de
+      // inicio.docx") o de sistema puede aparecer en CUALQUIER nivel, incluso dentro de
+      // una carpeta de expediente válida. Si no se descarta aquí, se subiría como si
+      // fuera un documento real del cliente.
+      if (isJunkFile(currentFileName)) continue;
 
       // Archivo de datos preestablecidos directamente en la carpeta del cliente:
       // RootFolder / ClientName / datos.csv
@@ -74,10 +91,7 @@ export function BulkImportModule() {
       // veía "Estructura analizada" como si todo hubiera entrado, sin saber que faltaba
       // algo. Ahora se reporta explícitamente para que decida si reorganiza esa carpeta.
       if (pathParts.length < 4) {
-        const fileName = pathParts[pathParts.length - 1];
-        if (!SYSTEM_JUNK_FILES.includes(fileName.toLowerCase())) {
-          skipped.push(file.webkitRelativePath);
-        }
+        skipped.push(file.webkitRelativePath);
         continue;
       }
 
