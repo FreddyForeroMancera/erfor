@@ -1,6 +1,5 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
 
 /**
  * Sube un archivo DIRECTO desde el navegador a Supabase Storage, sin pasar por el body de
@@ -36,68 +35,36 @@ export async function uploadFileDirect(
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error("Supabase no está configurado en el navegador (NEXT_PUBLIC_SUPABASE_URL/ANON_KEY).");
   }
-  // Solo se usa Storage, nunca Auth: se desactiva la persistencia/renovación de sesión para
-  // que GoTrueClient no intente leer/escribir localStorage ni haga llamadas de red en
-  // segundo plano (evita además el warning "Multiple GoTrueClient instances detected" al
-  // crear un cliente nuevo en cada subida).
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    global: {
-      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
-        if (init?.headers) {
-          const sanitizedHeaders: Record<string, string> = {};
-          const headersObj = init.headers as Record<string, string>;
-          console.log("[Supabase Fetch Headers Original]:", { ...headersObj });
-          for (const [key, value] of Object.entries(headersObj)) {
-            const safeKey = key.replace(/[^\x00-\xFF]/g, "");
-            const safeValue = typeof value === "string" ? value.replace(/[^\x00-\xFF]/g, "") : value;
-            if (key !== safeKey || value !== safeValue) {
-              console.warn(
-                `Sanitizando cabecera no-ISO-8859-1 detectada en Supabase Fetch: "${key}" -> "${safeKey}", valor modificado.`
-              );
-            }
-            sanitizedHeaders[safeKey] = safeValue;
-          }
-          init.headers = sanitizedHeaders;
-        }
-        return fetch(input, init);
-      }
-    }
-  });
 
-  let uploadResult;
   try {
-    // Para evitar problemas de multipart/FormData con antivirus, proxies o firewalls en
-    // archivos grandes (que causan errores de codificación en los headers o bloqueos),
-    // convertimos el archivo a ArrayBuffer. Al no ser instancia de Blob/File, supabase-js
-    // lo envía como un cuerpo binario directo (PUT raw) con headers limpios, evitando usar FormData.
+    // Para archivos grandes en producción, el cliente de Supabase (storage-js) puede fallar
+    // internamente al manipular cabeceras nativas (Headers Constructor) arrojando:
+    // "Failed to execute 'set' on 'Headers': String contains non ISO-8859-1 code point."
+    // Para evitarlo por completo, hacemos la subida mediante un fetch PUT directo/nativo
+    // a la URL firmada.
     const fileArrayBuffer = await file.arrayBuffer();
-    uploadResult = await supabase.storage
-      .from("erfor-uploads")
-      .uploadToSignedUrl(urlData.path, urlData.token, fileArrayBuffer, {
-        contentType: file.type || "application/octet-stream"
-      });
+    const uploadRes = await fetch(urlData.signedUrl, {
+      method: "PUT",
+      headers: {
+        "apikey": supabaseAnonKey,
+        "Authorization": `Bearer ${supabaseAnonKey}`,
+        "Content-Type": file.type || "application/octet-stream",
+        "cache-control": "max-age=3600",
+        "x-upsert": "false"
+      },
+      body: fileArrayBuffer
+    });
+
+    if (!uploadRes.ok) {
+      const responseText = await uploadRes.text().catch(() => "");
+      throw new Error(`Código de estado HTTP ${uploadRes.status}: ${responseText || uploadRes.statusText}`);
+    }
   } catch (thrown: any) {
-    // Diagnóstico: el error "Headers.set / non ISO-8859-1" que se vio en producción no se
-    // pudo reproducir ni con el nombre real del archivo (sin tildes/ñ) ni con la clave anon
-    // (limpia o con comillas/espacios simulados) en un Chrome real. Se agrega el máximo
-    // detalle posible al mensaje (nombre de error, causa anidada, JSON completo) para que
-    // el próximo fallo real se pueda diagnosticar sin depender de que el usuario abra DevTools.
     const detail = [thrown?.name, thrown?.message, thrown?.cause?.message]
       .filter(Boolean)
       .join(" | ");
     throw new Error(
-      `Error subiendo el archivo (excepción): ${detail || String(thrown)} | fileName="${fileName}" (${file.size} bytes, tipo="${file.type}")`
-    );
-  }
-  const { error: uploadError } = uploadResult;
-  if (uploadError) {
-    const anyErr = uploadError as any;
-    const detail = [anyErr?.name, anyErr?.message, anyErr?.cause?.message, anyErr?.originalError?.message]
-      .filter(Boolean)
-      .join(" | ");
-    throw new Error(
-      `Error subiendo el archivo: ${detail} | fileName="${fileName}" (${file.size} bytes, tipo="${file.type}")`
+      `Error subiendo el archivo directamente: ${detail || String(thrown)} | fileName="${fileName}" (${file.size} bytes, tipo="${file.type}")`
     );
   }
 
