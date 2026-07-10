@@ -61,24 +61,27 @@ ${text.slice(0, 15000)} // Límite para no exceder contexto
  * Extrae los datos del predio/cliente con IA. Gemini corre primero (nivel gratuito de
  * Google, sin costo hasta la cuota diaria); si no hay GEMINI_API_KEY configurada o la
  * llamada falla, cae a OpenAI como respaldo. Si ninguna de las dos está configurada,
- * se omite la extracción (comportamiento igual al de antes).
+ * se omite la extracción (no rompe el flujo de subida).
  */
 export async function extractPropertyFromText(text: string): Promise<ExtractedPropertyData | null> {
   if (!text || text.trim() === "") return null;
 
   const prompt = buildExtractionPrompt(text);
+  const providers: { key: string | undefined; label: string; call: (p: string) => Promise<ExtractedPropertyData | null> }[] = [
+    { key: process.env.GEMINI_API_KEY, label: "Gemini", call: callGemini },
+    { key: process.env.OPENAI_API_KEY, label: "OpenAI", call: callOpenAI }
+  ];
 
-  if (process.env.GEMINI_API_KEY) {
-    const geminiResult = await callGemini(prompt);
-    if (geminiResult) return geminiResult;
-    console.warn("Gemini no devolvió un resultado utilizable; intentando con OpenAI como respaldo.");
+  let anyConfigured = false;
+  for (const provider of providers) {
+    if (!provider.key) continue;
+    anyConfigured = true;
+    const result = await provider.call(prompt);
+    if (result) return result;
+    console.warn(`${provider.label} no devolvió un resultado utilizable; intentando siguiente proveedor.`);
   }
 
-  if (process.env.OPENAI_API_KEY) {
-    return callOpenAI(prompt);
-  }
-
-  if (!process.env.GEMINI_API_KEY) {
+  if (!anyConfigured) {
     console.warn("No hay GEMINI_API_KEY ni OPENAI_API_KEY configuradas; se omite la extracción con IA.");
   }
   return null;

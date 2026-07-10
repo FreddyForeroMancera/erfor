@@ -52,25 +52,83 @@ ${metadataContext}
 CONTENIDO DE LOS DOCUMENTOS RECIENTES:
 ${documentsContext.slice(0, 20000)}`;
 
+  const aiContent = await callAIChain(prompt);
+  return { content: aiContent || localAnswer(question, context), sources };
+}
+
+/**
+ * Misma cadena de respaldo que la extracción de predios (Gemini -> OpenAI), cada uno solo
+ * si el anterior no está configurado o falla. Si ninguno responde, el llamador cae al
+ * generador de texto por plantillas (localAnswer).
+ */
+async function callAIChain(prompt: string): Promise<string | null> {
+  if (process.env.GEMINI_API_KEY) {
+    const result = await callGeminiChat(prompt);
+    if (result) return result;
+    console.warn("Gemini no devolvió respuesta utilizable para el chat; intentando OpenAI.");
+  }
   if (process.env.OPENAI_API_KEY) {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    return callOpenAiCompatibleChat("https://api.openai.com/v1/chat/completions", process.env.OPENAI_API_KEY, process.env.OPENAI_MODEL || "gpt-4o-mini", prompt, "OpenAI");
+  }
+  return null;
+}
+
+async function callGeminiChat(prompt: string): Promise<string | null> {
+  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "x-goog-api-key": process.env.GEMINI_API_KEY as string,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.3 }
+        })
+      }
+    );
+    if (response.ok) {
+      const json = await response.json();
+      return json.candidates?.[0]?.content?.parts?.[0]?.text || null;
+    }
+    console.error("Gemini API error (chat):", await response.text());
+  } catch (error) {
+    console.error("Error consultando Gemini (chat):", error);
+  }
+  return null;
+}
+
+async function callOpenAiCompatibleChat(
+  url: string,
+  apiKey: string,
+  model: string,
+  prompt: string,
+  label: string
+): Promise<string | null> {
+  try {
+    const response = await fetch(url, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+        model,
         messages: [{ role: "user", content: prompt }]
       })
     });
     if (response.ok) {
       const json = (await response.json()) as { choices?: { message?: { content?: string } }[] };
-      return { content: json.choices?.[0]?.message?.content || localAnswer(question, context), sources };
+      return json.choices?.[0]?.message?.content || null;
     }
+    console.error(`${label} API error (chat):`, await response.text());
+  } catch (error) {
+    console.error(`Error consultando ${label} (chat):`, error);
   }
-
-  return { content: localAnswer(question, context), sources };
+  return null;
 }
 
 function localAnswer(question: string, context: Awaited<ReturnType<typeof buildContext>>) {
