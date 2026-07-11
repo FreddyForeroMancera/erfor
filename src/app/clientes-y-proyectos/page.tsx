@@ -1,15 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { AppShell } from "@/components/app-shell";
 import { FilesModule } from "@/components/files-module";
 import { ClientsModule } from "@/components/clients-module";
+import { useSearchParams } from "next/navigation";
 
-export default function ClientesYProyectosPage() {
+function ClientesYProyectosContent() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const statusParam = searchParams.get("status") || undefined;
+  
   const [activeTab, setActiveTab] = useState<"clientes" | "expedientes">("clientes");
 
+  useEffect(() => {
+    if (tabParam === "expedientes") {
+      setActiveTab("expedientes");
+    } else {
+      setActiveTab("clientes");
+    }
+  }, [tabParam]);
+
   return (
-    <AppShell>
+    <>
       <div className="border-b border-slate-200 bg-white px-4 lg:px-8 pt-4">
         <nav className="-mb-px flex space-x-8" aria-label="Tabs">
           <button
@@ -36,8 +49,22 @@ export default function ClientesYProyectosPage() {
       </div>
 
       <div>
-        {activeTab === "clientes" ? <ClientsModule /> : <FilesModule />}
+        {activeTab === "clientes" ? <ClientsModule /> : <FilesModule status={statusParam} />}
       </div>
+    </>
+  );
+}
+
+export default function ClientesYProyectosPage() {
+  return (
+    <AppShell>
+      <Suspense fallback={
+        <div className="flex h-64 items-center justify-center">
+          <p className="text-sm text-slate-500">Cargando...</p>
+        </div>
+      }>
+        <ClientesYProyectosContent />
+      </Suspense>
     </AppShell>
   );
 }

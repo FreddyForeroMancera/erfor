@@ -3,8 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { Cloud, File, Plus, Loader2, MoreVertical, Search, CheckCircle2, AlertCircle, HardDrive } from "lucide-react";
+import { Cloud, File, Plus, Loader2, Search, CheckCircle2, AlertCircle, HardDrive, Trash2 } from "lucide-react";
 import { uploadFileDirect } from "@/lib/direct-upload";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
+import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal";
 
 export function DocumentsModule({ environmentalFileId, clientId, initialDocuments }: { environmentalFileId: string, clientId?: string, initialDocuments: any[] }) {
   const [search, setSearch] = useState("");
@@ -12,6 +15,42 @@ export function DocumentsModule({ environmentalFileId, clientId, initialDocument
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  const { data: userData } = useSWR<any>("/api/auth/me", fetcher);
+  const currentUser = userData?.user;
+  const canDelete = currentUser?.role === "SUPER_ADMIN" || currentUser?.role === "DIRECTOR_AMBIENTAL";
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState<any>(null);
+
+  const handleDeleteDoc = async () => {
+    if (!selectedDoc) return;
+    setIsDeleting(true);
+    const toastId = toast.loading(`Eliminando "${selectedDoc.name}"...`);
+    try {
+      const res = await fetch(`/api/documents/${selectedDoc.id}`, {
+        method: "DELETE"
+      });
+      if (!res.ok) throw new Error("Error al eliminar el documento");
+      toast.success("Documento eliminado correctamente", { id: toastId });
+      setIsDeleteModalOpen(false);
+      setSelectedDoc(null);
+      router.refresh();
+      
+      // Actualizar cuota
+      fetch("/api/documents/quota")
+        .then(r => r.json())
+        .then(data => {
+          if (!data.error) setQuota(data);
+        })
+        .catch(() => {});
+    } catch (err: any) {
+      toast.error(err.message || "No se pudo eliminar el documento", { id: toastId });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     fetch("/api/documents/quota")
@@ -50,7 +89,8 @@ export function DocumentsModule({ environmentalFileId, clientId, initialDocument
   );
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       {/* Integración Cloud — Próximamente */}
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -175,9 +215,18 @@ export function DocumentsModule({ environmentalFileId, clientId, initialDocument
                     )}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="p-2 text-slate-400 hover:text-erfor-green hover:bg-slate-100 rounded-lg transition">
-                      <MoreVertical className="h-4 w-4" />
-                    </button>
+                    {canDelete && (
+                      <button 
+                        onClick={() => {
+                          setSelectedDoc(doc);
+                          setIsDeleteModalOpen(true);
+                        }}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                        title="Eliminar documento"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))
@@ -186,5 +235,20 @@ export function DocumentsModule({ environmentalFileId, clientId, initialDocument
         </table>
       </div>
     </div>
+
+    <DeleteConfirmationModal
+      isOpen={isDeleteModalOpen}
+      onClose={() => {
+        setIsDeleteModalOpen(false);
+        setSelectedDoc(null);
+      }}
+      onConfirm={handleDeleteDoc}
+      itemName={selectedDoc?.name}
+      title="Eliminar Documento"
+      isDeleting={isDeleting}
+      requireDoubleConfirmation={true}
+      doubleConfirmationLabel="Entiendo que esta acción es permanente, que el archivo físico se eliminará de Supabase Storage y que no se podrá recuperar el texto extraído."
+    />
+  </>
   );
 }

@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { NewExpedienteModal } from "./new-expediente-modal";
 
-export function FilesModule({ clientId }: { clientId?: string }) {
+export function FilesModule({ clientId, status }: { clientId?: string; status?: string }) {
   const { selectedClientId } = useClient();
   const effectiveClientId = clientId || selectedClientId;
   const router = useRouter();
@@ -40,21 +40,21 @@ export function FilesModule({ clientId }: { clientId?: string }) {
       toast.error("Selecciona un cliente primero en la barra superior");
       return;
     }
-    const formData = new FormData(e.currentTarget);
-    const data = {
-      clientId: effectiveClientId,
-      internalCode: formData.get("internalCode"),
-      authority: "CAR Cundinamarca",
-      carRegional: formData.get("carRegional"),
-      type: formData.get("type"),
-    };
-
     setCreating(true);
     try {
+      const data = new FormData(e.currentTarget);
       const res = await fetch("/api/expedientes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: JSON.stringify({
+          clientId: effectiveClientId,
+          internalCode: data.get("internalCode"),
+          officialCode: data.get("officialCode"),
+          authority: data.get("authority"),
+          carRegional: data.get("carRegional"),
+          type: data.get("type"),
+          description: data.get("description"),
+        })
       });
       if (!res.ok) throw new Error("Error al crear expediente");
       toast.success("Expediente creado");
@@ -79,6 +79,7 @@ export function FilesModule({ clientId }: { clientId?: string }) {
 
   const query = new URLSearchParams();
   if (effectiveClientId) query.set("clientId", effectiveClientId);
+  if (status) query.set("status", status);
   if (search) query.set("q", search);
   
   const { data, error, isLoading: loading } = useSWR<any>(`/api/expedientes?${query.toString()}`, fetcher);
@@ -114,6 +115,31 @@ export function FilesModule({ clientId }: { clientId?: string }) {
           </button>
         </div>
       </div>
+
+      {status && (
+        <div className="mb-6 flex">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 border border-sky-100">
+            Filtro de fase: {
+              status === "PREPARATION" ? "En Proceso" :
+              status === "EVALUATION" ? "En Trámite" :
+              status === "APPROVED" ? "Otorgado" :
+              status === "COMPLETED" ? "En Seguimiento" : status
+            }
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                const params = new URLSearchParams(window.location.search);
+                params.delete("status");
+                router.push(`${window.location.pathname}?${params.toString()}`);
+              }}
+              className="text-sky-500 hover:text-sky-700 ml-1 rounded-full p-0.5 hover:bg-sky-100 transition"
+              title="Limpiar filtro"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </span>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center items-center h-64">

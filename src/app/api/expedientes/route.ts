@@ -7,8 +7,11 @@ export async function GET(request: Request) {
     await requireUser();
     const url = new URL(request.url);
     const clientId = url.searchParams.get("clientId");
+    const status = url.searchParams.get("status");
     
-    const where = clientId ? { clientId } : {};
+    const where: any = {};
+    if (clientId) where.clientId = clientId;
+    if (status) where.status = status;
     
     const items = await prisma.environmentalFile.findMany({
       where,

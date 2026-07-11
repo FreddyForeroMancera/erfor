@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { AlertTriangle, Loader2 } from "lucide-react";
 
@@ -11,6 +11,8 @@ interface DeleteConfirmationModalProps {
   itemName?: string;
   title?: string;
   isDeleting?: boolean;
+  requireDoubleConfirmation?: boolean;
+  doubleConfirmationLabel?: string;
 }
 
 export function DeleteConfirmationModal({ 
@@ -19,8 +21,19 @@ export function DeleteConfirmationModal({
   onConfirm, 
   itemName = "este elemento", 
   title = "Confirmar Eliminación",
-  isDeleting = false
+  isDeleting = false,
+  requireDoubleConfirmation = false,
+  doubleConfirmationLabel = "Entiendo que esta acción es permanente y no se podrá deshacer."
 }: DeleteConfirmationModalProps) {
+  const [confirmed, setConfirmed] = useState(false);
+
+  // Reset confirmation state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setConfirmed(false);
+    }
+  }, [isOpen]);
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-[100]" onClose={() => !isDeleting && onClose()}>
@@ -61,7 +74,24 @@ export function DeleteConfirmationModal({
                       Esta acción no se puede deshacer.
                     </p>
                   </div>
+
+                  {requireDoubleConfirmation && (
+                    <div className="mt-4 bg-red-50/50 border border-red-100 rounded-lg p-3 text-left">
+                      <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                        <input 
+                          type="checkbox" 
+                          className="mt-0.5 h-4 w-4 rounded border-red-300 text-red-600 focus:ring-red-500 cursor-pointer"
+                          checked={confirmed}
+                          onChange={(e) => setConfirmed(e.target.checked)}
+                        />
+                        <span className="text-xs font-semibold text-slate-700 leading-tight">
+                          {doubleConfirmationLabel}
+                        </span>
+                      </label>
+                    </div>
+                  )}
                 </div>
+                
                 <div className="bg-slate-50 px-6 py-4 flex items-center justify-center gap-3 border-t border-slate-100">
                   <button
                     type="button"
@@ -73,8 +103,8 @@ export function DeleteConfirmationModal({
                   </button>
                   <button
                     type="button"
-                    disabled={isDeleting}
-                    className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none disabled:opacity-70 transition"
+                    disabled={isDeleting || (requireDoubleConfirmation && !confirmed)}
+                    className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition"
                     onClick={onConfirm}
                   >
                     {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}

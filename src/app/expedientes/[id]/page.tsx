@@ -4,8 +4,9 @@ import { useState, use, Fragment } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { AppShell } from "@/components/app-shell";
-import { ArrowLeft, Loader2, FileText, CheckCircle2, Clock, AlertTriangle, Cloud, Settings, Building2, MapPin, Pencil, X, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, FileText, CheckCircle2, Clock, AlertTriangle, Cloud, Settings, Building2, MapPin, Pencil, X, Sparkles, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Dialog, Transition } from "@headlessui/react";
 import toast from "react-hot-toast";
 import { DocumentsModule } from "@/components/documents-module";
@@ -13,11 +14,25 @@ import { ObligationsModule } from "@/components/obligations-module";
 import { ConsumptionReportsModule } from "@/components/consumption-reports-module";
 import { PueaaModule } from "@/components/pueaa-module";
 import { ExpedienteStatusTracker } from "@/components/expediente-status-tracker";
+import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal";
 
 export default function ExpedienteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
+  const router = useRouter();
   const { data: file, error, isLoading, mutate } = useSWR<any>(`/api/expedientes/${resolvedParams.id}`, fetcher);
+  
+  const { data: userData } = useSWR<any>("/api/auth/me", fetcher);
+  const currentUser = userData?.user;
+  const canDeleteUser = currentUser?.role === "SUPER_ADMIN" || currentUser?.role === "DIRECTOR_AMBIENTAL";
+
+  const { data: clientData } = useSWR<any>(
+    file?.clientId ? `/api/clients/${file.clientId}` : null,
+    fetcher
+  );
+  const clientProjects = clientData?.client?.projects || [];
+
   const [activeTab, setActiveTab] = useState<"resumen" | "documentos" | "obligaciones">("resumen");
+  const [showNewProjectField, setShowNewProjectField] = useState(false);
   const [isEditFileModalOpen, setIsEditFileModalOpen] = useState(false);
   const [isSavingFile, setIsSavingFile] = useState(false);
   const [fileEditForm, setFileEditForm] = useState<any>({});
@@ -28,6 +43,26 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
   const [isSavingClient, setIsSavingClient] = useState(false);
   const [clientEditForm, setClientEditForm] = useState<any>({});
   const [isReanalyzing, setIsReanalyzing] = useState(false);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteFile = async () => {
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/expedientes/${file.id}`, {
+        method: "DELETE"
+      });
+      if (!res.ok) throw new Error("Error al eliminar el expediente");
+      toast.success("Expediente eliminado correctamente");
+      setIsDeleteModalOpen(false);
+      router.push(`/clientes/${file.clientId}`);
+    } catch (err: any) {
+      toast.error(err.message || "No se pudo eliminar el expediente");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleReanalyze = async () => {
     setIsReanalyzing(true);
@@ -140,13 +175,24 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
                   nextDeadline: file.nextDeadline ? file.nextDeadline.slice(0, 10) : "",
                   description: file.description || "",
                   timeline: file.timeline || "",
+                  status: file.status || "DRAFT",
+                  projectId: file.projectId || "NONE",
                 });
+                setShowNewProjectField(false);
                 setIsEditFileModalOpen(true);
               }}
               className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm"
             >
               <Settings className="h-4 w-4" /> Configuración
             </button>
+            {canDeleteUser && (
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-100 hover:border-red-300 transition shadow-sm"
+              >
+                <Trash2 className="h-4 w-4" /> Eliminar
+              </button>
+            )}
           </div>
         </div>
 
@@ -415,7 +461,7 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
                     e.preventDefault();
                     setIsSavingFile(true);
                     try {
-                      const res = await fetch(`/api/environmentalFiles/${file.id}`, {
+                      const res = await fetch(`/api/expedientes/${file.id}`, {
                         method: "PATCH",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(fileEditForm),
@@ -487,16 +533,87 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Línea de Tiempo / Notas de Seguimiento</label>
                         <textarea rows={3} value={fileEditForm.timeline || ""} onChange={e => setFileEditForm((f: any) => ({ ...f, timeline: e.target.value }))} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green resize-none" />
                       </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Fase / Estado *</label>
+                        <select 
+                          required
+                          value={fileEditForm.status || "DRAFT"} 
+                          onChange={e => setFileEditForm((f: any) => ({ ...f, status: e.target.value }))} 
+                          className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green bg-white"
+                        >
+                          <option value="DRAFT">Cotización (Borrador)</option>
+                          <option value="PREPARATION">En Proceso (Preparación y Revisión)</option>
+                          <option value="EVALUATION">En Trámite (Ante autoridades)</option>
+                          <option value="APPROVED">Otorgado (Permisos y Licencias)</option>
+                          <option value="COMPLETED">En Seguimiento (Vigilancia de Obligaciones)</option>
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Proyecto Asociado</label>
+                        <select 
+                          value={fileEditForm.projectId || (showNewProjectField ? "NEW" : "NONE")}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "NEW") {
+                              setShowNewProjectField(true);
+                              setFileEditForm((f: any) => ({ ...f, projectId: undefined }));
+                            } else {
+                              setShowNewProjectField(false);
+                              setFileEditForm((f: any) => ({ ...f, projectId: val === "NONE" ? "NONE" : val, newProjectName: undefined }));
+                            }
+                          }}
+                          className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green bg-white"
+                        >
+                          <option value="NONE">Sin proyecto asociado</option>
+                          {clientProjects.map((p: any) => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                          <option value="NEW" className="text-erfor-green font-semibold">+ Crear nuevo proyecto...</option>
+                        </select>
+                      </div>
+
+                      {showNewProjectField && (
+                        <div className="sm:col-span-2">
+                           <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nombre del Nuevo Proyecto *</label>
+                           <input 
+                             type="text"
+                             required
+                             placeholder="Escribe el nombre del nuevo proyecto"
+                             value={fileEditForm.newProjectName || ""}
+                             onChange={(e) => setFileEditForm((f: any) => ({ ...f, newProjectName: e.target.value }))}
+                             className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-erfor-green"
+                           />
+                        </div>
+                      )}
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
-                      <button type="button" onClick={() => setIsEditFileModalOpen(false)} disabled={isSavingFile} className="px-4 py-2.5 text-sm font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
-                        Cancelar
-                      </button>
-                      <button type="submit" disabled={isSavingFile} className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-erfor-green text-white rounded-lg hover:bg-green-700 transition disabled:opacity-60">
-                        {isSavingFile && <Loader2 className="h-4 w-4 animate-spin" />}
-                        Guardar Cambios
-                      </button>
+                    <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+                      <div>
+                        {canDeleteUser && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsEditFileModalOpen(false);
+                              setIsDeleteModalOpen(true);
+                            }}
+                            className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Eliminar Expediente
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex gap-3">
+                        <button type="button" onClick={() => setIsEditFileModalOpen(false)} disabled={isSavingFile} className="px-4 py-2.5 text-sm font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+                          Cancelar
+                        </button>
+                        <button type="submit" disabled={isSavingFile} className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-erfor-green text-white rounded-lg hover:bg-green-700 transition disabled:opacity-60">
+                          {isSavingFile && <Loader2 className="h-4 w-4 animate-spin" />}
+                          Guardar Cambios
+                        </button>
+                      </div>
                     </div>
                   </form>
                 </Dialog.Panel>
@@ -722,6 +839,17 @@ export default function ExpedienteDetailPage({ params }: { params: Promise<{ id:
           </div>
         </Dialog>
       </Transition>
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteFile}
+        itemName={file.internalCode}
+        title="Eliminar Expediente"
+        isDeleting={isDeleting}
+        requireDoubleConfirmation={true}
+        doubleConfirmationLabel="Entiendo que al eliminar este expediente se desvincularán todos sus trámites, requerimientos y obligaciones, y esta acción no se puede deshacer."
+      />
     </AppShell>
   );
 }

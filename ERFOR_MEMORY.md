@@ -391,8 +391,54 @@ String contains non ISO-8859-1 code point.` Archivos más chicos (varios ya subi
 - **Verificación**: `npm run typecheck` pasó con éxito localmente.
 - **Despliegue**: El usuario realiza el commit y push manual desde su terminal para detonar el despliegue automático en Vercel.
 
+### Panel de Reprocesamiento Retroactivo (10-Jul-2026)
+- **Motivación**: Los documentos que se subieron antes de solucionar el bug del OCR y la extracción automática tenían texto extraído corrupto o vacío en la base de datos (por bugs en `pdf-parse` e inexistencia de WASM en serverless). Hacía falta una utilidad administrativa para reprocesarlos en lote desde el almacenamiento (Supabase Storage) sin obligar a los usuarios a volver a subir los archivos físicos.
+- **Implementación**:
+  1. **Endpoint de Candidatos (`GET /api/documents`)**: Se extendió para soportar `pendingReprocess=true`, filtrando archivos que no tienen texto o tienen placeholders de fallos previos, omitiendo archivos simulados locales o purgados.
+  2. **Endpoint de Reprocesador (`POST /api/documents/[id]/reprocess`)**: Endpoint serverless que descarga los bytes del archivo desde Supabase, ejecuta la extracción/OCR nativa, actualiza el `extractedText` y, si el expediente padre no tiene predio, corre la IA para intentar enlazar el predio automáticamente.
+  3. **Consola Frontend (`retroactive-reprocess.tsx`)**: Interfaz premium con barra de progreso, contadores (Éxitos, Errores, Predios Encontrados) y logs en tiempo real que ejecuta las llamadas de forma secuencial desde el navegador para burlar el timeout de 60s en Vercel.
+  4. **Pestaña en Configuración (`settings-module.tsx`)**: Integración directa del panel administrativo como la pestaña **"Reprocesamiento"** del sistema.
+- **Verificación**: `npm run typecheck` en verde.
+
+### Diseño del Modelo de Normativas y Alertas Inteligentes (10-Jul-2026)
+- **Concepto**: Permitir que la IA actúe como un auditor de cumplimiento regulatorio cruzando el estado del expediente contra leyes ambientales colombianas.
+- **Estructura de Datos Propuesta**:
+  - `model EnvironmentalNorm`: Almacenará títulos, artículos y palabras clave de resoluciones/leyes (ej: límites de vertimientos, frecuencia de reportes).
+- **Flujo de Ejecución**:
+  - Un endpoint `/api/expedientes/[id]/analyze-compliance` reunirá el expediente (metadatos, obligaciones, texto de documentos) y buscará normativas aplicables.
+  - Enviará un prompt estructurado a Gemini/OpenAI para evaluar el nivel de cumplimiento técnico/legal.
+  - La IA retornará una lista de alertas de riesgo que el sistema guardará en la tabla `Alert` asociada al expediente.
+- **Estado**: Propuesta técnica aprobada e indexada en memoria para futura codificación.
+
 ### Siguientes pasos concretos (Actualizado 10-Jul-2026)
-1. Hacer git commit y git push de los cambios en `next.config.ts` y `ERFOR_MEMORY.md`, y reintentar la subida del archivo real de 33MB.
-2. Si es exitoso, verificar que el flujo de procesamiento posterior (OCR/extracción) se complete en el servidor.
-3. Probar KML/KMZ con archivos geoespaciales reales del cliente.
-4. Confirmar `GEMINI_API_KEY` en el entorno Preview de Vercel.
+1. Hacer git commit y git push de los cambios del panel de reprocesamiento y re-desplegar con `vercel --prod`.
+2. Probar KML/KMZ con archivos geoespaciales reales del cliente.
+3. Confirmar `GEMINI_API_KEY` en el entorno Preview de Vercel.
+4. Implementar el modelo de base de datos de Normativas (`EnvironmentalNorm`) y su automatización de alertas con IA (según la propuesta documentada).
+
+
+## [11-Jul-2026] Eliminación Segura, Dashboard, Navegación de Cotizaciones y Flujo de Proseguimiento
+
+### 1. Eliminación Segura con Doble Confirmación
+- **Flujo en Detalle:** Se implementó un botón directo de eliminación en la cabecera superior derecha del detalle del expediente (`src/app/expedientes/[id]/page.tsx`), visible únicamente para roles autorizados (`SUPER_ADMIN` y `DIRECTOR_AMBIENTAL`).
+- **Casilla de Aceptación:** Se modificó `DeleteConfirmationModal` para incluir opcionalmente una casilla de verificación ("Entiendo que esta acción es permanente...") que bloquea el botón de confirmación final hasta que sea seleccionada.
+- **Transacción en Backend (`DELETE /api/expedientes/[id]`):** Implementación segura en Prisma que desvincula documentos, requerimientos, visitas, y elimina de forma limpia tareas, alertas y conversaciones asociadas para evitar conflictos de claves foráneas.
+- **Borrado Físico de Archivos:** El endpoint `DELETE /api/documents/[id]` se conectó para borrar físicamente el archivo del bucket `erfor-uploads` de Supabase Storage antes de dar de baja el registro de la base de datos.
+
+### 2. Corrección de Redirección y Filtrado en Panel Maestro
+- **Dashboard:** Se redirigió el clic de las tarjetas de estado del Panel Maestro en `dashboard.tsx` a `/clientes-y-proyectos?tab=expedientes&status=[STATUS]`.
+- **Filtro Dinámico:** Se adaptó `page.tsx` de clientes para leer query params mediante `<Suspense>`, y se modificó `files-module.tsx` para recibir la prop `status` e integrar una insignia flotante que permite ver qué filtro está activo y desactivarlo con un solo clic.
+
+### 3. Navegación e Interacción en Cotizaciones
+- **Redirección:** Al hacer clic en el cuerpo de las tarjetas de cotización (`/cotizaciones`), el usuario ahora es enrutado directamente al detalle del expediente correspondiente.
+- **Menú Contextual:** Se reemplazó el ícono estático de tres puntos por un menú desplegable interactivo (`Dropdown`) con acciones para *Ver Detalle* y *Eliminar Cotización* con doble confirmación.
+
+### 4. Flujo de Asignación de Proyectos y Proseguimiento de Fase
+- **Controlador API Personalizado (`PATCH /api/expedientes/[id]`):** Nueva función backend que maneja transaccionalmente la actualización del expediente. Soporta la creación automática de proyectos al vuelo si se pasa `newProjectName` y permite la desvinculación con `projectId: "NONE"`.
+- **Fase / Estado (Dropdown):** Permite cambiar el estado global del expediente a cualquiera de los 5 estados del sistema (*Cotización/Borrador*, *En Proceso*, *En Trámite*, *Otorgado*, *En Seguimiento*), permitiendo hacer proseguir la cotización.
+- **Proyecto Asociado (Dropdown):** Obtiene y lista los proyectos del cliente actual mediante SWR. Cuenta con la opción especial *"+ Crear nuevo proyecto..."*, la cual despliega un input dinámico para escribir el nombre de un nuevo proyecto.
+
+### Próximos pasos concretos
+1. Realizar commit y push de todos los cambios de estas sesiones a producción en Vercel.
+2. Monitorear con el cliente la depuración de archivos pesados en local antes de subir datos.
+3. Probar archivos geográficos KML/KMZ reales sobre la interfaz de mapas.

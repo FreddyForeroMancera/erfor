@@ -127,7 +127,14 @@ export function Dashboard() {
                     if (isCotizaciones) {
                       router.push("/cotizaciones");
                     } else {
-                      router.push("/tramites-y-permisos");
+                      const statusMap: Record<string, string> = {
+                        "En Proceso": "PREPARATION",
+                        "En Trámite": "EVALUATION",
+                        "Otorgado": "APPROVED",
+                        "En Seguimiento": "COMPLETED"
+                      };
+                      const status = statusMap[label] || "";
+                      router.push(`/clientes-y-proyectos?tab=expedientes${status ? `&status=${status}` : ""}`);
                     }
                   }}
                 />

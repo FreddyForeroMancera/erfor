@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { Search, Plus, MoreVertical, FileText, User } from "lucide-react";
 import { GlobalNewTramiteModal } from "./global-new-tramite-modal";
+import { useRouter } from "next/navigation";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
+import toast from "react-hot-toast";
+import { DeleteConfirmationModal } from "./delete-confirmation-modal";
 
 type Item = {
   id: string;
@@ -19,8 +24,38 @@ const COLUMNS = [
 ];
 
 export function QuotesProceduresKanban({ initialData, onRefresh }: { initialData: Item[], onRefresh: () => void }) {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+
+  // Secure Deletion States
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedForDelete, setSelectedForDelete] = useState<Item | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { data: userData } = useSWR<any>("/api/auth/me", fetcher);
+  const currentUser = userData?.user;
+  const canDeleteUser = currentUser?.role === "SUPER_ADMIN" || currentUser?.role === "DIRECTOR_AMBIENTAL";
+
+  const handleDeleteQuote = async () => {
+    if (!selectedForDelete) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/expedientes/${selectedForDelete.id}`, {
+        method: "DELETE"
+      });
+      if (!res.ok) throw new Error("Error al eliminar la cotización");
+      toast.success("Cotización eliminada correctamente");
+      setIsDeleteModalOpen(false);
+      setSelectedForDelete(null);
+      onRefresh();
+    } catch (err: any) {
+      toast.error(err.message || "No se pudo eliminar la cotización");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const filteredItems = initialData.filter(p => 
     p.type?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -70,14 +105,62 @@ export function QuotesProceduresKanban({ initialData, onRefresh }: { initialData
               </div>
               <div className="erfor-scroll flex-1 space-y-3 overflow-y-auto pr-1">
                 {colItems.map((item) => (
-                  <article key={item.id} className="group cursor-grab rounded-lg border border-slate-200 bg-white p-4 shadow-sm hover:border-erfor-green hover:shadow-md transition-all active:cursor-grabbing">
+                  <article 
+                    key={item.id} 
+                    onClick={() => router.push(`/expedientes/${item.id}`)}
+                    className="group cursor-pointer rounded-lg border border-slate-200 bg-white p-4 shadow-sm hover:border-erfor-green hover:shadow-md transition-all"
+                  >
                     <div className="flex items-start justify-between">
                       <span className="inline-block rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700">
                         {item.type}
                       </span>
-                      <button className="text-slate-400 hover:text-slate-600">
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
+                      <div className="relative">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveMenuId(activeMenuId === item.id ? null : item.id);
+                          }}
+                          className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100 transition"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                        {activeMenuId === item.id && (
+                          <>
+                            <div 
+                              className="fixed inset-0 z-10" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuId(null);
+                              }}
+                            />
+                            <div className="absolute right-0 mt-1 w-44 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-20 overflow-hidden border border-slate-100">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveMenuId(null);
+                                  router.push(`/expedientes/${item.id}`);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition"
+                              >
+                                Ver Detalle
+                              </button>
+                              {canDeleteUser && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveMenuId(null);
+                                    setSelectedForDelete(item);
+                                    setIsDeleteModalOpen(true);
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition border-t border-slate-100"
+                                >
+                                  Eliminar Cotización
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                     <p className="mt-3 text-sm font-bold text-slate-800 leading-tight">
                       {item.project?.name || "Sin Asignar"}
@@ -110,6 +193,20 @@ export function QuotesProceduresKanban({ initialData, onRefresh }: { initialData
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onSuccess={onRefresh}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedForDelete(null);
+        }}
+        onConfirm={handleDeleteQuote}
+        title="Eliminar Cotización"
+        itemName={selectedForDelete?.type || "esta cotización"}
+        isDeleting={isDeleting}
+        requireDoubleConfirmation={true}
+        doubleConfirmationLabel="Entiendo que esta acción es permanente y que se eliminarán de forma definitiva todos los registros asociados a esta cotización en la plataforma."
       />
     </div>
   );
